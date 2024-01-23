@@ -9,7 +9,7 @@ See the docker README for documentation on how to use.
 
 ## Build the GDSC front end (a Flask app)  
 
-```$ ./build -r```
+```$ ./build.sh -r```
 
 Build the docker container for the front end and push to dockerhub. Build takes these options:  
 
