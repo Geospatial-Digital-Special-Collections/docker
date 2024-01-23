@@ -1,4 +1,4 @@
-# Start from an official Python base image.
+# start from an official solr base image
 FROM solr
 
 # copy the init script

@@ -1,27 +1,26 @@
 # GDSC - Repository Front End  
 
-This repository contains Docker container builds for the GDSC repository front end. Currently there are two implementations:
+This folder contains Docker container builds for the gaia implementation of the GDSC repository front end.
 
-- GDSC front end (main branch)
-- OHDSI front end (ohdsi branch)  
+NOTE: if you are seeking the regular GDSC implementation, please switch your branch to `main`.
 
-See the docker README for documentation on how to use
+## Run the Repository Front End (in this directory)
 
-## Build the GDSC front end (based on Flask)  
+`$ docker-compose up`
 
-`$ ./build -r`
+This will build two docker containers locally (if not already built):
 
-Build the docker container for the front end and push to dockerhub. Build takes these options:  
+- gaia_R: an Ubuntu base container with an R installation including all libraries needed for gaia (can take a while)  
+- gaia_repository: a python Flask base container with a simple search app  
 
-`       -h          to see this help message
-       -r          to build repository search interface
-       -u <user>   specify the user account on dockerhub (optional, defaults to tibben)
-       -n <name>   specify the repository name on dockerhub (optional, defaults to pg)`
+After building the images three containers are run on the gaia-default network (this requires that you have the docker container for the gaia database already running).
 
-Runs a viariant of these commmands:
+- gaia-R
+- gaia-repository
+- gaia-solr
 
-`cd ../
-docker build -t $user/$name:$tag -f ./docker/$tag/Dockerfile .
-docker push $user/$name:$tag`
+Notes:  
 
-Note, you must be logged into docker hub as $user.
+- The gaia-solr container will create a volume called gaia-solr-index where the index will be stored.
+- The gaia-solr container needs the collections folder (where the json metadata is stored).
+- You must refresh the json with the R based tool ...

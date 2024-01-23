@@ -1,5 +1,3 @@
-# plumber.R
-
 library(gaiaCore)
 library(DatabaseConnector)
 library(plumber)
@@ -8,7 +6,7 @@ library(plumber)
 # from R docker container to gaiaDB docker container - network gaiadb_default
 connectionDetails <- DatabaseConnector::createConnectionDetails(
   dbms = "postgresql",
-  server = "gis_postgis/gaiaDB",
+  server = "gaia-postgis/gaiaDB",
   port = 5432,
   user="postgres",
   password = "mysecretpassword") 
