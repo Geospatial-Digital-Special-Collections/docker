@@ -35,16 +35,12 @@
                   <option value="Health Outcomes" {{ "selected='selected'" if collection == 'Health Outcomes' else "" }}>Health Outcomes</option>
                   <option value="Transportation" {{ "selected='selected'" if collection == 'Transportation' else "" }}>Transportation</option>
                   <option value="Census" {{ "selected='selected'" if collection == 'Census' else "" }}>Census</option>
-                  <option value="Trinidad and Tobago Disease Risk" {{ "selected='selected'" if collection == 'Trinidad and Tobago Disease Risk' else "" }}>Trinidad and Tobago Disease Risk</option>
                 </select>
               </div>
             </div>
             <div class="float-left mb-1">
               <input type="checkbox" {{ "checked" if active == 'true' else "" }} id="active" name="active" value="true" class="ml-3 mt-3">
-              <label for="active">
-                show only active datasets
-                <div class="float-left circle green-fill"></div>
-              </label>
+              <label for="active">show only active datasets</label>
             </div>
             <div class="float-right">
               <button type="submit" class="float-right btn btn-primary">Search</button>
@@ -59,15 +55,9 @@
           <h5 class="float-left ml-2 mt-2">Results (n={{ numresults }}):</h5>
         </div>
         {% for document in results %}
-        {% autoescape off %}
         <div class="row border-top pt-2 pb-2">
           <div class="col-7 align-top">
-            <h4 class="float-left">
-              {% if document['dct_title'] %}
-                <a href="/detail/{{ document['gdsc_tablename'][0] }}?collection={{ collection }}&active={{ active }}&query={{ query }}">{{ document['dct_title'][0] }}</a>
-              {% endif %}
-              <div class="float-left circle {{ 'green-fill' if document['gdsc_up'][0] else 'red-fill' }}"></div>
-            </h4>
+            <h4 class="float-left">{% if document['dct_title'] %}<a href="/detail/{{ document['gdsc_tablename'][0] }}?collection={{ collection }}&active={{ active }}&query={{ query }}">{{ document['dct_title'][0] }}</a>{% endif %}</h4>
           </div>
           <div class="col-5 align-top">
             {% if document['gdsc_collections'] and document['gdsc_collections']|length > 0 %}
@@ -81,7 +71,7 @@
           <div class="col ml-4">
             <div class="container">
               <div class="row">
-                <div class="col-sm-10">
+                <div class="col-10">
                   <b>Citation:</b> 
                   {% if document['dct_creator'] %}{{ document['dct_creator'][0] }}{% endif %}
                   {% if document['dct_issued'] %}({{ document['dct_issued'][0][:4] }}){% endif %}.
@@ -89,40 +79,30 @@
                   {% if document['dct_publisher'] %}{{ document['dct_publisher'][0] }}{% endif %}.
                   {% if document['dct_identifier'] %}<a href="{{ document['dct_identifier'][0] }}" target="_blank" class="text-wrap text-break">{{ document['dct_identifier'][0] }}</a>.{% endif %}
                   {% if document['dct_modified'] %} last updated: {{ document['dct_modified'][0][:10] }}{% endif %}
-                  <!-- {% if document['dcat_downloadURL'] %} from <a href="{{ document['dcat_downloadURL'][0] }}" target="_blank" class="text-wrap text-break">{{ document['dcat_downloadURL'][0] }}</a>{% endif %} -->
+                  {% if document['dcat_downloadURL'] %} from <a href="{{ document['dcat_downloadURL'][0] }}" target="_blank">{{ document['dcat_downloadURL'][0] }}</a>{% endif %} 
                   {% if document['dct_accrualPeriodicity'] %} (update frequency: {{ document['dct_accrualPeriodicity'][0] }}){% endif %}.
                   {% if document['dct_description'] %}
-                  <span class="mt-2 d-block"><b>Abstract:</b> {{ document['display_description'] }} </span>
+                  <span class="mt-2 d-block"><b>Abstract:</b> {{ document['dct_description'][0] }}</span>
                   {% endif %}
                   {% if document['dcat_keyword'] and document['dcat_keyword']|length > 0 %}
-                  <span class="mt-1 d-block"><b>Key words:</b>
+                  <span class="mt-1 d-block"><b>key words:</b>
                     {# {% for keyword in document['dcat_keyword'] %}{{ keyword }}{{ ", " if not loop.last else "" }}{% endfor %} #}
                     {{ ", ".join(document['dcat_keyword']) }}
                   </span>
                   {% endif %}
-                  {% if document['found_in'] %}
-                  {% if document['found_in']['gdsc_attributes'] and document['found_in']['gdsc_attributes']|length > 0 %}
-                  <span class="mt-1 d-block"><b>Attributes with <span class="highlight-term">{{ query }}</span>:</b>
-                    {% for attr in document['found_in']['gdsc_attributes'] %}{{ attr[0] }}{{ ", " if not loop.last else "" }}{% endfor %}
-                    {# { ", ".join([attr[0] for attr in document['found_in']['gdsc_attributes']]) } #}
-                  </span>
-                  {% endif %}
-                  {% endif %}
                 </div>
-                <div class="col-sm">
+                <div class="col">
                   {% if document['gdsc_sponsor'] %}
-                  <span class="mt-1 d-block"><b>Sponsors:</b><br>
+                  Sponsors:<br>
                   {% for sponsor in document['gdsc_sponsor'] %}
                   <a href="{{ sponsor.split(';')[1] }}" target="_blank"><img src="/static/{{ sponsor.split(';')[0] }}-small.jpg" style="max-height:30px;"></a>
                   {% endfor %}
-                  </span>
                   {% endif %}
                 </div>
               </div>
             </div>
           </div>
         </div>
-        {% endautoescape %}
         {% endfor %}
         {% endif %}
       </div>

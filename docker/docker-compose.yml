@@ -1,0 +1,39 @@
+version: "3.9"
+
+services:
+  gaia_r:
+    container_name: gaia-r
+    build: ./R/
+    image: gaia_r
+    ports:
+      - "8000:8000"
+    networks:
+      - gaiadb
+  gis_repo:
+    container_name: gis-repo
+    build: ./searchApp/
+    image: gis_repo
+    ports:
+      - "5000:5000"
+    networks:
+      - gaiadb
+    links:
+      - "solr:index"
+      - "gaia_r:gaiaCore"
+  solr:
+    container_name: solr
+    image: solr
+    networks:
+      - gaiadb
+    volumes:
+      - ./collections:/collections
+      - solr-data:/var/solr
+
+volumes:
+  solr-data:
+    name: ohdsi-solr-index
+
+networks:
+  gaiadb:
+    name: gaiadb_default
+    external: true

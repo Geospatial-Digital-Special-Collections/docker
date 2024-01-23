@@ -17,3 +17,5 @@ do
 	docker rmi ${i}
 done
 
+# Remove the DB Volume, removes database
+docker volume rm docker_gdsc_pgdata
