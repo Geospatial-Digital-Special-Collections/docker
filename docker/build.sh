@@ -10,7 +10,7 @@ tag=0
 user='ohdsi'
 name='gaia-catalog'
 push=0
-while getopts ":h:r:s:R:u:n:p" option; do
+while getopts ":hrsRp:u:n" option; do
   case $option in
     h) # help
        echo 'Usage: $ ./build -hrsRp -u <user> -n <name>'
@@ -18,7 +18,7 @@ while getopts ":h:r:s:R:u:n:p" option; do
        echo '-h          to see this help message'
        echo '-r          to build repository search interface container '
        echo '-s          to build solr container for indexing'
-       echo '-R          to build R container for indexing'
+       echo '-R          to build R container for connecting to gaia database'
        echo '-p          to push image to dockerhub (optional, defaults to no)'
        echo '-u <user>   specify the user account on dockerhub (optional, default=ohdsi)'
        echo '-n <name>   specify the repository name on dockerhub (optional, default=gaia-catalog)'

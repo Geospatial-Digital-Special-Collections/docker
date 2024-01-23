@@ -7,7 +7,7 @@ This repository contains Docker container builds for the GDSC repository front e
 
 See the docker README for documentation on how to build and use.
 
-Once built the containers can be run with either docker-compose or kubernetes. When running they provide a simple search interface at [http://localhost:5000](http://localhost:5000) based on a GDSC catalog or collection.
+Once built the containers can be run with either docker-compose or kubernetes. When running they provide a simple search interface at [http://localhost:5000](http://localhost:5000) based on a GDSC catalog or collection(s).
 
 ### Documentation
 
