@@ -6,20 +6,32 @@
 ##
 
 # check to see if running local or the build version of the deployment
-subdir=''
 tag=0
-user=tibben
-name=pg
-while getopts ":hrun" option; do
+user='tibben'
+name='pg'
+push=1
+while getopts ":h:r:u:n:p" option; do
   case $option in
     h) # help
+       echo 'Usage: $ ./build -hrsRp -u <user> -n <name>'
+       echo 'Options: '
        echo '-h          to see this help message'
-       echo '-r          to build repository search interface'
-       echo '-u <user>   specify the user account on dockerhub'
-       echo '-n <name>   specify the repository name on dockerhub'
+       echo '-r          to build repository search interface container '
+       echo '-p          to push image to dockerhub (optional, defaults to yes)'
+       echo '-u <user>   specify the user account on dockerhub (optional, default=tibben)'
+       echo '-n <name>   specify the repository name on dockerhub (optional, default=pg)'
+       echo 'NOTE: only one image can be built at a time, build options are exclusive.'
        exit;;
     r) # build the gdsc interface image
+       if [[ ${tag} != 0 ]]
+       then
+         echo 'You cannot use multiple build options.'
+         exit
+       fi
        tag=repository
+       ;;
+    p) # push to dockerhub
+       push=1
        ;;
     u) # build the gdsc interface image
        user=$OPTARG
@@ -30,14 +42,14 @@ while getopts ":hrun" option; do
   esac
 done
 
-# catch user error
+# catch user error for build choice
 if [[ ${tag} == 0 ]]
 then
   echo 'build.sh error: the build type must be specified'
   echo 'usage:'
   echo './build.sh -h # to see the help message'
   echo './build.sh -r # to build repository search interface'
-  echo './build.sh -r [-u <user> [-n <name>]] # specify the user account and repository name on dockerhub (defaults to tibben/pg)'
+  echo './build.sh -[r] -p -u <user> -n <name> # specify the user account and repository name for push to dockerhub'
   exit
 fi
 
@@ -45,5 +57,7 @@ fi
 cd ../
 docker build -t $user/$name:$tag -f ./docker/$tag/Dockerfile .
 # must be logged into docker hub as $user ($ docker login)
-# TODO: make idsc dockerhub account
-docker push $user/$name:$tag
+if [[ ${push} == 1 ]]
+then
+  docker push $user/$name:$tag
+fi
