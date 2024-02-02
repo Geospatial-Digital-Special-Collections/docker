@@ -1,0 +1,14 @@
+# install gdal raster command line tools
+RUN apt-get update -y \
+    && apt-get install postgis -y \
+    && apt-get clean \
+    && rm -rf /var/cache/apt/lists/*
+
+# provide the ArcGIS geometry libraries for postGIS
+ENV LD_LIBRARY_PATH /usr/lib/postgresql
+COPY ./config/ESRI/PostgreSQL/12/Linux64/st_geometry.so /usr/lib/postgresql/12/lib
+RUN chmod 644 /usr/lib/postgresql/12/lib/st_geometry.so
+
+# provide function to create foreign data wrappers, foreign tables, and views
+RUN mkdir /usr/lib/postgresql/12/scripts
+COPY ./scripts/sql /usr/lib/postgresql/12/scripts
