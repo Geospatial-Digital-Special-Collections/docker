@@ -128,7 +128,7 @@ then
   multi=multi
   if [[ "${list#*$multi}" = "$list" ]]
   then
-   docker buildx create -platform linux/arm64,linux/amd64 --name multi
+   docker buildx create --platform linux/arm64,linux/amd64 --name multi
   fi
   docker buildx use multi
   echo ready to build
