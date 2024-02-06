@@ -78,7 +78,7 @@ do
         -d) # build the degauss fastAPI image
           dedup; tag=degaussAPI;;
         -r) # build the gdsc interface image
-          dedup; tag=gdsc;;
+          dedup; tag=repository;;
         -u) # set dockerhub user name
           p=user;;
         -b) # set base name for docker image
@@ -110,14 +110,17 @@ fi
 postgis="proxy node"
 if [[ "${postgis#*$tag}" != "$postgis" ]]
 then
-  postgis_version=12-3.3
+  postgis_version=15-3.4
   sed 's/COPY .\//COPY .\/builds\/'"$tag"'\//g' docker-postgis/$postgis_version/${subdir}Dockerfile > $tag/Dockerfile
   cat $tag/Dockerfile-gdsc >> $tag/Dockerfile
   cat docker-postgis/$postgis_version/${subdir}initdb-postgis.sh $tag/initdb-gdsc.sh > $tag/initdb-postgis.sh
   cat docker-postgis/$postgis_version/${subdir}update-postgis.sh > $tag/update-postgis.sh
 fi
 
+echo pre-build with push=$push and multi=$multi
+
 # build docker image
+cd ../
 if [[ ${multi} == 1 ]]
 then
   # build multiple architecture docker image
@@ -128,8 +131,10 @@ then
    docker buildx create -platform linux/arm64,linux/amd64 --name multi
   fi
   docker buildx use multi
+  echo ready to build
   if [[ ${push} == 1 ]]
   then
+    # must be logged into docker hub as $user ($ docker login)
     docker buildx build --push --platform=linux/amd64,linux/arm64 -t $user/$name:$tag -f ./builds/$tag/Dockerfile .
   else
     docker buildx build --platform=linux/amd64,linux/arm64 -t $user/$name:$tag -f ./builds/$tag/Dockerfile .
@@ -137,13 +142,13 @@ then
   docker buildx use default
 else
   # build single architecture (host) docker image
-  cd ../
   docker build -t $user/$name:$tag -f ./builds/$tag/Dockerfile .
+  # must be logged into docker hub as $user ($ docker login)
+  if [[ ${push} == 1 ]]
+  then
+    echo docker push $user/$name:$tag
+    docker push $user/$name:$tag
+  fi
 fi
 
-# must be logged into docker hub as $user ($ docker login)
-if [[ ${push} == 1 ]]
-then
-  echo docker push $user/$name:$tag
-  docker push $user/$name:$tag
-fi
+cd builds

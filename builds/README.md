@@ -44,3 +44,9 @@ Note, you must be logged into docker hub as ```<user>```.
 ```$ ./build.sh -r```
 
 Build the docker container for the front end and push to dockerhub.
+
+## For arm64 builds on x86-64
+
+- set up QEMU (from https://github.com/docker/buildx/issues/1101)
+
+```$ docker run --rm --privileged tonistiigi/binfmt:latest --install all```

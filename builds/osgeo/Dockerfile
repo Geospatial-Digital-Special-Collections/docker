@@ -1,4 +1,4 @@
-FROM osgeo/gdal:ubuntu-full-latest-amd64
+FROM ghcr.io/osgeo/gdal:ubuntu-full-latest
 
 RUN mkdir -p /openssl
-COPY ./docker/osgeo/openssl.conf /openssl/openssl.conf
+COPY ./builds/osgeo/openssl.conf /openssl/openssl.conf

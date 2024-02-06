@@ -32,7 +32,7 @@ done
   DROP EXTENSION IF EXISTS fuzzystrmatch;
 EOSQL
 
-# foreign data wrapper, sde user, and remote schema for GDSC proxy
+# raster extensions
 "${psql[@]}" --dbname="gdsc" <<-'EOSQL'
   CREATE EXTENSION IF NOT EXISTS postgis_raster;
 EOSQL
