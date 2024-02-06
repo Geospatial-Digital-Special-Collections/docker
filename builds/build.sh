@@ -143,6 +143,7 @@ then
   docker buildx use default
 else
   ptag=$tag
+  # a hack to get around difficult multi-architecture builds for postGIS on alpine
   if [[ "$tag" = "node" ]]
   then
     arch=$(uname -a)
