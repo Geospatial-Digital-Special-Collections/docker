@@ -51,6 +51,7 @@ user='tibben'
 name='pg'
 push=0
 multi=0
+arm=0
 for i in "$@"
 do
   p=0
@@ -58,9 +59,9 @@ do
  
     --*) # --option
       case "$i" in
-        --push) #set push flag to push to dockerhub
+        --push) # set push flag to push to dockerhub
           push=1;;
-        --multi-platform) #set multi-platform flag
+        --multi-platform) # set multi-platform flag
           multi=1;;
       esac
       ;;
@@ -110,7 +111,7 @@ fi
 postgis="proxy node"
 if [[ "${postgis#*$tag}" != "$postgis" ]]
 then
-  postgis_version=15-3.4
+  postgis_version=12-3.4
   sed 's/COPY .\//COPY .\/builds\/'"$tag"'\//g' docker-postgis/$postgis_version/${subdir}Dockerfile > $tag/Dockerfile
   cat $tag/Dockerfile-gdsc >> $tag/Dockerfile
   cat docker-postgis/$postgis_version/${subdir}initdb-postgis.sh $tag/initdb-gdsc.sh > $tag/initdb-postgis.sh
@@ -141,13 +142,25 @@ then
   fi
   docker buildx use default
 else
+  ptag=$tag
+  if [[ "$tag" = "node" ]]
+  then
+    arch=$(uname -a)
+    x86=x86_64
+    if [[ "${arch#*$x86}" = "$arch" ]]
+    then
+      ptag=$ptag-arm64
+    else
+      ptag=$ptag-amd64
+    fi
+  fi
   # build single architecture (host) docker image
-  docker build -t $user/$name:$tag -f ./builds/$tag/Dockerfile .
+  docker build -t $user/$name:$ptag -f ./builds/$tag/Dockerfile .
   # must be logged into docker hub as $user ($ docker login)
   if [[ ${push} == 1 ]]
   then
-    echo docker push $user/$name:$tag
-    docker push $user/$name:$tag
+    echo docker push $user/$name:$ptag
+    docker push $user/$name:$ptag
   fi
 fi
 
