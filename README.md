@@ -5,9 +5,9 @@ This repository contains Docker container builds for the Geospatial Digital Spec
 - GDSC front end (main branch)
 - OHDSI front end (ohdsi branch)  
 
-See the docker README for documentation on how to build and use.
+See the [README](builds/README.md) in the builds directory for documentation on how to build and use.
 
-Once built the containers can be run with either docker-compose or kubernetes. 
+Once built the containers can be run with either docker-compose (must roll your own) or kubernetes (implemented with the kubernetes repo of this organization). 
 
 ### Documentation
 
