@@ -5,7 +5,7 @@ This repository contains Docker container builds for GDSC. Currently there are t
 - GDSC (main branch)
 - OHDSI (ohdsi branch)  
 
-See the [README](builds/readme.md) in the builds directory for documentation on how to build and use.
+See the [README](builds/README.md) in the builds directory for documentation on how to build and use.
 
 Once built the containers can be run with either docker-compose or kubernetes. 
 
