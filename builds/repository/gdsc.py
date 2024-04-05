@@ -9,9 +9,31 @@ app = Flask(__name__)
 log = logging.getLogger('werkzeug')
 log.disabled = True
 
-BASE_PATH='http://solr.gdsc:8983/solr/dcat/select?wt=json&'
+BASE_PATH = 'http://solr.gdsc:8983/solr/dcat/select?wt=json&'
 SNIP_LENGTH = 180
 QUERY_FIELDS = ['gdsc_collections','dct_title','dcat_keyword','dct_description','gdsc_attributes']
+
+##
+ # get solr data
+ ##
+def query_solr(path,parameters):
+
+    numresults = 1
+    results = []
+
+    # send query to SOLR and gather paged results
+    query_string  = urlencode(parameters).replace('-','+')
+    print(path,query_string)
+    while numresults > len(results):
+        connection = urlopen("{}{}".format(path, query_string))
+        response = simplejson.load(connection)
+        numresults = response['response']['numFound']
+        results = response['response']['docs']
+        parameters["rows"] = numresults
+        query_string  = urlencode(parameters).replace('-','+')
+    if results == None: results = []
+
+    return results, numresults
 
 ##
  # highlight found instances of query in document metadata
@@ -44,14 +66,14 @@ def highlight_query(document,query):
                     row = attr.split(';')
                     if len(row) > 1:
                         print (row[0])
-                        document[field][i] = add_tags(document[field][i],row[0]) 
+                        document[field][i] = add_tags(document[field][i],row[0])
                         print(document[field][i])
                         for j in range(0,2):
                             for term in terms:
                                 row[j] = add_tags(row[j],term)
                         print(row[0])
                         row[0] = add_tags(row[0],row[0])
-                        print(row[0]) 
+                        print(row[0])
                         attrs.append([row[0],row[1]])
                         print(attrs)
             if len(attrs) > 0: document['found_in'][field] = attrs
@@ -74,7 +96,7 @@ def index():
     if request.method == "POST":
 
         # get the form parameters
-        if 'ImmutableMultiDict' in str(type(request.form)): args = request.form.to_dict() 
+        if 'ImmutableMultiDict' in str(type(request.form)): args = request.form.to_dict()
         else: args = request.form
         print(args)
         query = args["searchTerm"]
@@ -86,7 +108,7 @@ def index():
 
         # build the query parameters for SOLR
         q = collection
-        if collection == 'all' or collection == '*': 
+        if collection == 'all' or collection == '*':
             collection = '*'
             q = ""
         query_parameters = {"q": "gdsc_collections:*" + collection}
@@ -108,15 +130,7 @@ def index():
             }
 
     # send query to SOLR and gather paged results
-    query_string  = urlencode(query_parameters)
-    while numresults > len(results): 
-        connection = urlopen("{}{}".format(BASE_PATH, query_string))
-        response = simplejson.load(connection)
-        numresults = response['response']['numFound']
-        results = response['response']['docs']
-        query_parameters["rows"] = numresults
-        query_string  = urlencode(query_parameters) 
-    if results == None: results = []
+    results, numresults = query_solr(BASE_PATH,query_parameters)
 
     # check results for correct display
     for entry in results:
@@ -131,7 +145,17 @@ def index():
             if len(entry['display_description']) > SNIP_LENGTH:
                 entry['display_description'] = entry['dct_description'][0][0:SNIP_LENGTH] + '...'
 
-    return render_template('index.html', collection=collection, query=query, active=active, numresults=numresults, results=results)
+    if collection == "*": collection = 'all'
+
+    return render_template(
+        'index.html',
+        collection=collection,
+        query=query,
+        active=active,
+        numresults=numresults,
+        results=results,
+        collections=COLLECTIONS
+    )
 
 ##
  # query SOLR for one document and render all metadata in detail
@@ -139,7 +163,7 @@ def index():
 @app.route('/detail/<name_id>', methods=["GET","POST"])
 def detail(name_id):
 
-    args = request.args.to_dict() 
+    args = request.args.to_dict()
 
     query_parameters = {"q": "gdsc_tablename:" + name_id}
     query_string  = urlencode(query_parameters)
@@ -147,16 +171,26 @@ def detail(name_id):
     response = simplejson.load(connection)
     document = response['response']['docs'][0]
 
-    if 'gdsc_attributes' in document:                                                             
+    if 'gdsc_attributes' in document:
         document['gdsc_columns'] = [attr.split(';')[0] for attr in document['gdsc_attributes']]
 
     if args['query'] != None and args['query'] != 'None' and args['query'] != '':
         document = highlight_query(document,args['query'])
 
-    if 'gdsc_attributes' in document:                                                             
-        document['gdsc_attributes'] = [attr.split(';') for attr in document['gdsc_attributes']]   
+    if 'gdsc_attributes' in document:
+        document['gdsc_attributes'] = [attr.split(';') for attr in document['gdsc_attributes']]
 
     return render_template('detail.html', name_id=name_id, document=document, referrer=request.args)
+
+COLLECTIONS, COLLECTIONS_COUNT = query_solr(
+    'http://solr.gdsc:8983/solr/collections/select?wt=json&',
+    {
+      "q.op": "OR",
+      "q": "Status:published"
+    }
+)
+keys = [item['Collection_ID'][0] for item in COLLECTIONS]
+COLLECTIONS = dict(zip(keys, COLLECTIONS))
 
 ##
  # run the app if called from the command line

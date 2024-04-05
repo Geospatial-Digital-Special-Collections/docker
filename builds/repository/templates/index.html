@@ -16,26 +16,16 @@
 {% endblock %}
 
 {% block content %}
-      <p class="mb-5">
-        The University of Miami <b>Geospatial Data Special Collections</b> (GDSC) is a joint initiative between the <a href="https://idsc.miami.edu">Institute for Data Science and Computing</a> (IDSC) and the <a href="https://www.library.miami.edu">University of Miami Libraries</a> to make <b>geographic data</b> at the University of Miami more <b>discoverable</b>, <b>accessible</b>, and <b>interoperable</b>. To do this GDSC provides a non-proprietary platform to dynamically discover, publish, and/or consume geographic <b>data as a service</b>. The geographic data available through GDSC is a <b>highly curated</b> set of collections--or special collections--of geographic data with coverage in <b>south Florida</b> and the <b>Global South</b> of the western hemisphere.
-      </p>
-      <div class="container mb-4">
+      <div class="container mb-5">
         <div class="row border-top border-bottom pt-2 pb-2">
           <form method="post" id="filterForm" name="filterForm" class="w-100">
             <div class="float-left">
               <h5 class="float-left mr-2 mt-2">Collection: </h5>
               <div class="float-left">
                 <select class="form-control" id="collection" name="collection">
-                  <option value="all" {{ "selected='selected'" if collection == 'all' else "" }}>all</option>
-                  <option value="DVMT" {{ "selected='selected'" if collection == 'DVMT' else "" }}>DVMT</option>
-                  <option value="Climate Change" {{ "selected='selected'" if collection == 'Climate Change' else "" }}>Climate Change</option>
-                  <option value="CAMP" {{ "selected='selected'" if collection == 'CAMP' else "" }}>CAMP</option>
-                  <option value="LAND" {{ "selected='selected'" if collection == 'LAND' else "" }}>LAND</option>
-                  <option value="Vulnerability" {{ "selected='selected'" if collection == 'Vulnerability' else "" }}>Vulnerability</option>
-                  <option value="Health Outcomes" {{ "selected='selected'" if collection == 'Health Outcomes' else "" }}>Health Outcomes</option>
-                  <option value="Transportation" {{ "selected='selected'" if collection == 'Transportation' else "" }}>Transportation</option>
-                  <option value="Census" {{ "selected='selected'" if collection == 'Census' else "" }}>Census</option>
-                  <option value="Trinidad and Tobago Disease Risk" {{ "selected='selected'" if collection == 'Trinidad and Tobago Disease Risk' else "" }}>Trinidad and Tobago Disease Risk</option>
+                  {% for coll in collections %}
+                  <option value="{{ collections[coll]['Collection_ID'][0] }}" {{ "selected='selected'" if collection == collections[coll]['Collection_ID'][0] else "" }}>{{ collections[coll]['Title'][0] }}</option>
+                  {% endfor %}
                 </select>
               </div>
             </div>
@@ -54,6 +44,51 @@
             </div>
           </form>
         </div>
+      </div>
+      <div class="mb-5">
+        <h2 class="mb-1">
+          {{ collections[collection]['Title'][0] }}
+        </h2>
+        <p class="mb-0">
+          {% autoescape off %}{{ collections[collection]['Description'][0] }}{% endautoescape %}
+        </p>
+        {% if collections[collection]['Creator'] %}
+        <p class="mb-0"><b>Contributors:</b></p>
+        <div class="container mb-0">
+          {% for contributor in collections[collection]['Creator'][0].split('|') %}
+            {% set contributor = contributor.split(';') %}
+            <p class="mb-0">
+              {{ contributor[0] }}{% if contributor[7] %}, {{ contributor[7] }}{% endif %}{% if contributor[4] %}, <a href="{{ contributor[4] }}" target="_blank">{{ contributor[4] }}</a>{% endif %}
+            </p>
+          {% endfor %}
+        </div>
+        {% endif %}
+        {% if collections[collection]['Relations'] %}
+        <p class="mb-0"><b>Related Content:</b></p>
+        <div class="container mb-0">
+          {% for relation in collections[collection]['Relations'][0].split('|') %}
+            {% set relationship = relation.split(';') %}
+            <p class="mb-0">
+              The <a href="{{ relationship[2] }}" target="_blank">{{ relationship[0] }}</a> {{ relationship[1].lower() }} this collection.
+            </p>
+          {% endfor %}
+        </div>
+        {% endif %}
+        {% if collections[collection]['Coverage'] %}
+        <p class="mb-0"><b>Geographical coverage:</b></p>
+        <div class="container mb-0">
+          {% for coverage in collections[collection]['Coverage'][0].split('|') %}
+            {% set coverage = coverage.split(';') %}
+            <p class="mb-0">
+              {% if coverage[1] == 'gazeteer' %}
+                <a href="{{ coverage[2] }}" target="_blank">{{ coverage[0] }}</a>
+              {% endif %}
+            </p>
+          {% endfor %}
+        </div>
+        {% endif %}
+      </div>
+      <div class="container mb-4">
         {% if results and results|length > 0 %}
         <div class="row mt-4 pt-2 pb-1">
           <h5 class="float-left ml-2 mt-2">Results (n={{ numresults }}):</h5>
@@ -82,7 +117,7 @@
             <div class="container">
               <div class="row">
                 <div class="col-sm-10">
-                  <b>Citation:</b> 
+                  <b>Citation:</b>
                   {% if document['dct_creator'] %}{{ document['dct_creator'][0] }}{% endif %}
                   {% if document['dct_issued'] %}({{ document['dct_issued'][0][:4] }}){% endif %}.
                   {% if document['dct_title'] %}{{ document['dct_title'][0] }}{% endif %} [gis dataset].
