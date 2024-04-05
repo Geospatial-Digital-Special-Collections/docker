@@ -8,7 +8,8 @@ This repository contains the following Docker container builds for the GDSC tool
 In the main branch the following images are supported:
 - postgis proxy
 - postgis node
-- gdsc repository front end 
+- osgeo/gdal ETL 
+- repository front end 
 - degauss fast api
 
 In development:
@@ -19,17 +20,33 @@ In development:
 
 The script ```./build.sh``` provides a streamlined approach to build all of the different containers and push to dockerhub. Usage:
 
-```./build.sh -h[rpnd] -u <user> -n <name>`
+```
+./build.sh
 
-```  
-  -h          to see this help message
-  -r          to build repository search interface (tag=repository)
-  -p          push to dockerhub (defaults to yes)
-  -u <user>   specify the user account on dockerhub (optional, user=tibben) 
-  -n <name>   specify the repository name on dockerhub (optional, name=pg)
+Usage: $ ./build.sh -h[pondr] [-u <user>] [-b <base name>] [--push] [--multi-platform]
+
+Options: 
+-h                  see the help message
+-p                  build postgis proxy container
+-n                  build postgis node container
+-o                  build osgeo/gdal etl container
+-d                  build degaussAPI container
+-r                  build gdsc repository interface container
+-u <user>           dockerhub account username (defaults to: tibben)
+-b <name>           base name for docker repository (defaults to: pg)
+--push              push image to dockerhub (optional, default push=0)
+--multi-platform    make the build multi-platform (arm64 and amd64) (optional, default to host architecture)
+
+NOTE: only one build image can be built at a time, build options are exclusive.
+
+--- example ---
+
+# Build the multi-platform gdsc repository container and push to docker hub as tibben/pg:gdsc.
+# Assumes you are logged into dockerhub as tibben.
+$ ./build.sh -r -u tibben -b pg --push --multi-platform
 ```  
 
-Runs a variant of these commands:
+Runs a variant of these commands for a single architecture build:
 
 ```
 cd ../
@@ -37,13 +54,14 @@ docker build -t $user/$name:$tag -f ./docker/$tag/Dockerfile .
 docker push $user/$name:$tag
 ```
 
-Note, you must be logged into docker hub as ```<user>```.
+or these for a multi-architecture build
 
-## Build the GDSC front end (a Flask app)  
+```
+cd ../
+docker buildx build --push --platform=linux/amd64,linux/arm64 -t $user/$name:$tag -f ./docker/$tag/Dockerfile .
+```
 
-```$ ./build.sh -r```
-
-Build the docker container for the front end and push to dockerhub.
+Note, you must be logged into docker hub as ```<user>``` for the push to work.
 
 ## For arm64 builds on x86-64
 

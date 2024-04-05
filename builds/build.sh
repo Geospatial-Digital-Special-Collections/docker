@@ -9,7 +9,7 @@ function  showhelp() {
   echo ''
   echo './build.sh'
   echo ''
-  echo 'Usage: $ ./build.sh -h[pondr]'
+  echo 'Usage: $ ./build.sh -h[pondr] [-u <user>] [-b <base name>] [--push] [--multi-platform]'
   echo ''
   echo 'Options: '
   echo '-h                  see the help message'
@@ -27,8 +27,9 @@ function  showhelp() {
   echo ''
   echo '--- example ---'
   echo ''
-  echo '# build the gdsc repository container and push to docker hub with as tibben/pg:gdsc'
-  echo '$ ./build.sh -r -u tibben -b pg --push '
+  echo '# Build the multi-platform gdsc repository container and push to docker hub as tibben/pg:gdsc.'
+  echo '# Assumes you are logged into dockerhub as tibben.'
+  echo '$ ./build.sh -r -u tibben -b pg --push --multi-platform'
   echo ''
 }
 
