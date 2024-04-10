@@ -43,7 +43,12 @@
         <div class="row">
           <div class="col-sm-9 ml-3 mt-2 mr-2">
             <b>Citation:</b> 
-            {% if document['dct_creator'] %}{{ document['dct_creator'][0] }}{% endif %}
+            {% if document['dct_creator'] %}
+              {% for creator in document['dct_creator'] %}
+                {% set creator = creator.split(';') %}
+                {{ creator[0] }}{% if loop.index < document['dct_creator']|length %}, {% endif %}
+              {% endfor %}
+            {% endif %}
             ({% if document['dct_issued'] %}{{ document['dct_issued'][0][:4] }}{% endif %}).
             {% if document['dct_title'] %}{{ document['dct_title'][0] }}{% endif %} [gis dataset].
             {% if document['dct_publisher'] %}{{ document['dct_publisher'][0] }}{% endif %}.

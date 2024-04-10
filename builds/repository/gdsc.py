@@ -4,6 +4,7 @@ from urllib.parse import urlencode
 import simplejson
 import logging
 import re
+from collections import OrderedDict
 
 app = Flask(__name__)
 log = logging.getLogger('werkzeug')
@@ -191,6 +192,7 @@ COLLECTIONS, COLLECTIONS_COUNT = query_solr(
 )
 keys = [item['Collection_ID'][0] for item in COLLECTIONS]
 COLLECTIONS = dict(zip(keys, COLLECTIONS))
+COLLECTIONS = OrderedDict(sorted(COLLECTIONS.items(), key=lambda i: i[0].lower()))
 
 ##
  # run the app if called from the command line
