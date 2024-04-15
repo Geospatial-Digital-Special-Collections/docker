@@ -98,6 +98,15 @@
         <div class="row border-top pt-2 pb-2">
           <div class="col-7 align-top">
             <h4 class="float-left">
+              {% if document['adms_representationTechnique'] %}
+                {% if document['adms_representationTechnique'][0] == 'raster' %}
+                  <img src="/static/raster.jpg" class="mb-1" style="max-width: 18px;">
+                {% else %}
+                  {% if document['locn_geometry'] %}
+                    <img src="/static/{{ document['locn_geometry'][0] }}.jpg" class="mb-1" style="max-width: 18px;">
+                  {% endif %}
+                {% endif %}
+              {% endif %}
               {% if document['dct_title'] %}
                 <a href="/detail/{{ document['gdsc_tablename'][0] }}?collection={{ collection }}&active={{ active }}&query={{ query }}">{{ document['dct_title'][0] }}</a>
               {% endif %}
@@ -121,7 +130,7 @@
                   {% if document['dct_creator'] %}
                     {% for creator in document['dct_creator'] %}
                       {% set creator = creator.split(';') %}
-                      {{ creator[0] }}{% if loop.index < document['dct_creator']|length %}, {% endif %}
+                      {{ creator[0] }}{{ ", " if not loop.last else "" }}
                     {% endfor %}
                   {% endif %}
                   {% if document['dct_issued'] %}({{ document['dct_issued'][0][:4] }}){% endif %}.
