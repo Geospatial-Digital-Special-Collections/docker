@@ -24,7 +24,6 @@ def query_solr(path,parameters):
 
     # send query to SOLR and gather paged results
     query_string  = urlencode(parameters).replace('-','+')
-    print(path,query_string)
     while numresults > len(results):
         connection = urlopen("{}{}".format(path, query_string))
         response = simplejson.load(connection)
@@ -59,24 +58,16 @@ def highlight_query(document,query):
                     if term.upper() not in attr.upper(): found = False
                 if found:
                     document['found_in'][field] = []
-                    print(field)
                     for term in terms:
-                        print(term)
                         document[field][i] = add_tags(document[field][i],term)
-                    print(document[field][i])
                     row = attr.split(';')
                     if len(row) > 1:
-                        print (row[0])
                         document[field][i] = add_tags(document[field][i],row[0])
-                        print(document[field][i])
                         for j in range(0,2):
                             for term in terms:
                                 row[j] = add_tags(row[j],term)
-                        print(row[0])
                         row[0] = add_tags(row[0],row[0])
-                        print(row[0])
                         attrs.append([row[0],row[1]])
-                        print(attrs)
             if len(attrs) > 0: document['found_in'][field] = attrs
 
     return document
@@ -100,7 +91,7 @@ def index():
         if 'ImmutableMultiDict' in str(type(request.form)): args = request.form.to_dict()
         else: args = request.form
         print(args)
-        query = args["searchTerm"]
+        query = re.sub(r'[\+\-\&\|\!\(\)\{\}\[\]\^\"\~\*\?\:\\]','',args["searchTerm"])
         if query == "None" or query == "": query = None
         collection = args["collection"]
         if 'active' in args:
@@ -183,6 +174,9 @@ def detail(name_id):
 
     return render_template('detail.html', name_id=name_id, document=document, referrer=request.args)
 
+##
+ # always get the list of collections for reference
+ ##
 COLLECTIONS, COLLECTIONS_COUNT = query_solr(
     'http://solr.gdsc:8983/solr/collections/select?wt=json&',
     {

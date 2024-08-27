@@ -42,7 +42,7 @@
         </div>
         <div class="row">
           <div class="col-sm-9 ml-3 mt-2 mr-2">
-            <b>Citation:</b> 
+            <b>Citation:</b>
             {% if document['dct_creator'] %}
               {% for creator in document['dct_creator'] %}
                 {% set creator = creator.split(';') %}
@@ -83,19 +83,19 @@
                           <th scope="col">Name</th>
                           <th scope="col">Description</th>
                           <th scope="col">Type</th>
-                          <th scope="col">Units</th>  
+                          <th scope="col">Units</th>
                         </tr>
                       </thead>
-                      <tbody>                                                                                                     
-                        {% for attr in document['gdsc_attributes'] %} 
+                      <tbody>
+                        {% for attr in document['gdsc_attributes'] %}
                         <tr>
-                          <td>{{ attr[0] }}</td>                            
-                          <td>{{ attr[1] }}</td>                     
-                          <td>{{ attr[3] }}</td>                            
-                          <td>{{ attr[4] }}</td>                           
+                          <td>{{ attr[0] }}</td>
+                          <td>{{ attr[1] }}</td>
+                          <td>{{ attr[3] }}</td>
+                          <td>{{ attr[4] }}</td>
                         </tr>
                         {% endfor %}
-                      </tbody>  
+                      </tbody>
                     </table>
                     </div></div></div>
                     </div>
@@ -107,7 +107,11 @@
             <span class="mt-4 d-block">
               <b>Open Geospatial Consortium Standards:</b>
               {% if "Raster" not in document['dct_type'][0] %}
-                <a href="https://gdsc.idsc.miami.edu/vector/public.{{ document['gdsc_tablename'][0] }}.html" target="_blank">vector tiles</a>
+                <a href="https://gdsc.idsc.miami.edu/vector/public.{{ document['gdsc_tablename'][0] }}.html" target="_blank">dynamic vector tiles</a> |
+              {% endif %}
+              {% if document['gdsc_tile_url'] %}
+                <a href="{{ document['gdsc_tile_url'][0] }}{{ document['gdsc_tile_url'][2] }}" target="_blank">{{ document['dct_type'][0].split()[0].lower() }} tiles</a>
+                 | {{ document['dct_type'][0].split()[0].lower() }} tile url: {{ document['gdsc_tile_url'][0] }}{{ document['gdsc_tile_url'][1] }}
               {% endif %}
               | WMS (coming soon) | WFS (coming soon)
             </span>
