@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, send_from_directory, status
 from urllib.request import urlopen
 from urllib.parse import urlencode
 import simplejson
@@ -172,7 +172,29 @@ def detail(name_id):
     if 'gdsc_attributes' in document:
         document['gdsc_attributes'] = [attr.split(';') for attr in document['gdsc_attributes']]
 
+    if 'gdsc_derivatives' in document:
+        document['gdsc_derived'] = [attr.split(';') for attr in document['gdsc_derived']]
+
     return render_template('detail.html', name_id=name_id, document=document, referrer=request.args)
+
+##
+ # provide download api for derivate files
+ ##
+@app.route('/download/<name_id>', methods=["GET","POST"])
+def download(name_id):
+
+    if 'ImmutableMultiDict' in str(type(request.args)): args = request.args.to_dict()
+    else: args = request.args
+
+    if 'format' in args:
+        if args['format'] in ["sql","shp","geotiff"]:
+            return send_from_directory(
+                f"/data/{name_id}/derived/",
+                f"{name_id}.{args['format']}.tar.gz",
+                as_attachment=True
+            )
+
+    return "File not found", status.HTTP_400_BAD_REQUEST
 
 ##
  # always get the list of collections for reference
@@ -192,4 +214,4 @@ COLLECTIONS = OrderedDict(sorted(COLLECTIONS.items(), key=lambda i: i[0].lower()
  # run the app if called from the command line
  ##
 if __name__ == '__main__':
-    app.run(host='0.0.0.0',debug=True,use_reloader=True)/gdsc
+    app.run(host='0.0.0.0',debug=True,use_reloader=True)/gdsc/gdsc

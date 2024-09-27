@@ -104,6 +104,43 @@
               </div>
             </div>
             {% endif %}
+            {% if document['gdsc_derived'] and document['gdsc_derived']|length > 0 %}
+            <div class="accordion mt-2" id="downloads-container">
+              <div class="accordion-item">
+                <div class="accordion-header">
+                  <a href="downloads" data-bs-toggle="collapse" data-bs-target="#downloads" aria-expanded="false" aria-controls="downloads">
+                    <b>Downloads:</b>
+                  </a>
+                </div>
+                <div id="downloads" class="accordion-collapse collapse" data-bs-parent="#downloads-container">
+                  <div class="accordion-body">
+                    <div class="container mt-2 text-break">
+                    <div class="container-fluid"><div class="row"><div class="wrapScroll">
+                    <table class="table table_morecondensed table-striped w-auto" style="font-size: 0.75em;">
+                      <thead>
+                        <tr>
+                          <th scope="col">Type</th>
+                          <th scope="col">URL</th>
+                          <th scope="col">Size</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {% for download in document['gdsc_derived'] %}
+                        <tr>
+                          <td>{{ download }}</td>
+                          <td><a href="/download/{{ document['gdsc_tablename'][0] }}?format=sql">{{ document['gdsc_tablename'][0] }}.{{ download }}.tar.bz</a></td>
+                          <td>TBD</td>
+                        </tr>
+                        {% endfor %}
+                      </tbody>
+                    </table>
+                    </div></div></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            {% endif %}
             <span class="mt-4 d-block">
               <b>Open Geospatial Consortium Standards:</b>
               {% if "Raster" not in document['dct_type'][0] %}

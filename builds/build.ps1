@@ -69,8 +69,8 @@ for ( $i = 0; $i -lt $args.count; $i++ ) {
         "-o" { dedup; $tag="osgeo"; Break }
         "-d" { dedup; $tag="degaussAPI"; Break }
         "-r" { dedup; $tag="repository"; Break }
-        "-u" { p=user; Break }
-        "-b" { p=name; Break }
+        "-u" { $p=$user; Break }
+        "-b" { $p=$name; Break }
         default { dupfail; Break }
   		}
   		Break
