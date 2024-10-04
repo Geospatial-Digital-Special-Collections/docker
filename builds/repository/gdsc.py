@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, send_from_directory, status
+from flask import Flask, render_template, request, send_from_directory
 from urllib.request import urlopen
 from urllib.parse import urlencode
 import simplejson
@@ -194,7 +194,7 @@ def download(name_id):
                 as_attachment=True
             )
 
-    return "File not found", status.HTTP_400_BAD_REQUEST
+    return "File not found", 400
 
 ##
  # always get the list of collections for reference
@@ -214,4 +214,4 @@ COLLECTIONS = OrderedDict(sorted(COLLECTIONS.items(), key=lambda i: i[0].lower()
  # run the app if called from the command line
  ##
 if __name__ == '__main__':
-    app.run(host='0.0.0.0',debug=True,use_reloader=True)/gdsc/gdsc
+    app.run(host='0.0.0.0',debug=True,use_reloader=True)
