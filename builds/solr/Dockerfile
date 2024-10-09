@@ -10,5 +10,5 @@ RUN mkdir -p /ohdsi/data && \
     mkdir -p /ohdsi/collections
 COPY ./metadata/data/* /ohdsi/data
 COPY ./metadata/collections/* /ohdsi/collections
-RUN chown -R solr:solr /metadata
+RUN chown -R solr:solr /ohdsi
 USER solr
