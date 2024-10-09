@@ -12,4 +12,4 @@ RUN pip install --no-cache-dir --upgrade -r requirements.txt
 COPY ./ ./
 CMD ["sleep","infinity"]
 # CMD ["nohup", "python", "./ohdsi.py", "&"]
-# CMD ["uvicorn", "ohdsi:app", "--host", "0.0.0.0", "--port", "5150"]
+# CMD ["uvicorn", "ohdsi:app", "--host", "0.0.0.0", "--port", "5000"]

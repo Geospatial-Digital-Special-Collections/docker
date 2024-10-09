@@ -9,7 +9,7 @@ app = Flask(__name__)
 log = logging.getLogger('werkzeug')
 log.disabled = True
 
-BASE_PATH='http://gaia-solr:8983/solr/gaia/select?wt=json&'
+BASE_PATH='http://gaia-solr:8983/solr/dcat/select?wt=json&'
 SNIP_LENGTH = 180
 QUERY_FIELDS = ['dct_title','dct_keywords','dct_description','gdsc_attributes']
 
@@ -161,10 +161,10 @@ def load(variable_id):
 
     query_parameters = {"variable_id": variable_id}
     query_string  = urlencode(query_parameters) 
-    connection = urlopen("http://gaia-r:8000/load?{}".format(query_string))                                             
+    connection = urlopen("http://gaia-core:8000/load?{}".format(query_string))                                             
     response = simplejson.load(connection)
 
     return response
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0',debug=True,use_reloader=True,port=5150)/ohdsi
+    app.run(host='0.0.0.0',debug=True,use_reloader=True,port=5000)/ohdsi
