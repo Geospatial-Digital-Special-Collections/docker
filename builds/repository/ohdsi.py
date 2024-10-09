@@ -198,5 +198,22 @@ def load(variable_id):
 
     return response
 
+##
+ # always get the list of collections for reference
+ ##
+COLLECTIONS, COLLECTIONS_COUNT = query_solr(
+    'http://solr.gdsc:8983/solr/collections/select?wt=json&',
+    {
+      "q.op": "OR",
+      "q": "Status:published"
+    }
+)
+keys = [item['Collection_ID'][0] for item in COLLECTIONS]
+COLLECTIONS = dict(zip(keys, COLLECTIONS))
+COLLECTIONS = OrderedDict(sorted(COLLECTIONS.items(), key=lambda i: i[0].lower()))
+
+##
+ # run the app if called from the command line
+ ##
 if __name__ == '__main__':
     app.run(host='0.0.0.0',debug=True,use_reloader=True,port=5000)/ohdsi
