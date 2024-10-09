@@ -100,6 +100,7 @@ def index():
         else: args = request.form
         print(args)
         query = re.sub(r'[\+\-\&\|\!\(\)\{\}\[\]\^\"\~\*\?\:\\]','',args["searchTerm"])
+        query = re.sub(r'[/]','\\/',query)
         if query == "None" or query == "": query = None
         collection = args["collection"]
         if 'active' in args:

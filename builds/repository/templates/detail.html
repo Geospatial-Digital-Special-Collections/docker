@@ -135,31 +135,47 @@
                     <b>attributes:</b>
                   </a>
                 </div>
-                <div id="attributes" class="accordion-collapse" data-bs-parent="#attributes-container">
+                <div id="attributes" class="accordion-collapse collapse" data-bs-parent="#attributes-container">
                   <div class="accordion-body">
                     <div class="container mt-2 text-break">
-                      <div class="row border-bottom border-dark">
-                        <div class="col-1">Status</div>
-                        <div class="col-1">Gaia ID</div>
-                        <div class="col-2">Name</div>
-                        <div class="col-6">Description</div>
-                        <div class="col-6">Type</div>
-                        <div class="col-6">Start Date</div>
-                        <div class="col-6">End Date</div>
-                        <div class="col-6">Concept ID</div>
-                      </div>    
-                      {% for attr in document['gdsc_attributes'] %}
-                      <div class="row grid-color">
-                        <div class="col-1"><div class="none"><div id="variable-{{ attr[9] }}" class="circle red-fill" onclick="javascript:loadvar({{ attr[9] }});"></div></div></div>
-                        <div class="col-1">{{ attr[9] }}</div>
-                        <div class="col-2">{{ attr[0] }}</div>
-                        <div class="col-6">{{ attr[1] }}</div>
-                        <div class="col-6">{{ attr[3] }}</div>
-                        <div class="col-1">{% if attr[6] %}{{ attr[6] }}{% endif %}</div>
-                        <div class="col-2">{% if attr[7] %}{{ attr[7] }}{% endif %}</div>
-                        <div class="col-6">{% if attr[8] %}{{ attr[8] }}{% endif %}</div>
-                      </div>
-                      {% endfor %}
+                    <div class="container-fluid"><div class="row"><div class="wrapScroll">
+                    <table class="table table_morecondensed table-striped w-auto" style="font-size: 0.75em;">
+                      <thead>
+                        <tr>
+                          <th scope="col">Status</th>
+                          <th scope="col">Gaia ID</th>
+                          <th scope="col">Name</th>
+                          <th scope="col">Description</th>
+                          <th scope="col">Type</th>
+                          <th scope="col">Start Date</th>
+                          <th scope="col">End Date</th>
+                          <th scope="col">Concept ID</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {% for attr in document['gdsc_attributes'] %}
+                        <tr>
+                          <td>
+                            {% if attr[9] != "" %}
+                            <div class="none">
+                              <div id="variable-{{ attr[9] }}" class="circle red-fill" onclick="javascript:loadvar({{ attr[9] }});"></div>
+                            </div>
+                            {% else %}
+                              &nbsp;
+                            {% endif %}
+                          </td>
+                          <td>{{ attr[9] }}</td>
+                          <td>{{ attr[0] }}</td>
+                          <td>{{ attr[1] }}</td>
+                          <td>{{ attr[3] }}</td>
+                          <td>{% if attr[6] %}{{ attr[6] }}{% endif %}</td>
+                          <td>{% if attr[7] %}{{ attr[7] }}{% endif %}</td>
+                          <td>{% if attr[8] %}{{ attr[8] }}{% endif %}</td>
+                        </tr>
+                        {% endfor %}
+                      </tbody>
+                    </table>
+                    </div></div></div>
                     </div>
                   </div>
                 </div>
