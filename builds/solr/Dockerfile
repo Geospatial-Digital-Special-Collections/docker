@@ -6,9 +6,9 @@ COPY ./metadata/solr/* /var/solr/data
 
 # copy the collection metadata
 USER root
-RUN mkdir -p /ohdsi/data && \
-    mkdir -p /ohdsi/collections
-COPY ./metadata/data/* /ohdsi/data
-COPY ./metadata/collections/* /ohdsi/collections
-RUN chown -R solr:solr /ohdsi
+RUN mkdir -p /gaia/data && \
+    mkdir -p /gaia/collections
+COPY ./metadata/data/* /gaia/data
+COPY ./metadata/collections/* /gaia/collections
+RUN chown -R solr:solr /gaia
 USER solr
