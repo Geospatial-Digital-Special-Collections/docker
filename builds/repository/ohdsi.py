@@ -100,7 +100,6 @@ def index():
         else: args = request.form
         print(args)
         query = re.sub(r'[\+\-\&\|\!\(\)\{\}\[\]\^\"\~\*\?\:\\]','',args["searchTerm"])
-        query = re.sub(r'[/]','\\/',query)
         if query == "None" or query == "": query = None
         collection = args["collection"]
         if 'active' in args:
@@ -112,7 +111,7 @@ def index():
         if collection == 'all' or collection == '*':
             collection = '*'
             q = ""
-        query_parameters = {"q": "gdsc_collections:*" + collection}
+        query_parameters = {"q": "gdsc_collections:" + collection}
         if query is not None:
             qf += ' '.join(QUERY_FIELDS)
             if len(q) > 0: q += " "
