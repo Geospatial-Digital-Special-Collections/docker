@@ -2,7 +2,7 @@
 FROM solr
 
 # copy the solr indices
-COPY ./metadata/solr/* /var/solr/data
+COPY ./metadata/solr/ /var/solr/data
 
 # copy the collection metadata
 USER root
