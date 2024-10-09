@@ -5,8 +5,7 @@ FROM solr
 COPY ./metadata/solr/* /var/solr/data
 
 # copy the collection metadata
-RUN mkdir /var/ohdsi/metadata && \
-    mkdir /var/ohdsi/metadata/data && \
-    mkdir /var/ohdsi/metadata/collections
-COPY ./metadata/data/* /var/ohdsi/metadata/data
-COPY ./metadata/collections/* /var/ohdsi/metadata/collections
+RUN mkdir -p /var/ohdsi/data && \
+    mkdir -p /var/ohdsi/collections
+COPY ./metadata/data/* /var/ohdsi/data
+COPY ./metadata/collections/* /var/ohdsi/collections
