@@ -135,7 +135,7 @@
                     <b>attributes:</b>
                   </a>
                 </div>
-                <div id="attributes" class="accordion-collapse collapse" data-bs-parent="#attributes-container">
+                <div id="attributes" class="accordion-collapse" data-bs-parent="#attributes-container">
                   <div class="accordion-body">
                     <div class="container mt-2 text-break">
                     <div class="container-fluid"><div class="row"><div class="wrapScroll">
@@ -156,9 +156,9 @@
                         {% for attr in document['gdsc_attributes'] %}
                         <tr>
                           <td>
-                            {% if attr[9] != "" %}
+                            {% if attr[9]|length > 0 %}
                             <div class="none">
-                              <div id="variable-{{ attr[9] }}" class="circle red-fill" onclick="javascript:loadvar({{ attr[9] }});"></div>
+                              <div id="variable-{{ attr[9] }}" class="circle red-fill" onclick="javascript:loadvar('{{ attr[9] }}');"></div>
                             </div>
                             {% else %}
                               &nbsp;
