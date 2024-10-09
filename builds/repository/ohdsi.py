@@ -202,7 +202,7 @@ def load(variable_id):
  # always get the list of collections for reference
  ##
 COLLECTIONS, COLLECTIONS_COUNT = query_solr(
-    'http://solr.gdsc:8983/solr/collections/select?wt=json&',
+    'http://gaia-solr:8983/solr/collections/select?wt=json&',
     {
       "q.op": "OR",
       "q": "Status:published"
