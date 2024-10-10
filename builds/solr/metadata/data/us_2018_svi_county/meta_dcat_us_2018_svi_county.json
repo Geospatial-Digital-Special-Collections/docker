@@ -25,14 +25,14 @@
   "gdsc:functions": ["gdsc_get_attributes"],
   "gdsc:analyticConformsTo": "EPSG:6350",
   "gdsc:derived": ["sql"],
-  "gdsc:sponsor": ["IDSC;https://idsc.miami.edu", "Library;https://www.library.miami.edu"],
+  "gdsc:sponsor": ["TuftsCTSI;https://www.tuftsctsi.org/", "IDSC;https://idsc.miami.edu", "Library;https://www.library.miami.edu"],
   "dcat:downloadURL": "https://svi.cdc.gov/Documents/Data/2018/db/states_counties/SVI_2018_US_county.zip",
   "gdsc:tablename": "us_2018_svi_county",
   "gdsc:up": "true",
   "gdsc:podID": "postgis-gtqfomprafjglcnk",
-  "dct:modified": "2024-10-08 21:55:49",
+  "dct:modified": "2024-10-09 20:36:38",
   "dct:accrualPeriodicity": "Never",
-  "spdx:checksum": "c1ba693e0433acab0e8543f1ab59bdff0dbc49b21f42d1427aa484050ca17e34",
+  "spdx:checksum": "a673afcea2d5ff377e26a8dfd2526a6ec97798fab2d5dc6facc477427e3e1c16",
   "dct:extent": ["10300637", "9.9M"],
   "dcat:bbox": "POLYGON((-179.14890899999997 18.91035632663017,-179.14890899999997 71.36516200000005,179.77847011250086 71.36516200000005,179.77847011250086 18.91035632663017,-179.14890899999997 18.91035632663017))"
 }

@@ -5,7 +5,7 @@
   "Description": "Datasets curated for direct use in the OHDSI/GIS Gaia toolchain.",
   "Language": "en",
   "Collection_ID": "OHDSI/GIS",
-  "Funders": "IDSC;https://idsc.miami.edu|Library;https://www.library.miami.edu",
+  "Funders": "TuftsCTSI;https://www.tuftsctsi.org/|IDSC;https://idsc.miami.edu|Library;https://www.library.miami.edu",
   "Logo": "OHDSI-wide.png",
   "Count": 3,
   "Status": "published"

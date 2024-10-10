@@ -191,7 +191,7 @@ def detail(name_id):
 @app.route('/load/<variable_id>', methods=["GET","POST"])
 def load(variable_id):
 
-    query_parameters = {"variable_id": variable_id[:5]}
+    query_parameters = {"variable_id": variable_id[5:]}
     query_string  = urlencode(query_parameters) 
     connection = urlopen("http://gaia-core:8000/load?{}".format(query_string))                                             
     response = simplejson.load(connection)
