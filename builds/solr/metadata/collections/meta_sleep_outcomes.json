@@ -1,10 +1,11 @@
 {
   "Title": "Miami Dade Sleep Outcomes",
+  "Creator": "Azizi Seixas;Personal;Seixas;Azizi;https://orcid.org/0000-0003-0843-2679;ORCID;https://orcid.org/;University of Miami;https://ror.org/02dgjyy92;ROR;https://ror.org/|Sadeaqua Scott;Personal;Scott;Sadeaqua;;;;University of Miami;https://ror.org/02dgjyy92;ROR;https://ror.org/",
   "Publisher": "Frost Institute for Data Science and Computing, University of Miami;https://ror.org/02dgjyy92;ROR;https://ror.org/|University of Miami Libraries, University of Miami;https://ror.org/02dgjyy92;ROR;https://ror.org/",
   "Description": "Datasets used in the study of Miami Dade sleep outocmes research.",
   "Language": "en",
   "Collection_ID": "Sleep Outcomes",
   "Funders": "IDSC;https://idsc.miami.edu|Library;https://www.library.miami.edu",
-  "Count": 5,
-  "Status": "draft"
+  "Count": 16,
+  "Status": "published"
 }

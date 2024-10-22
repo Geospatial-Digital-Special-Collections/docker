@@ -29,7 +29,7 @@
   "gdsc:tablename": "mdc_metro_mover_stations",
   "gdsc:up": "true",
   "gdsc:podID": "postgis-0rslypd3hf0y1v7e",
-  "dct:modified": "2024-10-03 15:51:29",
+  "dct:modified": "2024-10-22 11:25:23",
   "dct:accrualPeriodicity": "1 year",
   "spdx:checksum": "TBD",
   "dct:extent": ["9670", "9.5K"]

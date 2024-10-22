@@ -29,7 +29,7 @@
   "gdsc:tablename": "mdc_private_schools",
   "gdsc:up": "true",
   "gdsc:podID": "postgis-xieuyynp6d32duqs",
-  "dct:modified": "2024-10-03 15:52:38",
+  "dct:modified": "2024-10-22 11:26:41",
   "dct:accrualPeriodicity": "1 year",
   "spdx:checksum": "TBD",
   "dct:extent": ["1664514", "1.6M"]

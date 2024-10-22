@@ -29,7 +29,7 @@
   "gdsc:tablename": "mdc_charter_schools",
   "gdsc:up": "true",
   "gdsc:podID": "postgis-2a5p77gqe5d1z3av",
-  "dct:modified": "2024-10-03 15:48:38",
+  "dct:modified": "2024-10-22 11:22:39",
   "dct:accrualPeriodicity": "1 year",
   "spdx:checksum": "TBD",
   "dct:extent": ["142358", "140K"]

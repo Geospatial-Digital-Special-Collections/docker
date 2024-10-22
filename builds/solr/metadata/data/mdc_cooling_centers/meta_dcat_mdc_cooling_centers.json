@@ -29,9 +29,9 @@
   "gdsc:tablename": "mdc_cooling_centers",
   "gdsc:up": "true",
   "gdsc:podID": "postgis-0k62fqc4f4p3vmm3",
-  "dct:modified": "2024-10-03 15:48:47",
+  "dct:modified": "2024-10-22 11:22:50",
   "dct:accrualPeriodicity": "As Needed",
-  "spdx:checksum": "970ce7081e6cd65e1c68d721afd690b2761ead3f28c190cc9bd8f0cb0b16dac9",
+  "spdx:checksum": "49f4166864358fe6f2a2426a68eac6a2b34fbee21ac3a8a1d971dd639521341d",
   "dct:extent": ["27609", "27K"],
   "dcat:bbox": "POLYGON((-80.4416418992557 25.5063117198944,-80.4416418992557 25.9603968467233,-80.1207136561832 25.9603968467233,-80.1207136561832 25.5063117198944,-80.4416418992557 25.5063117198944))"
 }

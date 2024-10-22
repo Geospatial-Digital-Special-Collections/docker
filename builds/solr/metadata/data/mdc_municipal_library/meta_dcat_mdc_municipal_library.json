@@ -30,7 +30,7 @@
   "gdsc:tablename": "mdc_municipal_library",
   "gdsc:up": "true",
   "gdsc:podID": "postgis-qchfalo4yhyplj55",
-  "dct:modified": "2024-10-03 15:51:35",
+  "dct:modified": "2024-10-22 11:25:29",
   "dct:accrualPeriodicity": "1 Year",
   "spdx:checksum": "TBD",
   "dct:extent": ["11008", "11K"]

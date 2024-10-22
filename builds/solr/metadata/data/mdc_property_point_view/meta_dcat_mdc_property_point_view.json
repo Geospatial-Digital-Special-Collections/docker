@@ -31,8 +31,8 @@
   "gdsc:tablename": "mdc_property_point_view",
   "gdsc:up": "true",
   "gdsc:podID": "postgis-vs14onna2rztkj2u",
-  "dct:modified": "2024-10-03 15:54:30",
+  "dct:modified": "2024-10-22 11:28:24",
   "dct:accrualPeriodicity": "As Needed",
-  "spdx:checksum": "3e128e5380f934bf7f76cb9b87f229fb77d98f9d93db4811af890af3a6ced22b",
+  "spdx:checksum": "45555b32ef1faf51caff734602b2a1d3d84e489d06c49ded7ccacaa3908e6cfd",
   "dct:extent": ["1080589745", "1.1G"]
 }

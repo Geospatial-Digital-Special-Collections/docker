@@ -30,8 +30,8 @@
   "gdsc:tablename": "mdc_sexual_predators",
   "gdsc:up": "true",
   "gdsc:podID": "postgis-tt1sk6l8tqln1op3",
-  "dct:modified": "2024-10-03 15:55:00",
+  "dct:modified": "2024-10-22 11:28:53",
   "dct:accrualPeriodicity": "1 day",
-  "spdx:checksum": "c7119931e496154e596eeb72657bab2db61a135ff288a4a0ec939e808b0ec973",
+  "spdx:checksum": "6c73531bdc16d9b3d4f05b29650a3b4cea99b26ecde853f6a80a780bcd700588",
   "dct:extent": ["1047460", "1023K"]
 }

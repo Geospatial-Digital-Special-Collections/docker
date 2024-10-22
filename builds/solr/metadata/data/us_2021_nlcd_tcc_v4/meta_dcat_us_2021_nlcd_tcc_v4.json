@@ -27,7 +27,7 @@
   "gdsc:tablename": "us_2021_nlcd_tcc_v4",
   "gdsc:up": "false",
   "gdsc:podID": "postgis-rda3w1tuj46wvf4t",
-  "dct:modified": "2024-10-03 15:55:23",
+  "dct:modified": "2024-10-22 11:29:40",
   "dct:accrualPeriodicity": "Never",
   "spdx:checksum": "TBD",
   "dct:extent": ["3740553331", "3.5G"]

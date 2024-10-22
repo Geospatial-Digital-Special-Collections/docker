@@ -30,8 +30,8 @@
   "gdsc:tablename": "fl_us_highways",
   "gdsc:up": "true",
   "gdsc:podID": "postgis-i0s0kjcd4vm8nk3a",
-  "dct:modified": "2024-10-03 15:42:39",
+  "dct:modified": "2024-10-22 11:15:46",
   "dct:accrualPeriodicity": "1 week",
-  "spdx:checksum": "0893c67d6ee6a46e2366b435dbad38756966725924097a8e288b131309c46dd1",
+  "spdx:checksum": "06d40db69f9d6dd32e8d0282669f16546c70bfea8bf3e99ca79ec3b1fc509335",
   "dct:extent": ["1935245", "1.9M"]
 }

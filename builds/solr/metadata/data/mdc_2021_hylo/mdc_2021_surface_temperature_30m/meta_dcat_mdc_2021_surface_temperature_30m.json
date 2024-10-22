@@ -19,7 +19,7 @@
   "prov:action": "#########\n# GDSC ETL is performed in two steps: shell script to ETL data into postgres\n# and then additional transformations with SQL in postGIS (if needed).\n####\n\n#########\n# Step 1 - bash script (pseudo code)\n####\n\n# create directory structure and move into it\nmkdir -p /data/mdc_2021_hylo/{download,mdc_2021_surface_temperature_30m/etl} && cd /data/mdc_2021_hylo\n\n# set update flag based on last update and update frequency\ndo_update=0 if date() < last_update + update_frequency else do_update = 1\n\n# download if update flag is set:\nif do_update == 1 then\n  wget -O download/mdc_2021_hylo.zip 'https://scholarship.miami.edu/view/fileRedirect?instCode=01UOML_INST&filePid=13395678880002976&download=true'\n\n# unzip to download directory if update flag is set\nif do_update == 1 then\n  unzip -d download download/mdc_2021_hylo.zip && rm download/mdc_2021_hylo.zip\n\n# load raster into postGIS with:\n    raster2pgsql -s 3857 -d -C -I GeoTIFF_Rasters/Surface_Temperature_30m.tif -F -t 256x256 mdc_2021_surface_temperature_30m > load_raster.sql\npsql <connection options> < load_raster.sql\nrm load_raster.sql\n\ncd /data/mdc_2021_hylo/mdc_2021_surface_temperature_30m/\nmkdir -p derived\n# Create pg_dump and downloadable zip of table in derivate directory \npg_dump -d $POSTGRES_DB -U $POSTGRES_USER -p $POSTGRES_PORT -h postgis-k36gj44h1g2r1h6y -t mdc_2021_surface_temperature_30m > derived/mdc_2021_surface_temperature_30m.sql\ntar -czf derived/mdc_2021_surface_temperature_30m.sql.tar.gz meta_dcat_mdc_2021_surface_temperature_30m.json -C derived mdc_2021_surface_temperature_30m.sql\n",
   "prov:wasGeneratedBy": "GDSC automation (see Process Step)",
   "dcat:contactPoint": ["Timothy Norris", "Librarian Associate Professor", "University of Miami Libraries, Frost Institute for Data Science and Computing", "txn60@miami.edu"],
-  "gdsc:collections": ["Climate Change", "Vulnerability", "CAMP", "DVMT"],
+  "gdsc:collections": ["Climate Change", "Vulnerability", "CAMP", "DVMT", "MAP", "Sleep Outcomes"],
   "gdsc:functions": ["gdsc_zonal_statistics"],
   "gdsc:analyticConformsTo": "EPSG:2236",
   "gdsc:derived": ["sql"],
@@ -28,8 +28,8 @@
   "gdsc:tablename": "mdc_2021_surface_temperature_30m",
   "gdsc:up": "true",
   "gdsc:podID": "postgis-k36gj44h1g2r1h6y",
-  "dct:modified": "2024-10-03 15:46:04",
+  "dct:modified": "2024-10-22 11:19:31",
   "dct:accrualPeriodicity": "Never",
-  "spdx:checksum": "13a2d932c21a2836b1daf64ec12359c377d030fb26f24755a0659547ff34986c",
+  "spdx:checksum": "292a108a03b6280823cb619c7da7d42652e0257c6618763aeb0ce1b7e72b0cc3",
   "dct:extent": ["533778541", "510M"]
 }

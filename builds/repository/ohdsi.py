@@ -115,7 +115,7 @@ def index():
         if query is not None:
             qf += ' '.join(QUERY_FIELDS)
             if len(q) > 0: q += " "
-            q += query
+            q += f"*{query}*"
         if active is not None:
             if qf != "gdsc_collections ": qf += " "
             qf += "gdsc_up"

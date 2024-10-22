@@ -29,7 +29,7 @@
   "gdsc:tablename": "mdc_public_schools",
   "gdsc:up": "true",
   "gdsc:podID": "postgis-49bpk5hsqh68zlq0",
-  "dct:modified": "2024-10-03 15:54:39",
+  "dct:modified": "2024-10-22 11:28:32",
   "dct:accrualPeriodicity": "6 months",
   "spdx:checksum": "TBD",
   "dct:extent": ["281963", "276K"]

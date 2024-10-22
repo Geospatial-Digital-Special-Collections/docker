@@ -31,8 +31,8 @@
   "gdsc:tablename": "mdc_county_library",
   "gdsc:up": "true",
   "gdsc:podID": "postgis-zw0vpqotapompcl3",
-  "dct:modified": "2024-10-03 15:48:50",
+  "dct:modified": "2024-10-22 11:22:52",
   "dct:accrualPeriodicity": "1 year",
-  "spdx:checksum": "6b19c061cace06afd912eaf4b04eb831b40eabf8005eef9065a2e263fca4b8c7",
+  "spdx:checksum": "44e0727ac1ae28182e001a023dd30e46c917afd357365ed696a086733fc6e80a",
   "dct:extent": ["41572", "41K"]
 }

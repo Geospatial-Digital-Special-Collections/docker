@@ -28,7 +28,7 @@
   "gdsc:tablename": "mdc_municipal_boundary",
   "gdsc:up": "true",
   "gdsc:podID": "postgis-dn7tn2p5cfahc611",
-  "dct:modified": "2024-10-03 15:51:34",
+  "dct:modified": "2024-10-22 11:25:28",
   "dct:accrualPeriodicity": "As Needed",
   "spdx:checksum": "TBD",
   "dct:extent": ["1248580", "1.2M"],

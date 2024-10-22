@@ -28,7 +28,7 @@
   "gdsc:tablename": "fl_2022_svi_tract",
   "gdsc:up": "true",
   "gdsc:podID": "postgis-a9524noxszv23wer",
-  "dct:modified": "2024-10-03 15:42:28",
+  "dct:modified": "2024-10-22 11:15:32",
   "dct:accrualPeriodicity": "Never",
   "spdx:checksum": "TBD",
   "dct:extent": ["6871472", "6.6M"],

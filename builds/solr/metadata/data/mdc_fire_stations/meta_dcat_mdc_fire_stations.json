@@ -31,8 +31,8 @@
   "gdsc:tablename": "mdc_fire_stations",
   "gdsc:up": "true",
   "gdsc:podID": "postgis-wlic19uc4d5z8b83",
-  "dct:modified": "2024-10-03 15:48:57",
+  "dct:modified": "2024-10-22 11:23:00",
   "dct:accrualPeriodicity": "1 year",
-  "spdx:checksum": "36dddeb753659e4e8ea7cfda4c302b1d73595adb6b894703b7bb1f11cd883515",
+  "spdx:checksum": "9cf7c3b0988d1f5b501969246cbc24db9c62362dfd635131148cbf6c7b1e94ca",
   "dct:extent": ["30457", "30K"]
 }

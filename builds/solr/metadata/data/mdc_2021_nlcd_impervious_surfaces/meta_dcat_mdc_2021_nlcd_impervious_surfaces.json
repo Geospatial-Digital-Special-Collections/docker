@@ -21,7 +21,7 @@
   "prov:wasGeneratedBy": "GDSC automation (see Process Step)",
   "dcat:contactPoint": ["Timothy Norris", "Librarian Associate Professor", "University of Miami Libraries, Frost Institute for Data Science and Computing", "txn60@miami.edu"],
   "gdsc:tileUrl": ["https://gdsc.idsc.miami.edu/tiles/2021_miami_dade_impervious_nlcd/", "{z}/{x}/{y}.png", "leaflet.html"],
-  "gdsc:collections": ["CAMP", "Little River Climate Resilience", "Miami-Dade Climate Resilience"],
+  "gdsc:collections": ["CAMP", "Little River Climate Resilience", "Miami-Dade Climate Resilience", "MAP"],
   "gdsc:functions": ["gdsc_zonal_statistics"],
   "gdsc:analyticConformsTo": "EPSG:2236",
   "gdsc:sponsor": ["IDSC;https://idsc.miami.edu", "Library;https://www.library.miami.edu"],
@@ -30,7 +30,7 @@
   "dcat:qualifiedRelation": ["us_2021_nlcd_impervious_surfaces", "fl_2022_tl_cousub"],
   "gdsc:up": "true",
   "gdsc:podID": "postgis-uei3wjc9acxrruw8",
-  "dct:modified": "2024-10-03 15:46:12",
+  "dct:modified": "2024-10-22 11:19:46",
   "dct:accrualPeriodicity": "Never",
   "spdx:checksum": "TBD",
   "dct:extent": ["8513550", "8.2M"]

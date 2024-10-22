@@ -26,7 +26,7 @@
   "gdsc:tablename": "sea_2022_slosh_cat1",
   "gdsc:up": "false",
   "gdsc:podID": "postgis-f5ud61lq4es2soa2",
-  "dct:modified": "2024-10-03 15:55:08",
+  "dct:modified": "2024-10-22 11:29:03",
   "dct:accrualPeriodicity": "As Needed",
   "spdx:checksum": "TBD",
   "dct:extent": ["7109788233", "6.7G"],

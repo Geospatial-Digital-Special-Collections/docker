@@ -30,9 +30,9 @@
   "gdsc:tablename": "us_2018_svi_county",
   "gdsc:up": "true",
   "gdsc:podID": "postgis-gtqfomprafjglcnk",
-  "dct:modified": "2024-10-09 20:36:38",
+  "dct:modified": "2024-10-22 11:29:26",
   "dct:accrualPeriodicity": "Never",
-  "spdx:checksum": "a673afcea2d5ff377e26a8dfd2526a6ec97798fab2d5dc6facc477427e3e1c16",
+  "spdx:checksum": "d96ab8027d7f0b1720c12afadceb291c6ec49a2753e1e479edf007f96ebd1087",
   "dct:extent": ["10300637", "9.9M"],
   "dcat:bbox": "POLYGON((-179.14890899999997 18.91035632663017,-179.14890899999997 71.36516200000005,179.77847011250086 71.36516200000005,179.77847011250086 18.91035632663017,-179.14890899999997 18.91035632663017))"
 }

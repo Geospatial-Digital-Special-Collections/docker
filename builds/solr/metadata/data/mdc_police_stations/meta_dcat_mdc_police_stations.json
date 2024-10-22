@@ -31,8 +31,8 @@
   "gdsc:tablename": "mdc_police_stations",
   "gdsc:up": "true",
   "gdsc:podID": "postgis-v57591ytbm192la0",
-  "dct:modified": "2024-10-03 15:52:37",
+  "dct:modified": "2024-10-22 11:26:39",
   "dct:accrualPeriodicity": "As Needed",
-  "spdx:checksum": "9f4e9d48245318fd2df4023cdf81e13c7a87a91d69a8f0d1d76a3214df96a83d",
+  "spdx:checksum": "28ec3a0064af74ae4405ec1c54169ea5114aecd66ced4d1c07dc56c2d270c984",
   "dct:extent": ["3805", "3.8K"]
 }

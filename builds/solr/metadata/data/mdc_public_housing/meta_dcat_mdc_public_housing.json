@@ -31,8 +31,8 @@
   "gdsc:tablename": "mdc_public_housing",
   "gdsc:up": "true",
   "gdsc:podID": "postgis-p5hguvsgv3a84juh",
-  "dct:modified": "2024-10-03 15:54:38",
+  "dct:modified": "2024-10-22 11:28:29",
   "dct:accrualPeriodicity": "3 months",
-  "spdx:checksum": "7af598722770e83a3d860a321b8179f3385b1bba7325de3483989cbe9423ded1",
+  "spdx:checksum": "0898acc4da22de32f583b678ba4d36b0d0b966d57e13cb0454bd93dde1d3595e",
   "dct:extent": ["21360150", "21M"]
 }

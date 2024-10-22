@@ -29,7 +29,7 @@
   "dcat:qualifiedRelation": ["mdc_2022_slosh_cat3"],
   "gdsc:up": "true",
   "gdsc:podID": "postgis-knvchq3drib933hy",
-  "dct:modified": "2024-10-03 15:47:26",
+  "dct:modified": "2024-10-22 11:21:10",
   "dct:accrualPeriodicity": "As Needed",
   "spdx:checksum": "TBD",
   "dct:extent": ["395768492", "378M"],

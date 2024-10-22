@@ -29,7 +29,7 @@
   "dcat:qualifiedRelation": ["fl_2021_tl_bg"],
   "gdsc:up": "false",
   "gdsc:podID": "postgis-0rxkjz1d4u2679t0",
-  "dct:modified": "2024-10-03 15:45:54",
+  "dct:modified": "2024-10-22 11:19:19",
   "dct:accrualPeriodicity": "Never",
   "spdx:checksum": "TBD",
   "dct:extent": ["3142447", "3.0M"],

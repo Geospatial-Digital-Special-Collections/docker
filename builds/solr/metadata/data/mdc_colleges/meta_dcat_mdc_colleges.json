@@ -29,7 +29,7 @@
   "gdsc:tablename": "mdc_colleges",
   "gdsc:up": "true",
   "gdsc:podID": "postgis-nsvenz6qa0v7yyzd",
-  "dct:modified": "2024-10-03 15:48:39",
+  "dct:modified": "2024-10-22 11:22:40",
   "dct:accrualPeriodicity": "1 year",
   "spdx:checksum": "TBD",
   "dct:extent": ["99436", "98K"]

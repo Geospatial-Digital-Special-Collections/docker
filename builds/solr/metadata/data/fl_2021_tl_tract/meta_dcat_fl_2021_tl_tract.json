@@ -27,7 +27,7 @@
   "gdsc:tablename": "fl_2021_tl_tract",
   "gdsc:up": "true",
   "gdsc:podID": "postgis-59vl9wuk0skqjwqe",
-  "dct:modified": "2024-10-03 15:42:27",
+  "dct:modified": "2024-10-22 11:15:30",
   "dct:accrualPeriodicity": "Never",
   "spdx:checksum": "TBD",
   "dct:extent": ["23071634", "23M"]

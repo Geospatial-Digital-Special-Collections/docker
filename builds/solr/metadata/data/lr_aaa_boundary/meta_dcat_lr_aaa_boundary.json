@@ -25,7 +25,7 @@
   "gdsc:tablename": "lr_aaa_boundary",
   "gdsc:up": "true",
   "gdsc:podID": "postgis-2e61pbrwhns8d22m",
-  "dct:modified": "2024-10-03 15:42:59",
+  "dct:modified": "2024-10-22 11:16:38",
   "dct:accrualPeriodicity": "Never",
   "spdx:checksum": "TBD",
   "dct:extent": ["5533", "5.5K"],

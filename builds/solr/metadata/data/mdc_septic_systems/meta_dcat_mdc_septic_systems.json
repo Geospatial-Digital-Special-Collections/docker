@@ -27,7 +27,7 @@
   "dcat:downloadURL": "https://services.arcgis.com/8Pc9XBTAsYuxx9Ny/arcgis/rest/services/DOHSepticSystem_gdb/FeatureServer/0/query?outFields=*&where=1%3D1&outSR=4326&f=geojson",
   "gdsc:tablename": "mdc_septic_systems",
   "gdsc:up": "true",
-  "dct:modified": "2024-10-03 15:54:57",
+  "dct:modified": "2024-10-22 11:28:49",
   "dct:accrualPeriodicity": "Weekly",
   "spdx:checksum": "TBD",
   "gdsc:podID": "postgis-ti1mzf8rwhp3tpsw",

@@ -29,7 +29,7 @@
   "gdsc:tablename": "mdc_parcels_camp",
   "dcat:qualifiedRelation": ["mdc_property_boundary", "mdc_municipal_zoning", "mdc_county_zoning", "mdc_county_park_boundaries", "mdc_municipal_park_boundaries", "mdc_flood_hazard", "mdc_qualified_opportunity_zones", "mdc_major_roads", "fl_2023_flma", "mdc_water_polygons", "mdc_2015_dem_30ft", "mdc_neighborhoods", "mdc_municipal_boundary", "com_neighborhoods"],
   "gdsc:up": "false",
-  "dct:modified": "2024-10-03 15:52:32",
+  "dct:modified": "2024-10-22 11:26:35",
   "dct:accrualPeriodicity": "As Needed",
   "spdx:checksum": "TBD",
   "gdsc:podID": "postgis-4d8urdupgjvec6d0",

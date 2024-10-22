@@ -30,8 +30,8 @@
   "gdsc:tablename": "mdc_bus_stops",
   "gdsc:up": "true",
   "gdsc:podID": "postgis-hbdqexfer7jgt0p9",
-  "dct:modified": "2024-10-03 15:48:36",
+  "dct:modified": "2024-10-22 11:22:37",
   "dct:accrualPeriodicity": "1 year",
-  "spdx:checksum": "6c6cd82b59fd3d6cac8981e1947808032fead1caaf54f59d4959a72723496238",
+  "spdx:checksum": "e244ecde2a9721433d6bf02a003820841c09687cd72076da5253625c408355f3",
   "dct:extent": ["840499", "821K"]
 }

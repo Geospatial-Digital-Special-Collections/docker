@@ -20,7 +20,7 @@
   "dcat:contactPoint": ["Timothy Norris", "Librarian Associate Professor", "University of Miami Libraries, Frost Institute for Data Science and Computing", "txn60@miami.edu"],
   "gdsc:label": "ma_id",
   "gdsc:attributes": ["area;Area in square meters.;FNAI;double;square meters", "perimeter;Perimeter in meters.;FNAI;double;meters", "ma_id;Managed Area ID, designed by NatureServe. Unique identifier for each Managed Area.;FNAI;double;", "macode_bcd;Managed Area Code;The Nature Conservancy;string;", "maname;Official name of the Managed Area (conservation land);The managing agency of the Managed Area;string;", "majorma;Official name of the Major Managed Area.  Major Managed Area refers to a larger Managed Area that contains the Managed Area in question.;FNAI;string;", "matype;Code for the Managed Area by lead managing agency. Each Managed Area has been coded as 1st byte = Managing Agency Category: F=Federal, S=State, L=Local, P=Private, 2nd and 3rd bytes = Managing Agency: (e.g., AF= US Air Force), 4th and 5th bytes = Managed Area Unit Type (e.g., AB= Air Force Base);The Nature Conservancy and FNAI;string;", "managing_a;Name of the lead managing agency for the Managed Area.;FNAI;string;", "matype2;Code for Managed Area by managing agency category.;FNAI;string;", "owner;Name of the main owner of the Managed Area;FNAI;string;", "coowners;Name(s) of additional owner(s) of the managed area;FNAI;string;", "totacres;Total number of acres within the Managed Area;The managing agency of the Managed Area;double;acres", "ltf_acres;Number of acres within the Managed Area that are in less-than-fee ownership.;The managing agency of the Managed Area;double;acres", "county;Abbreviation (the first four letters of the county name) for the county;FNAI;string;", "prostat;Protection Status as 1, 2, or 3;The Nature Conservancy and FNAI. Synonymous with protection categories I, II, III;double;", "manager;Name and/or official job title of the current manager of the Managed Area.;The managing agency of the Managed Area;string;", "mgrinst;Manager Institution;The managing agency of the Managed Area;string;", "mgrcity;Manager City.;The managing agency of the Managed Area;string;", "mgrphone;Manager Phone;FNAI;string;", "desc1;General description of the Managed Area;FNAI;string;", "desc2;Description;FNAI;string;", "comments1;General comments;FNAI;string;", "comments2;Continued Description;FNAI;string;", "maname_ab;A shortened (abbreviated) name of the Managed Area;FNAI;string;", "ma_website;Managed Area Web Site;FNAI;string;", "ownertypes;Owner Types;FNAI;string;", "esmt_hold;Easement Holder;FNAI;string;"],
-  "gdsc:collections": ["CAMP"],
+  "gdsc:collections": ["CAMP", "MAP"],
   "gdsc:functions": ["gdsc_get_attributes", "gdsc_nearest_neighbor"],
   "gdsc:analyticConformsTo": "EPSG:2236",
   "gdsc:sponsor": ["IDSC;https://idsc.miami.edu", "Library;https://www.library.miami.edu"],
@@ -28,7 +28,7 @@
   "gdsc:tablename": "fl_2023_flma",
   "gdsc:up": "true",
   "gdsc:podID": "postgis-vq9e663z4cjbv2iw",
-  "dct:modified": "2024-10-03 15:42:31",
+  "dct:modified": "2024-10-22 11:15:36",
   "dct:accrualPeriodicity": "4 months",
   "spdx:checksum": "TBD",
   "dct:extent": ["105239560", "101M"]

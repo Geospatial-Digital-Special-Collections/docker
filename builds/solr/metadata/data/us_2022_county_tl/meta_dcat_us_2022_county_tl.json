@@ -25,7 +25,7 @@
   "gdsc:tablename": "us_2022_county_tl",
   "gdsc:up": "true",
   "gdsc:podID": "postgis-p6kuqm33g3kz9oyw",
-  "dct:modified": "2024-10-03 15:56:10",
+  "dct:modified": "2024-10-22 11:30:40",
   "dct:accrualPeriodicity": "Never",
   "spdx:checksum": "TBD",
   "dct:extent": ["132306364", "127M"]

@@ -31,8 +31,8 @@
   "gdsc:tablename": "mdc_hospitals",
   "gdsc:up": "true",
   "gdsc:podID": "postgis-0wumcoymjq6h2dd9",
-  "dct:modified": "2024-10-03 15:51:24",
+  "dct:modified": "2024-10-22 11:25:17",
   "dct:accrualPeriodicity": "As Needed",
-  "spdx:checksum": "30f6c63c94b6039150868535b7b2bb012df81f809dded795f9e20b8f3dda8dff",
+  "spdx:checksum": "5d884f26fda504596df280e637fe6985c355657e4d431aaadc40f98ff39865ba",
   "dct:extent": ["17340", "17K"]
 }

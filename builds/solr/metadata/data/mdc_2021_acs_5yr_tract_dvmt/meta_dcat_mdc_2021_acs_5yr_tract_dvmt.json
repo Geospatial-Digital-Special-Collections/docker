@@ -31,9 +31,9 @@
   "dcat:qualifiedRelation": ["fl_2021_tl_tract"],
   "gdsc:up": "true",
   "gdsc:podID": "postgis-hzn13w7dp3caeaqn",
-  "dct:modified": "2024-10-03 15:45:59",
+  "dct:modified": "2024-10-22 11:19:25",
   "dct:accrualPeriodicity": "Never",
-  "spdx:checksum": "605e842958b56ecf6f3242c1b5c0e239655e7b0b7856076b9d3124bcdd650ae1",
+  "spdx:checksum": "ab55b8bbc26102e510daf6b3c1f90a62e1b68df2bdc498585c65f2e275dd1b92",
   "dct:extent": ["1120358", "1.1M"],
   "dcat:bbox": "POLYGON((-80.8736 25.13742,-80.8736 25.979434,-80.06279 25.979434,-80.06279 25.13742,-80.8736 25.13742))"
 }

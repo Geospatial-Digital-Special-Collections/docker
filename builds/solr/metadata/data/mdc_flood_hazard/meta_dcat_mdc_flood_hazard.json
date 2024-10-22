@@ -21,7 +21,7 @@
   "gdsc:label": "fzone",
   "gdsc:value": ["elev"],
   "gdsc:attributes": ["fzone;Flood zone type;FEMA;string;", "zonesubty;Flood zone sub type;FEMA;string;", "elev;Elevation of zone;FEMA;double;feet;"],
-  "gdsc:collections": ["DVMT", "Climate Change", "Vulnerability", "CAMP", "LAND", "Little River Climate Resilience", "Miami-Dade Climate Resilience"],
+  "gdsc:collections": ["DVMT", "Climate Change", "Vulnerability", "CAMP", "LAND", "Little River Climate Resilience", "Miami-Dade Climate Resilience", "MAP"],
   "gdsc:functions": ["gdsc_get_attributes", "gdsc_nearest_neighbor"],
   "gdsc:analyticConformsTo": "EPSG:2236",
   "gdsc:arcgisSD": "mdc_flood_hazard.sd",
@@ -31,9 +31,9 @@
   "gdsc:tablename": "mdc_flood_hazard",
   "gdsc:up": "true",
   "gdsc:podID": "postgis-gaxfbdigubom2fwo",
-  "dct:modified": "2024-10-03 15:50:59",
+  "dct:modified": "2024-10-22 11:24:34",
   "dct:accrualPeriodicity": "10 years",
-  "spdx:checksum": "40fd3036f2157425516688f48e260d118617dd492757599532f483951dcec32d",
+  "spdx:checksum": "b170645224c9c194762f80f91909a95cb3eb109f52c872879113805da6263bf1",
   "dct:extent": ["365027770", "349M"],
   "dcat:bbox": "POLYGON((-80.8735841400735 25.1374249799875,-80.8735841400735 25.9794389235506,-80.0937527944454 25.9794389235506,-80.0937527944454 25.1374249799875,-80.8735841400735 25.1374249799875))"
 }

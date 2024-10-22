@@ -31,8 +31,8 @@
   "gdsc:tablename": "mdc_community_health_centers",
   "gdsc:up": "true",
   "gdsc:podID": "postgis-x6sb8ja0sejjyitg",
-  "dct:modified": "2024-10-03 15:48:42",
+  "dct:modified": "2024-10-22 11:22:43",
   "dct:accrualPeriodicity": "1 week",
-  "spdx:checksum": "e35e0575812ac724ea919bef51e1f2b4b877aec361d93c09429bf8f575cb495b",
+  "spdx:checksum": "a87471b68362c70aed52d221d15b1c48ce1070cdafcd63e73161ba36a8a292a9",
   "dct:extent": ["43554", "43K"]
 }

@@ -28,7 +28,7 @@
   "gdsc:tablename": "us_nuclear_power_plants",
   "gdsc:up": "true",
   "gdsc:podID": "postgis-grarsao84mluc6rl",
-  "dct:modified": "2024-10-03 15:56:19",
+  "dct:modified": "2024-10-22 11:30:50",
   "dct:accrualPeriodicity": "As Needed",
   "spdx:checksum": "TBD",
   "dct:extent": ["45398", "45K"],

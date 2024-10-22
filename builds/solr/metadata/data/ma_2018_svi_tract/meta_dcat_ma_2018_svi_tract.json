@@ -31,9 +31,9 @@
   "gdsc:tablename": "ma_2018_svi_tract",
   "gdsc:up": "true",
   "gdsc:podID": "postgis-dyisud9nf81j6nuu",
-  "dct:modified": "2024-10-09 21:20:02",
+  "dct:modified": "2024-10-22 11:16:41",
   "dct:accrualPeriodicity": "Never",
-  "spdx:checksum": "042626772f028a8d46a7cf13806871b6ad4c6d1267c9c5d67f253dd66ddbfa0e",
+  "spdx:checksum": "65a17879b722b2942f00ce1da6bb34d10e974ca67c53a84476d1cdcbdf8dd488",
   "dct:extent": ["1870946", "1.8M"],
   "dcat:bbox": "POLYGON((-73.50814199999996 41.237964000000034,-73.50814199999996 42.88658900000007,-69.92839299999997 42.88658900000007,-69.92839299999997 41.237964000000034,-73.50814199999996 41.237964000000034))"
 }

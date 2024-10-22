@@ -31,8 +31,8 @@
   "gdsc:tablename": "mdc_park_facilities",
   "gdsc:up": "true",
   "gdsc:podID": "postgis-59d6xi0arxi5dcwr",
-  "dct:modified": "2024-10-03 15:52:34",
+  "dct:modified": "2024-10-22 11:26:37",
   "dct:accrualPeriodicity": "As Needed",
-  "spdx:checksum": "000d0c7d05d0ab6d940661354ebc6c48e3053236e636f0e738722f07dd52db93",
+  "spdx:checksum": "3415bc6fecba51e5406a17a16a0f5e3db490b98cbd218e1c20a50f2c43c93e84",
   "dct:extent": ["1367374", "1.4M"]
 }

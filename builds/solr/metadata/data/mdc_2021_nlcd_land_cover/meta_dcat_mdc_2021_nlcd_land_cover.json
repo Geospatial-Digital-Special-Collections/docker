@@ -29,7 +29,7 @@
   "dcat:qualifiedRelation": ["us_2021_nlcd_land_cover", "fl_2022_tl_cousub"],
   "gdsc:up": "true",
   "gdsc:podID": "postgis-fn699pd0qfjnx6fy",
-  "dct:modified": "2024-10-03 15:46:16",
+  "dct:modified": "2024-10-22 11:19:50",
   "dct:accrualPeriodicity": "Never",
   "spdx:checksum": "TBD",
   "dct:extent": ["8514292", "8.2M"]

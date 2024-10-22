@@ -31,8 +31,8 @@
   "gdsc:tablename": "mdc_federally_qualified_health_centers",
   "gdsc:up": "true",
   "gdsc:podID": "postgis-g3xzzo1bpq3y6wis",
-  "dct:modified": "2024-10-03 15:48:54",
+  "dct:modified": "2024-10-22 11:22:57",
   "dct:accrualPeriodicity": "As Needed",
-  "spdx:checksum": "6eede4f5e84c46f8125e23a5597ccbc4b0bb3951b908a3ca6122c5bc8b717c97",
+  "spdx:checksum": "136c25af13db775d93a771ea5fdcef9c3cb25b27d5880e31ae940dcb47dd0cb8",
   "dct:extent": ["7672", "7.5K"]
 }

@@ -31,8 +31,8 @@
   "gdsc:tablename": "mdc_community_redevelopment_agency",
   "gdsc:up": "true",
   "gdsc:podID": "postgis-6f7mmq6u50ncpc82",
-  "dct:modified": "2024-10-03 15:48:45",
+  "dct:modified": "2024-10-22 11:22:45",
   "dct:accrualPeriodicity": "1 year",
-  "spdx:checksum": "4ff92e78d31a43c2fcc3cdd44096e795cf4b73df51166fd5fda94b3f8be5f194",
+  "spdx:checksum": "ad1355e56a59b4841279e4e5b34d0a2cfa45dd87e40dd91b40690998a26984e8",
   "dct:extent": ["133452", "131K"]
 }

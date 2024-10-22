@@ -27,7 +27,7 @@
   "gdsc:tablename": "com_neighborhoods",
   "gdsc:up": "true",
   "gdsc:podID": "postgis-90zi29yo2f6dr8g0",
-  "dct:modified": "2024-10-03 15:42:17",
+  "dct:modified": "2024-10-22 11:15:15",
   "dct:accrualPeriodicity": "As Needed",
   "spdx:checksum": "TBD",
   "dct:extent": ["305852", "299K"],

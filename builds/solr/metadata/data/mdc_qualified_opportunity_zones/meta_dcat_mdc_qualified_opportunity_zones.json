@@ -21,7 +21,7 @@
   "dcat:contactPoint": ["Timothy Norris", "Librarian Associate Professor", "University of Miami Libraries, Frost Institute for Data Science and Computing", "txn60@miami.edu"],
   "gdsc:label": "namelsad10",
   "gdsc:attributes": ["objectid;Unique identifier;Esri;oid;", "statefp10;2010 Census state FIPS code;Census;string;", "countyfp10;2010 Census county FIPS code;Census;string;", "tractce10;2010 Census tract code;Census;string;", "geoid10;Census Track identifier; a concatenation of 2010 Census state FIPS code, county FIPS code, and census tract code;Census;string;", "name10;Census tract name, this is the census tract code converted to an integer or integer plus two-digit decimal if the last two characters of the code are not both zeros;Census;string;", "namelsad10;2010 Census translated legal/statistical area description and the census tract name;Census;string;", "mtfcc10;maf/tiger feature class code (G5020);Census;string;", "funcstat10;2010 Census functional status;Census;string;", "aland10;2010 Census land area;Census;integer;", "awater10;2010 Census water area;Census;integer;", "intptlat10;2010 Census latitude of the internal point;Census;string;", "intptlon10;2010 Census longitude of the internal point;Census;string;", "pop100;100% population count for the zone;string;", "hu100;The 100% count of housing units for the zone;Census;string;", "p0020002;Total population;Census;integer;", "p0020005;White population alone;Census;integer;", "p0020006;Black or African American population alone;Census;integer;", "p0020007;American Indian and Alaska Native population alone;Census;integer;", "p0020008;Asian population alone;Census;integer;", "p0020009;Native Hawaiian and Other Pacific Islander population alone;Census;integer;", "p0020010;Some Other Race alone;Census;integer;", "p0020011;Population of two or more races;Census;integer;", "shape__area;Area of zone;Esri;double;", "shape__length;Length of zone;Esri;double;"],
-  "gdsc:collections": ["DVMT", "Vulnerability", "Displacement", "CAMP", "LAND"],
+  "gdsc:collections": ["DVMT", "Vulnerability", "Displacement", "CAMP", "LAND", "MAP"],
   "gdsc:functions": ["gdsc_nearest_neighbor"],
   "gdsc:analyticConformsTo": "EPSG:2236",
   "gdsc:arcgisSD": "mdc_qualified_opportunity_zones.sd",
@@ -31,8 +31,8 @@
   "gdsc:tablename": "mdc_qualified_opportunity_zones",
   "gdsc:up": "true",
   "gdsc:podID": "postgis-2k0dg34uilke6ctl",
-  "dct:modified": "2024-10-03 15:54:41",
+  "dct:modified": "2024-10-22 11:28:48",
   "dct:accrualPeriodicity": "As Needed",
-  "spdx:checksum": "1b179b4ef6d36182ee5d56b8071f29ccbe1be8b68aa733dc8049f5a680336e23",
+  "spdx:checksum": "2ba19ee76b84551b3d802334e81e572e650b955c3af3fd3c464f50e4e91a622a",
   "dct:extent": ["267270", "262K"]
 }

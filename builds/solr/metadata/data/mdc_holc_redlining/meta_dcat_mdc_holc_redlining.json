@@ -21,7 +21,7 @@
   "gdsc:label": "holc_grade",
   "gdsc:value": ["holc"],
   "gdsc:attributes": ["holc_grade;HOLC alphabetical system grade;HOLC;string;", "city;City of polygon;;string;", "holc;HOLC numeric system grade;HOLC;numeric;", "code;FIPS code;U.S. Census Bureau;integer;", "st;State of polygon;;string;", "citystate;City and state of polygon;;string;"],
-  "gdsc:collections": ["DVMT", "Displacement", "Vulnerability", "CAMP", "Little River Climate Resilience", "Miami-Dade Climate Resilience"],
+  "gdsc:collections": ["DVMT", "Displacement", "Vulnerability", "CAMP", "Little River Climate Resilience", "Miami-Dade Climate Resilience", "MAP"],
   "gdsc:functions": ["gdsc_get_attributes", "gdsc_nearest_neighbor"],
   "gdsc:analyticConformsTo": "EPSG:2236",
   "gdsc:arcgisSD": "mdc_holc_redlining.sd",
@@ -31,8 +31,8 @@
   "gdsc:tablename": "mdc_holc_redlining",
   "gdsc:up": "true",
   "gdsc:podID": "postgis-e43b1q10x1kr5qh0",
-  "dct:modified": "2024-10-03 15:51:21",
+  "dct:modified": "2024-10-22 11:25:15",
   "dct:accrualPeriodicity": "Never",
-  "spdx:checksum": "b2716208d3fb5b958e7a013e57cf42de22a3e8c106a5f85570a6b3eaca03b7f0",
+  "spdx:checksum": "2b10238eccd31bd0b1edec757d46d4da9b3f45f5b582cf87217cf65e446011db",
   "dct:extent": ["121191", "119K"]
 }

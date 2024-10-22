@@ -25,7 +25,7 @@
   "gdsc:tablename": "fl_2022_tl_cousub",
   "gdsc:up": "true",
   "gdsc:podID": "postgis-7s2hcbbxhfg8xk6y",
-  "dct:modified": "2024-10-03 15:42:30",
+  "dct:modified": "2024-10-22 11:15:34",
   "dct:accrualPeriodicity": "Never",
   "spdx:checksum": "TBD",
   "dct:extent": ["7853947", "7.5M"]

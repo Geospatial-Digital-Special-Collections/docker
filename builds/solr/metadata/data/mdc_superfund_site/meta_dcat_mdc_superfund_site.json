@@ -31,9 +31,9 @@
   "gdsc:tablename": "mdc_superfund_site",
   "gdsc:up": "true",
   "gdsc:podID": "postgis-0kwtatzqfri63bvm",
-  "dct:modified": "2024-10-03 15:55:06",
+  "dct:modified": "2024-10-22 11:29:00",
   "dct:accrualPeriodicity": "As Needed",
-  "spdx:checksum": "aef73fd5ed697cdf802bf7b425bb9f042ba83a423b23cb9787bb30ec6fe93537",
+  "spdx:checksum": "1ab4d0a2e4f48f381b87fee900945a89fa6eea975221e8a5416bc756f58edc1f",
   "dct:extent": ["5519", "5.4K"],
   "dcat:bbox": "POLYGON((-80.40056848194646 25.495520152265605,-80.40056848194646 25.924124462199504,-80.21027933357675 25.924124462199504,-80.21027933357675 25.495520152265605,-80.40056848194646 25.495520152265605))"
 }
