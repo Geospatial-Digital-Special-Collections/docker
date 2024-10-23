@@ -12,7 +12,7 @@ log.disabled = True
 
 BASE_PATH='http://gaia-solr:8983/solr/dcat/select?wt=json&'
 SNIP_LENGTH = 180
-QUERY_FIELDS = ['gdsc_collections','dct_title','dct_keywords','dct_description','gdsc_attributes']
+QUERY_FIELDS = ['gdsc_collections','dct_title','dcat_keyword','dct_description','gdsc_attributes']
 
 ##
  # get solr data
@@ -24,6 +24,7 @@ def query_solr(path,parameters):
 
     # send query to SOLR and gather paged results
     query_string  = urlencode(parameters).replace('-','+')
+    print(query_string)
     while numresults > len(results):
         connection = urlopen("{}{}".format(path, query_string))
         response = simplejson.load(connection)
@@ -58,24 +59,17 @@ def highlight_query(document,query):
                     if term.upper() not in attr.upper(): found = False
                 if found:
                     document['found_in'][field] = []
-                    print(field)
                     for term in terms:
-                        print(term)
                         document[field][i] = add_tags(document[field][i],term)
                     print(document[field][i])
                     row = attr.split(';')
                     if len(row) > 1:
-                        print (row[0])
                         document[field][i] = add_tags(document[field][i],row[0]) 
-                        print(document[field][i])
                         for j in range(0,2):
                             for term in terms:
                                 row[j] = add_tags(row[j],term)
-                        print(row[0])
                         row[0] = add_tags(row[0],row[0])
-                        print(row[0]) 
                         attrs.append([row[0],row[1]])
-                        print(attrs)
             if len(attrs) > 0: document['found_in'][field] = attrs
 
     return document
@@ -107,27 +101,21 @@ def index():
             if active == 'None': active = None
 
         # build the query parameters for SOLR
-        q = collection
         if collection == 'all' or collection == '*':
             collection = '*'
-            q = ""
-        query_parameters = {"q": "gdsc_collections:" + collection}
+        q = f"+gdsc_collections:{collection}"
         if query is not None:
-            qf += ' '.join(QUERY_FIELDS)
-            if len(q) > 0: q += " "
-            q += f"*{query}*"
+            q += f" (" 
+            for field in QUERY_FIELDS:
+                q += f"{field}:*{query}* OR "
+            q = f"{q[:-4]})" 
         if active is not None:
-            if qf != "gdsc_collections ": qf += " "
-            qf += "gdsc_up"
-            if len(q) > 0: q += " "
-            q += "true"
-        if qf != "gdsc_collections ":
-            query_parameters = {
-              "q.op": "AND",
-              "defType": "dismax",
-              "qf": qf,
-              "q": q
-            }
+            q += " +gdsc_up:true"
+        query_parameters = {
+          "q.op": "AND",
+          "defType": "lucene",
+          "q": q
+        }
 
     # send query to SOLR and gather paged results
     results, numresults = query_solr(BASE_PATH,query_parameters)
