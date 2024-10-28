@@ -128,7 +128,7 @@
                         {% for download in document['gdsc_derived'] %}
                         <tr>
                           <td>{{ download }}</td>
-                          <td><a href="/download/{{ document['gdsc_tablename'][0] }}?format={{ download }}">{{ document['gdsc_tablename'][0] }}.{{ download }}.tar.bz</a></td>
+                          <td><a href="/download/{{ document['dcat_accessURL'] }}/{{ document['gdsc_tablename'][0] }}?format={{ download }}">{{ document['gdsc_tablename'][0] }}.{{ download }}.tar.bz</a></td>
                           <td>TBD</td>
                         </tr>
                         {% endfor %}
