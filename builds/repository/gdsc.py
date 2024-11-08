@@ -180,17 +180,20 @@ def detail(name_id):
 ##
  # provide download api for derivate files
  ##
-@app.route('/download/<name_id>', methods=["GET","POST"])
-def download(name_id):
+@app.route('/download/<path:download_path>', methods=["GET","POST"])
+def download(download_path):
 
     if 'ImmutableMultiDict' in str(type(request.args)): args = request.args.to_dict()
     else: args = request.args
 
+    print(download_path)
+    print(download_path.split('/'))
+
     if 'format' in args:
         if args['format'] in ["sql","shp","geotiff"]:
             return send_from_directory(
-                f"/data/{name_id}/derived/",
-                f"{name_id}.{args['format']}.tar.gz",
+                f"/{download_path}/derived/",
+                f"{args['file']}.{args['format']}.tar.gz",
                 as_attachment=True
             )
 
