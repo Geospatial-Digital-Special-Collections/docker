@@ -141,6 +141,7 @@
               </div>
             </div>
             {% endif %}
+            {% if "Restricted" not in document['dct_rights'][0] %}
             <span class="mt-4 d-block">
               <b>Open Geospatial Consortium Standards:</b>
               {% if "Raster" not in document['dct_type'][0] %}
@@ -197,6 +198,11 @@
                   </div>
                 </div>
               </div>
+            </span>
+            {% endif %}
+            {% else %}
+            <span class="mt-4 d-block text-wrap text-break">
+              Restricted Access
             </span>
             {% endif %}
           </div>
