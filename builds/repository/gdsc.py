@@ -90,8 +90,8 @@ def index():
         # get the form parameters
         if 'ImmutableMultiDict' in str(type(request.form)): args = request.form.to_dict()
         else: args = request.form
-        print(args)
-        query = re.sub(r'[\+\-\&\|\!\(\)\{\}\[\]\^\"\~\*\?\:\\]','',args["searchTerm"])
+        if 'searchTerm' in args:
+            query = re.sub(r'[\+\-\&\|\!\(\)\{\}\[\]\^\"\~\*\?\:\\]','',args["searchTerm"])
         if query == "None" or query == "": query = None
         collection = args["collection"]
         if 'active' in args:
@@ -103,7 +103,7 @@ def index():
         if collection == 'all' or collection == '*':
             collection = '*'
             q = ""
-        query_parameters = {"q": "gdsc_collections:*" + collection}
+        query_parameters = {"q": "gdsc_collections:" + collection}
         if query is not None:
             qf += ' '.join(QUERY_FIELDS)
             if len(q) > 0: q += " "
@@ -186,13 +186,10 @@ def download(download_path):
     if 'ImmutableMultiDict' in str(type(request.args)): args = request.args.to_dict()
     else: args = request.args
 
-    print(download_path)
-    print(download_path.split('/'))
-
     if 'format' in args:
         if args['format'] in ["sql","shp","geotiff"]:
             return send_from_directory(
-                f"/{download_path}/derived/",
+                f"/{download_path}derived/",
                 f"{args['file']}.{args['format']}.tar.gz",
                 as_attachment=True
             )
