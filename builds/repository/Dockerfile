@@ -1,6 +1,9 @@
 # Start from an official Python base image.
 FROM python:3.9.16-alpine3.17
 
+# copy the init script
+COPY ./init.sh  /docker-entrypoint-initdb.d && chmod +x /docker-entrypoint-initdb.d/init.sh
+
 # Set the current working directory to /ohdsi.
 WORKDIR /ohdsi
 
