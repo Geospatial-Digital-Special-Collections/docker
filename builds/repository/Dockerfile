@@ -2,7 +2,7 @@
 FROM python:3.9.16-alpine3.17
 
 # copy the init script
-COPY --chmod 755 ./init.sh /docker-entrypoint-initdb.dh
+COPY --chmod=0500 ./init.sh /docker-entrypoint-initdb.dh
 
 # Set the current working directory to /ohdsi.
 WORKDIR /ohdsi

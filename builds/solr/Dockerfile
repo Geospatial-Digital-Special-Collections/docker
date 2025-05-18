@@ -8,6 +8,6 @@ COPY ./metadata/solr/ /var/solr/data
 RUN chown -R solr:solr /var/solr/data
 
 # copy the init script
-COPY --chmod 755 ./init.sh /docker-entrypoint-initdb.d
+COPY --chmod=0500 ./init.sh /docker-entrypoint-initdb.d
 
 USER solr
