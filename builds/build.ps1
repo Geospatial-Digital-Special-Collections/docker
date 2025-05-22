@@ -14,6 +14,7 @@ function showhelp {
   Write-Host '-p                  build postgis proxy container'
   Write-Host '-n                  build postgis node container'
   Write-Host '-o                  build osgeo/gdal etl container'
+  Write-Host '-g                  build gdsc python image'
   Write-Host '-d                  build degaussAPI container'
   Write-Host '-r                  build gdsc repository interface container'
   Write-Host '-u <user>           dockerhub account username (defaults to: tibben)'
@@ -67,6 +68,7 @@ for ( $i = 0; $i -lt $args.count; $i++ ) {
         "-p" { dedup; $tag="proxy"; Break }
         "-n" { dedup; $subdir="alpine/"; $tag="node"; Break }
         "-o" { dedup; $tag="osgeo"; Break }
+        "-g" { dedup; $tag="gdsc"; Break }
         "-d" { dedup; $tag="degaussAPI"; Break }
         "-r" { dedup; $tag="repository"; Break }
         "-u" { $p=$user; Break }

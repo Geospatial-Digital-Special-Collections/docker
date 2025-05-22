@@ -13,11 +13,12 @@ function  showhelp() {
   echo ''
   echo 'Options: '
   echo '-h                  see the help message'
-  echo '-p                  build postgis proxy container'
-  echo '-n                  build postgis node container'
-  echo '-o                  build osgeo/gdal etl container'
-  echo '-d                  build degaussAPI container'
-  echo '-r                  build gdsc repository interface container'
+  echo '-p                  build postgis proxy image'
+  echo '-n                  build postgis node image'
+  echo '-o                  build osgeo/gdal etl image'
+  echo '-g                  build gdsc python image'
+  echo '-d                  build degaussAPI image'
+  echo '-r                  build gdsc repository interface image'
   echo '-u <user>           dockerhub account username (defaults to: tibben)'
   echo '-b <name>           base name for docker repository (defaults to: pg)'
   echo '--push              push image to dockerhub (optional, default push=0)'
@@ -77,6 +78,8 @@ do
           dedup; subdir='alpine/'; tag=node;;
         -o) # build the osgeo gdal/ogr image
           dedup; tag=osgeo;;
+        -g) # build the python gdsc image
+          dedup; tag=gdsc;;
         -d) # build the degauss fastAPI image
           dedup; tag=degaussAPI;;
         -r) # build the gdsc interface image
