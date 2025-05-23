@@ -110,7 +110,7 @@
               {% if document['dct_title'] %}
                 <a href="/detail/{{ document['gdsc_tablename'][0] }}?collection={{ collection }}&active={{ active }}&query={{ query }}">{{ document['dct_title'][0] }}</a>
               {% endif %}
-              <div class="float-left circle {{ 'green-fill' if document['gdsc_up'][0] or document['gdsc_tileUrl'] else 'red-fill' }}"></div>
+              <div class="none" style="float: left; display: contents;"><div id="layer-{{ document['gdsc_tablename'][0] }}" class="float-left circle {{ 'green-fill' if document['gdsc_up'][0] or document['gdsc_tileUrl'] else 'red-fill' }}" onclick="javascript:loadlayer('{{ document['gdsc_tablename'][0] }}')"></div></div>
             </h4>
           </div>
           <div class="col-5 align-top">
@@ -184,5 +184,19 @@
         active.addEventListener("change", function() {
          document.getElementById("filterForm").submit();
         });
+        var loadlayer=function(layer_id) {
+          console.log('starting with: '+layer_id.toString());
+          var status_indicator = document.getElementById('layer-'+layer_id);
+          status_indicator.setAttribute('class', 'yin-yang');
+          status_indicator.parentElement.setAttribute('class', 'spin');
+          $.ajax({
+            type: 'POST',
+            url: '/loadlayer/' + layer_id,
+            success: function (resp) {
+                status_indicator.setAttribute('class', 'green-fill circle');
+                status_indicator.parentElement.setAttribute('class', 'none'); 
+                console.log(resp);
+            }});
+        }
       </script>
 {% endblock %}
