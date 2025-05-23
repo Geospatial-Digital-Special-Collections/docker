@@ -1,6 +1,7 @@
 #!/bin/bash
 
 set -e
+cd /opt/solr-9.8.1/
 
 # Custom Solr start script
     
@@ -12,5 +13,6 @@ echo "Starting Solr with custom configuration..."
 ./bin/solr start -f $SOLR_OPTS
 
 # build the intial indexes for collections and data respectively
-./bin/solr post --solr-url http://localhost:8983 -c collections -filetypes json $(find /data/collections -not \( -path /data/collections/lost+found -prune \) -name 'meta_*.json' -type f)
-./bin/solr post --solr-url http://localhost:8983 -c dcat -filetypes json $(find /data/data -not \( -path /data/data/lost+found -prune \) -name 'meta_dcat*.json' -type f)
+echo "indexing the collections"
+./bin/solr post --solr-url http://localhost:8983 -c collections -filetypes json $(find /data/collections -name 'meta_*.json' -type f)
+./bin/solr post --solr-url http://localhost:8983 -c dcat -filetypes json $(find /data/data -name 'meta_dcat*.json' -type f)
