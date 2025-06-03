@@ -18,10 +18,22 @@ X_API_KEY_FILE = getenv('GAIA_X_API_KEY_FILE')
 with open(X_API_KEY_FILE) as f:
     X_API_KEY = f.read().strip()
 apis = {
-    "git": f"http://gaia-git:{getenv('GAIA_GIT_API_PORT')}",
-    "gdsc": f"http://gaia-gdsc:{getenv('GAIA_GDSC_API_PORT')}",
-    "osgeo": f"http://gaia-osgeo:{getenv('GAIA_OSGEO_API_PORT')}",
-    "postgis": f"http://gaia-postgis:{getenv('GAIA_POSTGIS_API_PORT')}"
+    "git": {
+        "url": f"http://gaia-git:{getenv('GAIA_GIT_API_PORT')}",
+        "shell": "sh"
+    },
+    "gdsc": {
+        "url": f"http://gaia-gdsc:{getenv('GAIA_GDSC_API_PORT')}",
+        "shell": "sh"
+    },
+    "osgeo": {
+        "url": f"http://gaia-osgeo:{getenv('GAIA_OSGEO_API_PORT')}",
+        "shell": "bash"
+    },
+    "postgis": {
+        "url": f"http://gaia-postgis:{getenv('GAIA_POSTGIS_API_PORT')}",
+        "shell": "bash"
+    }
 }
 headers = {
     "x-api-key": X_API_KEY,
@@ -200,9 +212,9 @@ def loadlayer(layer_id):
 
     for api in apis:
         if api in scripts:
-            payload = f"\n/data/{layer_id}/etl/{layer_id}_{api}.sh\n\n".encode('utf-8')
-            print(api,apis[api],payload)
-            req = Request(apis[api], data=payload, headers=headers, method='POST')
+            payload = f"\n{apis[api]['shell']} /data/{layer_id}/etl/{layer_id}_{api}.sh\n\n".encode('utf-8')
+            print(api,apis[api]['url'],payload)
+            req = Request(apis[api]['url'], data=payload, headers=headers, method='POST')
             resp = urlopen(req).read()
             if len(resp) > 0:
                 output = loads(resp.strip().replace(b'\n',b'\\\\n').decode('utf-8'))
