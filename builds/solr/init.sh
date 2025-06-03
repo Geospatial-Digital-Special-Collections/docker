@@ -12,9 +12,14 @@ SOLR_OPTS="-Djetty.host=0.0.0.0"
 echo "Starting Solr with custom configuration..."
 ./bin/solr start $SOLR_OPTS
 
+# arbitrary wait for solr to start
 sleep 5
 
-# build the intial indexes for collections and data respectively
+# remove any pre-existing indexes
+curl -g 'http://localhost:8983/solr/collections/update' -d '<delete><query>*:*</query></delete>'
+curl -g 'http://localhost:8983/solr/dcat/update' -d '<delete><query>*:*</query></delete>'
+
+# build the indexes for collections and data respectively
 echo "indexing the collections"
 ./bin/solr post --solr-url http://localhost:8983 -c collections -filetypes json $(find /data/collections -name 'meta_*.json' -type f)
 ./bin/solr post --solr-url http://localhost:8983 -c dcat -filetypes json $(find /data/data -name 'meta_dcat*.json' -type f)
