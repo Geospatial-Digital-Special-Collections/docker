@@ -203,9 +203,9 @@ def loadlayer(layer_id):
             payload = f"\n/data/{layer_id}/etl/{layer_id}_{api}.sh\n\n".encode('utf-8')
             print(api,apis[api],payload)
             req = Request(apis[api], data=payload, headers=headers, method='POST')
-            resp = urlopen(req)
-            if len(resp.read()) > 0:
-                output = loads(resp.read().strip().replace(b'\n',b'\\\\n').decode('utf-8'))
+            resp = urlopen(req).read()
+            if len(resp) > 0:
+                output = loads(resp.strip().replace(b'\n',b'\\\\n').decode('utf-8'))
             else:
                 output = {'res': 'zero length response'}
             response[api] = output['res']
