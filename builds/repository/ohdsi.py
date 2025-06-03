@@ -208,7 +208,7 @@ def loadlayer(layer_id):
             req = Request(apis[api], data=payload, headers=headers, method='POST')
             resp = urlopen(req)
             output = loads(resp.read().strip().replace(b'\n',b'\\\\n').decode('utf-8'))
-            response = {api: output['res']}
+            response[api] = output['res']
 
     return response
 
