@@ -216,10 +216,7 @@ def loadlayer(layer_id):
             print(api,apis[api]['url'],payload)
             req = Request(apis[api]['url'], data=payload, headers=headers, method='POST')
             resp = urlopen(req).read()
-            if len(resp) > 0:
-                output = loads(resp.strip().replace(b'\n',b'\\\\n').decode('utf-8'))
-            else:
-                output = {'res': 'zero length response'}
+            output = loads(resp.decode('utf-8').strip(),strict=False)
             response[api] = output['res']
             print(output['res'])
 
