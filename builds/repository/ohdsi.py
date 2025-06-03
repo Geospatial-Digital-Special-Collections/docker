@@ -206,7 +206,7 @@ def loadlayer(layer_id):
             resp = urlopen(req)
             if len(resp.read()) > 0:
                 output = loads(resp.read().strip().replace(b'\n',b'\\\\n').decode('utf-8'))
-            else
+            else:
                 output = {'res': 'zero length response'}
             response[api] = output['res']
             print(output['res'])
