@@ -8,6 +8,7 @@ import simplejson
 import logging
 import re
 from collections import OrderedDict
+import os
 
 app = Flask(__name__)
 log = logging.getLogger('werkzeug')
@@ -16,8 +17,12 @@ log.disabled = True
 X_API_KEY_FILE = getenv('GAIA_X_API_KEY_FILE')
 with open(X_API_KEY_FILE) as f:
     X_API_KEY = f.read().strip()
-OSGEO_API_URL = "http://gaia-osgeo:9876"
-POSTGIS_API_URL = "http://gaia-postgis:8765"
+apis = {
+    "git": f"http://gaia-git:{getenv('GAIA_GIT_API_PORT')}",
+    "gdsc": f"http://gaia-gdsc:{getenv('GAIA_GDSC_API_PORT')}",
+    "osgeo": f"http://gaia-osgeo:{getenv('GAIA_OSGEO_API_PORT')}",
+    "postgis": f"http://gaia-postgis:{getenv('GAIA_POSTGIS_API_PORT')}"
+}
 headers = {
     "x-api-key": X_API_KEY,
     "Content-Type": "application/octet-stream"
@@ -192,20 +197,17 @@ def detail(name_id):
 @app.route('/loadlayer/<layer_id>', methods=["GET","POST"])
 def loadlayer(layer_id):
 
-    print('starting',layer_id)
-    payload = f"\nbash /data/{layer_id}/etl/{layer_id}_osgeo.sh\n\n".encode('utf-8')
-    print(payload)
-    req = Request(OSGEO_API_URL, data=payload, headers=headers, method='POST')
-    resp = urlopen(req)
-    output = loads(resp.read().strip().replace(b'\n',b'\\\\n').decode('utf-8'))
-    print(output['res'].replace('\\n','\n'))
-    response = {"osgeo": output['res']}
-    payload = f"\nbash /data/{layer_id}/etl/{layer_id}_postgis.sh\n\n".encode('utf-8')
-    req = Request(POSTGIS_API_URL, data=payload, headers=headers, method='POST')                       
-    resp = urlopen(req)                                                                           
-    output = resp.read().strip().decode('utf-8')
-    print(output)
-    response["postgis"] = output 
+    response = {'load': layer_id}
+    scripts = os.listdir(f'/data/{layer_id}/etl/')
+    scripts = [x.split('_')[-1][:-3] for x in scripts if x not in ['processStep','.DS_Store']]
+
+    for api in apis:
+        if api in scripts:
+            payload = f"\nbash /data/{layer_id}/etl/{layer_id}_osgeo.sh\n\n".encode('utf-8')
+            req = Request(apis[api], data=payload, headers=headers, method='POST')
+            resp = urlopen(req)
+            output = loads(resp.read().strip().replace(b'\n',b'\\\\n').decode('utf-8'))
+            response = {api: output['res']}
 
     return response
 
