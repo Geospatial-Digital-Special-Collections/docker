@@ -213,12 +213,10 @@ def loadlayer(layer_id):
     for api in apis:
         if api in scripts:
             payload = f"\n{apis[api]['shell']} /data/{layer_id}/etl/{layer_id}_{api}.sh\n\n".encode('utf-8')
-            print(api,apis[api]['url'],payload)
             req = Request(apis[api]['url'], data=payload, headers=headers, method='POST')
             resp = urlopen(req).read()
             output = loads(resp.decode('utf-8').strip(),strict=False)
             response[api] = output['res']
-            print(output['res'])
 
     return response
 
