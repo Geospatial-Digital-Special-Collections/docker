@@ -128,7 +128,11 @@
                         {% for download in document['gdsc_derived'] %}
                         <tr>
                           <td>{{ download }}</td>
+                          {% if download in ["json"] %}
+                          <td><a href="/download{{ document['dcat_accessURL'][0][:-1] }}/?file={{ document['gdsc_tablename'][0] }}&format={{ download }}">{{ document['gdsc_tablename'][0] }}.{{ download }}</a></td>
+                          {% else %}
                           <td><a href="/download{{ document['dcat_accessURL'][0][:-1] }}/?file={{ document['gdsc_tablename'][0] }}&format={{ download }}">{{ document['gdsc_tablename'][0] }}.{{ download }}.tar.bz</a></td>
+                          {% endif %}
                           <td>TBD</td>
                         </tr>
                         {% endfor %}

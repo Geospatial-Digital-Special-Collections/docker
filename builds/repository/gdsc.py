@@ -193,6 +193,12 @@ def download(download_path):
                 f"{args['file']}.{args['format']}.tar.gz",
                 as_attachment=True
             )
+        if args['format'] in ["json"]:
+            return send_from_directory(
+                f"/{download_path}derived/",
+                f"{args['file']}.{args['format']}",
+                as_attachment=True
+            )
 
     return "File not found", 400
 
