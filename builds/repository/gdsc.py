@@ -163,16 +163,16 @@ def detail(name_id):
     response = simplejson.load(connection)
     document = response['response']['docs'][0]
 
-    if 'gdsc_attributes' in document:
-        document['gdsc_columns'] = [attr.split(';')[0] for attr in document['gdsc_attributes']]
-
-    if args['query'] != None and args['query'] != 'None' and args['query'] != '':
-        document = highlight_query(document,args['query'])
-
     if "query" in args:
         if args['query'] != None and args['query'] != 'None' and args['query'] != '':
             document = highlight_query(document,args['query'])
     else: args['query'] = None
+
+    if 'gdsc_attributes' in document:
+        document['gdsc_columns'] = [attr.split(';')[0] for attr in document['gdsc_attributes']]
+
+    if 'gdsc_attributes' in document:
+        document['gdsc_attributes'] = [attr.split(';') for attr in document['gdsc_attributes']]
 
     if 'gdsc_derivatives' in document:
         document['gdsc_derived'] = [attr.split(';') for attr in document['gdsc_derived']]

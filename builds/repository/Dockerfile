@@ -10,5 +10,5 @@ RUN pip install --no-cache-dir --upgrade -r requirements.txt
 
 # copy the app and start it running
 COPY ./builds/repository ./
-CMD ["nohup", "python", "./gdsc.py", "&"]
+# CMD ["nohup", "python", "./gdsc.py", "&"]
 # CMD ["uvicorn", "gdsc:app", "--host", "0.0.0.0", "--port", "5000"]
