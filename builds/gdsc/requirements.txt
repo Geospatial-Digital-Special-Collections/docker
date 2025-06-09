@@ -7,4 +7,5 @@ boxsdk[jwt]
 python-dotenv
 pyyaml
 openpyxl
-pillow
+netCDF4
+cdsapi
