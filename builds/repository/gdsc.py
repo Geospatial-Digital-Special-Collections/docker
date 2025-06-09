@@ -169,13 +169,15 @@ def detail(name_id):
     if args['query'] != None and args['query'] != 'None' and args['query'] != '':
         document = highlight_query(document,args['query'])
 
-    if 'gdsc_attributes' in document:
-        document['gdsc_attributes'] = [attr.split(';') for attr in document['gdsc_attributes']]
+    if "query" in args:
+        if args['query'] != None and args['query'] != 'None' and args['query'] != '':
+            document = highlight_query(document,args['query'])
+    else: args['query'] = None
 
     if 'gdsc_derivatives' in document:
         document['gdsc_derived'] = [attr.split(';') for attr in document['gdsc_derived']]
 
-    return render_template('detail.html', name_id=name_id, document=document, referrer=request.args)
+    return render_template('detail.html', name_id=name_id, document=document, referrer=args)
 
 ##
  # provide download api for derivate files
