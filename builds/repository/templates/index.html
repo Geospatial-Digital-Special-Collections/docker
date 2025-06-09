@@ -37,10 +37,15 @@
               </label>
             </div>
             <div class="float-right">
+              <!-- toggle button to collections view -->
+              <div class="float-left mr-3">
+                <a href="{{ switch_url }}" class="btn btn-outline-secondary float-right mb-2">
+                  {{ switch_label }}
+                </a>
+              </div>
               <button type="submit" class="float-right btn btn-primary">Search</button>
               <div class="float-right mr-3">
                 <input type="text" class="form-control" name="searchTerm" placeholder="Enter search term(s)" value="{{ query if (query != "" and query != None) else "" }}">
-              </div>
             </div>
           </form>
         </div>
