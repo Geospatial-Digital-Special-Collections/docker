@@ -112,8 +112,9 @@
     </div>
     {% for document in results %}
       {% autoescape off %}
-      <div class="row border-top pt-2 pb-2">
-        <div class="col-7 align-top">
+      <div class="row mb-4">
+        <div class="col ml-4">
+
           <h4 class="float-left">
             {% if document['adms_representationTechnique'] %}
               {% if document['adms_representationTechnique'][0] == 'raster' %}
@@ -125,10 +126,7 @@
               {% endif %}
             {% endif %}
           </h4>
-        </div>
-      </div>
-      <div class="row mb-4">
-        <div class="col ml-4">
+
           <div class="container">
             <div class="row">
               <div class="col-sm-10">
