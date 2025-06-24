@@ -108,7 +108,7 @@
   <div class="container mb-4">
     {% if results and results|length > 0 %}
     <div class="row mt-4 pt-2 pb-1">
-      <h5 class="float-left ml-2 mt-2">Results (n={{ numresults }}):</h5>
+      <h5 class="float-left ml-2 mt-2">Datasets in collection ({{ numresults }}):</h5>
     </div>
     {% for document in results %}
       {% autoescape off %}
