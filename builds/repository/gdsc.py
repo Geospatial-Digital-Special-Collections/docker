@@ -7,6 +7,7 @@ import re
 from collections import OrderedDict
 from flask import Response
 import io
+from flask import make_response
 
 app = Flask(__name__)
 log = logging.getLogger('werkzeug')
@@ -15,6 +16,40 @@ log.disabled = True
 BASE_PATH = 'http://solr.gdsc:8983/solr/dcat/select?wt=json&'
 SNIP_LENGTH = 180
 QUERY_FIELDS = ['gdsc_collections','dct_title','dcat_keyword','dct_description','gdsc_attributes']
+
+@app.route('/download_bibtex_single')
+def download_bibtex_single():
+    doc_id = request.args.get('doc_id')
+    # Query Solr for the specific document
+    params = {'q': f"dct_identifier:('{doc_id}')"}
+    results, _ = query_solr(BASE_PATH, params)
+    if not results:
+        return "Citation not found", 404
+    doc = results[0]
+
+    # Build a minimal BibTeX entry; adjust fields as needed
+    bibtex = []
+    key = doc_id.split('/')[-1]  # or any unique key
+    bibtex.append(f"@misc{{{key},")
+    if 'dct_creator' in doc:
+        authors = ' and '.join([c.split(';')[0] for c in doc['dct_creator']])
+        bibtex.append(f"  author = {{{authors}}},")
+    if 'dct_title' in doc:
+        bibtex.append(f"  title = {{{doc['dct_title'][0]}}},")
+    if 'dct_publisher' in doc:
+        bibtex.append(f"  publisher = {{{doc['dct_publisher'][0]}}},")
+    if 'dct_issued' in doc:
+        year = doc['dct_issued'][0][:4]
+        bibtex.append(f"  year = {{{year}}},")
+    bibtex.append(f"  url = {{{doc_id}}}")
+    bibtex.append("}")
+
+    body = '\n'.join(bibtex)
+
+    response = make_response(body)
+    response.headers['Content-Disposition'] = f"attachment; filename=\"{key}.bib\""
+    response.mimetype = 'application/x-bibtex'
+    return response
 
 @app.route('/download_bibtex')
 def download_bibtex():
