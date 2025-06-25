@@ -107,9 +107,9 @@
 
   <div class="container mb-4">
     {% if results and results|length > 0 %}
-    <div class="row mt-4 pt-2 pb-1">
-      <h5 class="float-left ml-2 mt-2">Datasets in collection ({{ numresults }}):</h5>
-      <div class="float-right mb-2">
+    <div class="row mb-4">
+      <h5 class="float-left mb-1">Datasets in collection ({{ numresults }}):</h5>
+      <div class="col ml-4">
         <a href="{{ url_for('download_bibtex', collection=collection, query=query, active=active) }}" class="btn btn-success">
           Download Citations (BibTeX)
         </a>
