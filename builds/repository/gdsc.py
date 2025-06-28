@@ -53,10 +53,6 @@ def download_bibtex_single(name_id):
 
 @app.route('/download_bibtex/<collection>')
 def download_bibtex(collection):
-    collection = request.args.get('collection', '*')
-    query = request.args.get('query')
-    active = request.args.get('active')
-
     q, qf = collection, "gdsc_collections "
     query_parameters = {"q": f"gdsc_collections:{collection}"}
 
@@ -228,7 +224,7 @@ def index():
         results=results,
         collections=COLLECTIONS,
         switch_url=url_for('collections_view'),
-        switch_label='Collections'
+        switch_label='Bibliography'
     )
 
 @app.route('/detail/<name_id>', methods=["GET", "POST"])
