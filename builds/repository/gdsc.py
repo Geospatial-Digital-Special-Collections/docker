@@ -17,8 +17,8 @@ BASE_PATH = 'http://solr.gdsc:8983/solr/dcat/select?wt=json&'
 SNIP_LENGTH = 180
 QUERY_FIELDS = ['gdsc_collections','dct_title','dcat_keyword','dct_description','gdsc_attributes']
 
-@app.route('/download_bibtex_single')
-def download_bibtex_single():
+@app.route('/download_bibtex_single/<name_id>')
+def download_bibtex_single(name_id):
     doc_id = request.args.get('doc_id')
     # Query Solr for the specific document
     params = {'q': f"dct_identifier:('{doc_id}')"}
@@ -51,8 +51,8 @@ def download_bibtex_single():
     response.mimetype = 'application/x-bibtex'
     return response
 
-@app.route('/download_bibtex')
-def download_bibtex():
+@app.route('/download_bibtex/<collection>')
+def download_bibtex(collection):
     collection = request.args.get('collection', '*')
     query = request.args.get('query')
     active = request.args.get('active')

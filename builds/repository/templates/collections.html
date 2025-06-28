@@ -110,7 +110,7 @@
     <div class="row mb-4">
       <h5 class="float-left mb-1">Datasets in collection ({{ numresults }}):</h5>
       <div class="col ml-4">
-        <a href="{{ url_for('download_bibtex', collection=collection, query=query, active=active) }}" class="btn btn-success">
+        <a href="download_bibtex/{{collection}}" class="btn btn-success">
           Download Citations (BibTeX)
         </a>
       </div>
@@ -159,7 +159,7 @@
               <h4 class="float-left">
                 <div class="download-citation float-right">
                 {% if 'dct_identifier' in document and document['dct_identifier'] %}
-                  <a href="{{ url_for('download_bibtex_single', doc_id=document['dct_identifier'][0]) }}"
+                <a href="download_bibtex_single/{{document['gdsc_tablename'][0]}}"
                      class="btn btn-secondary btn-sm ml-2" download>
                       Download Citation (BibTeX)
                   </a>
