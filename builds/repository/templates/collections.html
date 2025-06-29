@@ -19,9 +19,9 @@
   <div class="container mb-5">
     <div class="row border-top border-bottom pt-2 pb-2">
       <form method="post" id="filterForm" name="filterForm" class="w-100">
-        <div class="float-left">
+        <div class="d-flex justify-content-between w-auto">
           <h5 class="float-left mr-2 mt-2">Collection: </h5>
-          <div class="float-left">
+          <div>
             <select class="form-control" id="collection" name="collection">
               {% for coll in collections %}
               <option value="{{ collections[coll]['Collection_ID'][0] }}"
@@ -31,23 +31,22 @@
               {% endfor %}
             </select>
           </div>
-        </div>
-        <div class="float-left mb-1">
-          <input type="checkbox" {{ "checked" if active == 'true' else "" }} id="active" name="active" value="true" class="ml-3 mt-3">
-          <label for="active">
-            show only active datasets
-            <div class="float-left circle green-fill"></div>
-          </label>
-        </div>
-        <div class="float-right">
+          <div>
+            <input type="checkbox" {{ "checked" if active == 'true' else "" }} id="active" name="active" value="true" class="ml-3 mt-3">
+            <label for="active">
+              show only active datasets
+            </label>
+          </div>
           <!-- toggle button back to index (home) -->
-          <div class="float-left mr-3">
+          <div>
             <a href="{{ switch_url }}" class="btn btn-outline-secondary float-right mb-2">
               {{ switch_label }}
             </a>
           </div>
-          <button type="submit" class="float-right btn btn-primary">Search</button>
-          <div class="float-right mr-3">
+          <div>
+            <button type="submit" class="float-right btn btn-primary">Search</button>
+          </div>
+          <div>
             <input type="text" class="form-control" name="searchTerm" placeholder="Enter search term(s)"
               value="{{ query if (query != '' and query is not none) else '' }}">
           </div>

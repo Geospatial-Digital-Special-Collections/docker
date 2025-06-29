@@ -348,7 +348,7 @@ def collections_view():
         results=results,
         collections=COLLECTIONS,
         switch_url=url_for('index'),
-        switch_label='Home'
+        switch_label='Standard'
     )
 
 if __name__ == '__main__':
