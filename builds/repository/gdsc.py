@@ -34,6 +34,39 @@ def bibtex(name_id):
     # Return the BibTeX entry as plain text
     return Response(bibtex_entry, mimetype='text/plain')
 
+
+@app.route('/bibtex_collection/<collection>', methods=["GET"])
+def bibtex_collection(collection):
+    # Query parameters to get all documents in the specified collection
+    if collection == "all":
+        query_parameters = {"q": "*:*"}  # Query to get all documents
+    else:
+        query_parameters = {"q": f"gdsc_collections:{collection}"}
+    
+    query_string = urlencode(query_parameters)
+    connection = urlopen(f"{BASE_PATH}{query_string}")
+    response = simplejson.load(connection)
+
+    # Assuming the response contains the documents
+    documents = response['response']['docs']
+
+    # Construct BibTeX entries for all documents
+    bibtex_entries = []
+    for doc in documents:
+        bibtex_entry = construct_bibtex_entry(doc)
+        bibtex_entries.append(bibtex_entry)
+
+    # Join all entries into a single string
+    bibtex_output = ''.join(bibtex_entries)
+
+    # Create a response with the BibTeX entries as a downloadable file
+    response = make_response(bibtex_output)
+    response.headers["Content-Disposition"] = f"attachment; filename={collection}.bib"
+    response.headers["Content-Type"] = "text/plain"
+    
+    return response
+
+
 def construct_bibtex_entry(doc):
     # Initialize the BibTeX entry
     entry = "@article{"
