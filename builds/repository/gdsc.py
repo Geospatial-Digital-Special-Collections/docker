@@ -17,101 +17,56 @@ BASE_PATH = 'http://solr.gdsc:8983/solr/dcat/select?wt=json&'
 SNIP_LENGTH = 180
 QUERY_FIELDS = ['gdsc_collections','dct_title','dcat_keyword','dct_description','gdsc_attributes']
 
-@app.route('/download_bibtex_single/<name_id>')
-def download_bibtex_single(name_id):
-    doc_id = request.args.get('doc_id')
-    # Query Solr for the specific document
-    params = {'q': f"dct_identifier:('{doc_id}')"}
-    results, _ = query_solr(BASE_PATH, params)
-    if not results:
-        return "Citation not found", 404
-    doc = results[0]
+@app.route('/bibtex/<name_id>', methods=["GET"])
+def bibtex(name_id):
+    # Query parameters to get the document for the given name_id
+    query_parameters = {"q": f"gdsc_tablename:{name_id}"}
+    query_string = urlencode(query_parameters)
+    connection = urlopen(f"{BASE_PATH}{query_string}")
+    response = simplejson.load(connection)
+    
+    # Assuming the response contains the document
+    document = response['response']['docs'][0]
 
-    # Build a minimal BibTeX entry; adjust fields as needed
-    bibtex = []
-    key = doc_id.split('/')[-1]  # or any unique key
-    bibtex.append(f"@misc{{{key},")
+    # Constructing the BibTeX entry
+    bibtex_entry = construct_bibtex_entry(document)
+
+    # Return the BibTeX entry as plain text
+    return Response(bibtex_entry, mimetype='text/plain')
+
+def construct_bibtex_entry(doc):
+    # Initialize the BibTeX entry
+    entry = "@article{"
+    key_parts = []
+
+    # Construct the BibTeX key
     if 'dct_creator' in doc:
-        authors = ' and '.join([c.split(';')[0] for c in doc['dct_creator']])
-        bibtex.append(f"  author = {{{authors}}},")
-    if 'dct_title' in doc:
-        bibtex.append(f"  title = {{{doc['dct_title'][0]}}},")
-    if 'dct_publisher' in doc:
-        bibtex.append(f"  publisher = {{{doc['dct_publisher'][0]}}},")
+        first_creator = doc['dct_creator'][0].split(';')[0].replace(' ', '')
+        key_parts.append(first_creator)
     if 'dct_issued' in doc:
-        year = doc['dct_issued'][0][:4]
-        bibtex.append(f"  year = {{{year}}},")
-    bibtex.append(f"  url = {{{doc_id}}}")
-    bibtex.append("}")
+        key_parts.append(doc['dct_issued'][0][:4])  # Get the year
+    if 'dct_title' in doc:
+        key_parts.append(doc['dct_title'][0].split(' ')[0])  # Get the first word of the title
 
-    body = '\n'.join(bibtex)
+    bibkey = ''.join(key_parts) or 'citation'
+    entry += bibkey + ",\n"
 
-    response = make_response(body)
-    response.headers['Content-Disposition'] = f"attachment; filename=\"{key}.bib\""
-    response.mimetype = 'application/x-bibtex'
-    return response
+    # Add fields to the BibTeX entry
+    if 'dct_creator' in doc:
+        creators = ' and '.join([c.split(';')[0] for c in doc['dct_creator']])
+        entry += f"  author = {{{creators}}},\n"
+    if 'dct_issued' in doc:
+        entry += f"  year = {{{doc['dct_issued'][0][:4]}}},\n"
+    if 'dct_title' in doc:
+        entry += f"  title = {{{doc['dct_title'][0]}}},\n"
+    if 'dct_publisher' in doc:
+        entry += f"  publisher = {{{doc['dct_publisher'][0]}}},\n"
+    if 'dct_identifier' in doc:
+        entry += f"  url = {{{doc['dct_identifier'][0]}}},\n"
 
-@app.route('/download_bibtex/<collection>')
-def download_bibtex(collection):
-    q, qf = collection, "gdsc_collections "
-    query_parameters = {"q": f"gdsc_collections:{collection}"}
+    entry += "}\n\n"
+    return entry
 
-    if query:
-        qf += ' '.join(QUERY_FIELDS)
-        q = f"{q} {query}".strip()
-
-    if active:
-        qf = f"{qf} gdsc_up"
-        q = f"{q} true".strip()
-
-    if qf.strip() != "gdsc_collections":
-        query_parameters = {
-            "q.op": "AND",
-            "defType": "dismax",
-            "qf": qf,
-            "q": q
-        }
-
-    results, _ = query_solr(BASE_PATH, query_parameters)
-
-    bibtex_entries = []
-    for doc in results:
-        entry = "@misc{"
-        # Generate a simple key: FirstCreatorYearTitle (sanitized)
-        key_parts = []
-        if 'dct_creator' in doc:
-            first_creator = doc['dct_creator'][0].split(';')[0].replace(' ', '')
-            key_parts.append(first_creator)
-        if 'dct_issued' in doc:
-            key_parts.append(doc['dct_issued'][0][:4])
-        if 'dct_title' in doc:
-            key_parts.append(doc['dct_title'][0].split(' ')[0])
-
-        bibkey = ''.join(key_parts) or 'citation'
-
-        entry += f"{bibkey},\n"
-
-        if 'dct_creator' in doc:
-            creators = ' and '.join([c.split(';')[0] for c in doc['dct_creator']])
-            entry += f"  author = {{{creators}}},\n"
-        if 'dct_issued' in doc:
-            entry += f"  year = {{{doc['dct_issued'][0][:4]}}},\n"
-        if 'dct_title' in doc:
-            entry += f"  title = {{{doc['dct_title'][0]}}},\n"
-        if 'dct_publisher' in doc:
-            entry += f"  publisher = {{{doc['dct_publisher'][0]}}},\n"
-        if 'dct_identifier' in doc:
-            entry += f"  url = {{{doc['dct_identifier'][0]}}},\n"
-
-        entry += "}\n\n"
-        bibtex_entries.append(entry)
-
-    bibtex_string = ''.join(bibtex_entries)
-    return Response(
-        bibtex_string,
-        mimetype="text/plain",
-        headers={"Content-Disposition": "attachment;filename=citations.bib"}
-    )
 
 def query_solr(path, parameters):
     numresults = 1
