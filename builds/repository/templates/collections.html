@@ -88,15 +88,20 @@
     </div>
     <div class="col-9">
       <div class="row mb-4 align-items-center justify-content-between">
-        <div class="col d-flex align-items-center gap-2">
+        <div class="col-auto float-left">
           <button type="submit" class="btn btn-primary">Search</button>
+        </div>
+
+        <div class="col-auto float-left">
           <input type="text" class="form-control" name="searchTerm"
             placeholder="Enter search term(s)"
             value="{{ query if (query != '' and query is not none) else '' }}"
             style="width: auto; min-width: 200px;">
         </div>
 
-        <div class="col-auto">
+        <div class="col"></div>
+
+        <div class="col-auto float-right">
           <a href="{{ switch_url }}" class="btn btn-outline-secondary">
             {{ switch_label }}
           </a>
