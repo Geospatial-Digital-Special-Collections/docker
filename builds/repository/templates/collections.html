@@ -67,7 +67,7 @@
     </div>
   </div>
 
-  <div class="row">
+  <div class="row border border-dark rounded-3 p-4">
     <div class="col-3">
       <div>
         <select class="form-control" id="collection" name="collection">
@@ -136,7 +136,7 @@
 
             <div class="container">
               <div class="row">
-                <div class="col-sm-10">
+                <div class="col">
                     {% if document['dct_creator'] %}
                       {% for creator in document['dct_creator'] %}
                         {% set creator = creator.split(';') %}
@@ -158,16 +158,14 @@
                   {% endif %}
                 </div>
 
-                <h4 class="float-left">
-                  <div class="download-citation float-right">
+                <div class="col-2">
                   {% if 'dct_identifier' in document and document['dct_identifier'] %}
                   <a href="bibtex/{{document['gdsc_tablename'][0]}}"
                        class="btn btn-secondary btn-sm ml-2" download>
                         Download Citation (BibTeX)
                     </a>
                   {% endif %}
-                  </div>
-                </h4>
+                </div>
 
               </div>
             </div>
