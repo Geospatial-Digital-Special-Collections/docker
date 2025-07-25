@@ -69,36 +69,35 @@
 
   <div class="row border border-dark rounded-3 p-4">
     <div class="col-3">
-      <div>
-        <select class="form-control" id="collection" name="collection">
-          {% for coll in collections %}
-          <option value="{{ collections[coll]['Collection_ID'][0] }}"
-            {{ "selected='selected'" if collection == collections[coll]['Collection_ID'][0] else "" }}>
-            {{ collections[coll]['Title'][0] }}
-          </option>
-          {% endfor %}
-        </select>
-      </div>
-      <div>
-        <input type="checkbox" {{ "checked" if active == 'true' else "" }} id="active" name="active" value="true" class="ml-3 mt-3">
-        <label for="active">
-          show only active datasets
-        </label>
-      </div>
+      <form method="post" id="filterForm" name="filterForm" class="w-100">
+        <div>
+          <select class="form-control" id="collection" name="collection">
+            {% for coll in collections %}
+            <option value="{{ collections[coll]['Collection_ID'][0] }}" {{ "selected='selected'" if collection == collections[coll]['Collection_ID'][0] else "" }}>{{ collections[coll]['Title'][0] }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <input type="checkbox" {{ "checked" if active == 'true' else "" }} id="active" name="active" value="true" class="ml-3 mt-3">
+          <label for="active">
+            show only active datasets
+          </label>
+        </div>
+      </form>
     </div>
     <div class="col-9">
-      <div class="row mb-4 align-items-center justify-content-between">
-        <div class="col-auto float-left">
-          <button type="submit" class="btn btn-primary">Search</button>
-        </div>
+      <form method="post" id="filterForm" name="filterForm" class="w-100">
+        <div class="row mb-4 align-items-center justify-content-between">
+          <div class="col-auto float-left">
+            <button type="submit" class="btn btn-primary">Search</button>
+          </div>
 
-        <div class="col-auto float-left">
-          <input type="text" class="form-control" name="searchTerm"
-            placeholder="Enter search term(s)"
-            value="{{ query if (query != '' and query is not none) else '' }}"
-            style="width: auto; min-width: 200px;">
-        </div>
-
+          <div class="col-auto float-left">
+            <input type="text" class="form-control" name="searchTerm"
+              placeholder="Enter search term(s)"
+              value="{{ query if (query != '' and query is not none) else '' }}"
+              style="width: auto; min-width: 200px;">
+          </div>
         <div class="col"></div>
 
         <div class="col-auto float-right">
