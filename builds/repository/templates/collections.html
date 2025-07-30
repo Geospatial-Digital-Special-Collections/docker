@@ -156,14 +156,19 @@
                   </span>
                   {% endif %}
                 </div>
-
-                <div class="col-2 float-right">
-                  {% if 'dct_identifier' in document and document['dct_identifier'] %}
-                  <a href="bibtex/{{document['gdsc_tablename'][0]}}"
-                       class="btn btn-secondary btn-sm ml-2" download>
-                        Download Citation (BibTeX)
-                    </a>
-                  {% endif %}
+                <div class="dropdown">
+                  <button class="btn btn-link p-1 dropdown-toggle"  data-bs-toggle="dropdown" type="button" aria-expanded="true">
+                    Cite
+                  </button>
+                  <ul class="dropdown-menu p-1" style="width: auto; min-width: 0">
+                    <li>
+                      {% if 'dct_identifier' in document and document['dct_identifier'] %}
+                        <a class="dropdown-item p-1" href="bibtex/{{document['gdsc_tablename'][0]}}" download>
+                          BibTeX
+                        </a>
+                      {% endif %}
+                    </li>
+                  </ul>
                 </div>
 
               </div>
