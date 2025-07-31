@@ -106,6 +106,26 @@
           </a>
         </div>
       </div>
+      
+      <div class="row mb-2 m-0">
+        <nav aria-label="Page navigation example">
+          <ul class="pagination">
+            <li class="page-item {% if page == 1 %}disabled{% endif %}">
+              <a class="page-link" href="{{page-1}}">
+                <span aria-hidden="true">&laquo;</span>
+              </a>
+            </li>
+            {% for i in range(numresults//10) %}
+            <li class="page-item {% if page == i + 1 %}active{% endif %}"><a class="page-link" href="{{i+1}}">{{i+1}}</a></li>
+            {% endfor %}
+            <li class="page-item {% if page == numresults//10 %}disabled{% endif %}">
+              <a class="page-link" href="{{page+1}}">
+                <span aria-hidden="true">&raquo;</span>
+              </a>
+            </li>
+          </ul>
+        </nav>
+      </div>
 
       {% if results and results|length > 0 %}
       <div class="row mb-4 m-0">
@@ -177,6 +197,25 @@
         </div>
         {% endautoescape %}
       {% endfor %}
+      <div class="row mb-2 m-0">
+        <nav aria-label="Page navigation example">
+          <ul class="pagination">
+            <li class="page-item {% if page == 1 %}disabled{% endif %}">
+              <a class="page-link" href="{{page-1}}">
+                <span aria-hidden="true">&laquo;</span>
+              </a>
+            </li>
+            {% for i in range(numresults//10) %}
+            <li class="page-item {% if page == i + 1 %}active{% endif %}"><a class="page-link" href="{{i+1}}">{{i+1}}</a></li>
+            {% endfor %}
+            <li class="page-item {% if page == numresults//10 %}disabled{% endif %}">
+              <a class="page-link" href="{{page+1}}">
+                <span aria-hidden="true">&raquo;</span>
+              </a>
+            </li>
+          </ul>
+        </nav>
+      </div>
       {% endif %}
     </div>
   </div>

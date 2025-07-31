@@ -16,6 +16,7 @@ log.disabled = True
 BASE_PATH = 'http://solr.gdsc:8983/solr/dcat/select?wt=json&'
 SNIP_LENGTH = 180
 QUERY_FIELDS = ['gdsc_collections','dct_title','dcat_keyword','dct_description','gdsc_attributes']
+RESULTS_PER_PAGE = 10
 
 @app.route('/bibtex/<name_id>', methods=["GET"])
 def bibtex(name_id):
@@ -101,20 +102,21 @@ def construct_bibtex_entry(doc):
     return entry
 
 
-def query_solr(path, parameters):
-    numresults = 1
+def query_solr(path, parameters, start=0, end=None):
     results = []
 
+    # Set 'start' and default 'rows' if not specified
+    parameters["start"] = start
+    parameters["rows"] = (end - start) if end is not None else parameters.get("rows", 10)
+
     query_string = urlencode(parameters).replace('-', '+')
-    while numresults > len(results):
-        connection = urlopen(f"{path}{query_string}")
-        response = simplejson.load(connection)
-        numresults = response['response']['numFound']
-        results = response['response']['docs']
-        parameters["rows"] = numresults
-        query_string = urlencode(parameters).replace('-', '+')
-    if results is None:
-        results = []
+    connection = urlopen(f"{path}{query_string}")
+    response = simplejson.load(connection)
+    
+    numresults = response['response']['numFound']
+    docs = response['response']['docs']
+    
+    results = docs if docs is not None else []
 
     return results, numresults
 
@@ -273,8 +275,8 @@ keys = [item['Collection_ID'][0] for item in COLLECTIONS]
 COLLECTIONS = dict(zip(keys, COLLECTIONS))
 COLLECTIONS = OrderedDict(sorted(COLLECTIONS.items(), key=lambda i: i[0].lower()))
 
-@app.route('/collections', methods=["GET", "POST"])
-def collections_view():
+@app.route('/collections/<int:page>', methods=["GET", "POST"])
+def collections_view(page):
     collection = list(COLLECTIONS.keys())[0]
     query, active = None, None
     query_parameters = {"q": "gdsc_collections:*"}
@@ -314,7 +316,7 @@ def collections_view():
                 "q": q
             }
 
-    results, numresults = query_solr(BASE_PATH, query_parameters)
+    results, numresults = query_solr(BASE_PATH, query_parameters, page*RESULTS_PER_PAGE, (page+1)*RESULTS_PER_PAGE)
 
     for entry in results:
         if query:
@@ -336,7 +338,8 @@ def collections_view():
         results=results,
         collections=COLLECTIONS,
         switch_url=url_for('index'),
-        switch_label='Standard'
+        switch_label='Standard',
+        page=page
     )
 
 if __name__ == '__main__':
