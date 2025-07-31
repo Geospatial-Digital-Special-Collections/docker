@@ -316,7 +316,7 @@ def collections_view(page):
                 "q": q
             }
 
-    results, numresults = query_solr(BASE_PATH, query_parameters, page*RESULTS_PER_PAGE, (page+1)*RESULTS_PER_PAGE)
+    results, numresults = query_solr(BASE_PATH, query_parameters, (page-1)*RESULTS_PER_PAGE, page*RESULTS_PER_PAGE)
 
     for entry in results:
         if query:
