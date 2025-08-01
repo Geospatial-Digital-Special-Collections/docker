@@ -38,8 +38,8 @@
     {% endblock %}
   </head>
   <body>
-    <div class="bg-image text-center shadow-1-strong mb-5 text-white p-5" style="background-image: url('/static/gdsc_UM2022drone_header.jpg')">
-      <a href="/" style="color: white; text-decoration: none;"><h1 style="text-shadow: 0px 0px 23px #2b3626, 0px 0px 23px #2b3626;">UM Geospatial Digital Special Collections</h1></a>
+    <div class="bg-image text-center shadow-1-strong mb-5 text-white p-5" style="background-image: url('{{ root }}static/gdsc_UM2022drone_header.jpg')">
+      <a href="{{ root }}" style="color: white; text-decoration: none;"><h1 style="text-shadow: 0px 0px 23px #2b3626, 0px 0px 23px #2b3626;">UM Geospatial Digital Special Collections</h1></a>
     </div>
     <div id="content" class="container">
     {% block content %}
@@ -48,8 +48,8 @@
     <div id="footer" class="container text-center mb-4 mt-2">
     {% block footer %}
       <hr>
-      <a href="https://idsc.miami.edu/"><img src="/static/IDSC-wide.jpg" class="img-fluid w-50" style="max-width: 350px"></a>
-      <a href="https://www.library.miami.edu/"><img src="/static/Library-wide.jpg" class="img-fluid w-50" style="max-width: 350px"></a>
+      <a href="https://idsc.miami.edu/"><img src="{{ root }}static/IDSC-wide.jpg" class="img-fluid w-50" style="max-width: 350px"></a>
+      <a href="https://www.library.miami.edu/"><img src="{{ root }}static/Library-wide.jpg" class="img-fluid w-50" style="max-width: 350px"></a>
     {% endblock %}
     </div>
   </body>

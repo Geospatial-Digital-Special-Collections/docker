@@ -18,7 +18,7 @@
 {% block content %}
       <div class="container mb-5">
         <div class="row border-top border-bottom pt-2 pb-2">
-          <form method="post" id="filterForm" name="filterForm" class="w-100">
+          <form method="post" id="filterForm" name="filterForm" class="w-100" action="./">
             <div class="float-left">
               <h5 class="float-left mr-2 mt-2">Collection: </h5>
               <div class="float-left">
@@ -100,15 +100,15 @@
             <h4 class="float-left">
               {% if document['adms_representationTechnique'] %}
                 {% if document['adms_representationTechnique'][0] == 'raster' %}
-                  <img src="/static/raster.jpg" class="mb-1" style="max-width: 18px;">
+                  <img src="static/raster.jpg" class="mb-1" style="max-width: 18px;">
                 {% else %}
                   {% if document['locn_geometry'] %}
-                    <img src="/static/{{ document['locn_geometry'][0] }}.jpg" class="mb-1" style="max-width: 18px;">
+                    <img src="static/{{ document['locn_geometry'][0] }}.jpg" class="mb-1" style="max-width: 18px;">
                   {% endif %}
                 {% endif %}
               {% endif %}
               {% if document['dct_title'] %}
-                <a href="/detail/{{ document['gdsc_tablename'][0] }}?collection={{ collection }}&active={{ active }}&query={{ query }}">{{ document['dct_title'][0] }}</a>
+                <a href="detail/{{ document['gdsc_tablename'][0] }}?collection={{ collection }}&active={{ active }}&query={{ query }}">{{ document['dct_title'][0] }}</a>
               {% endif %}
               <div class="float-left circle {{ 'green-fill' if document['gdsc_up'][0] or document['gdsc_tileUrl'] else 'red-fill' }}"></div>
             </h4>
@@ -162,7 +162,7 @@
                   {% if document['gdsc_sponsor'] %}
                   <span class="mt-1 d-block"><b>Sponsors:</b><br>
                   {% for sponsor in document['gdsc_sponsor'] %}
-                  <a href="{{ sponsor.split(';')[1] }}" target="_blank"><img src="/static/{{ sponsor.split(';')[0] }}-small.jpg" style="max-height:30px;"></a>
+                  <a href="{{ sponsor.split(';')[1] }}" target="_blank"><img src="static/{{ sponsor.split(';')[0] }}-small.jpg" style="max-height:30px;"></a>
                   {% endfor %}
                   </span>
                   {% endif %}

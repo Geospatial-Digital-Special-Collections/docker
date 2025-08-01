@@ -146,7 +146,8 @@ def index():
         active=active,
         numresults=numresults,
         results=results,
-        collections=COLLECTIONS
+        collections=COLLECTIONS,
+        root='./'
     )
 
 ##
@@ -177,7 +178,13 @@ def detail(name_id):
     if 'gdsc_derivatives' in document:
         document['gdsc_derived'] = [attr.split(';') for attr in document['gdsc_derived']]
 
-    return render_template('detail.html', name_id=name_id, document=document, referrer=args)
+    return render_template(
+        'detail.html', 
+        name_id=name_id, 
+        document=document, 
+        referrer=args,
+        root='../'
+    )
 
 ##
  # provide download api for derivate files
@@ -222,4 +229,5 @@ COLLECTIONS = OrderedDict(sorted(COLLECTIONS.items(), key=lambda i: i[0].lower()
  # run the app if called from the command line
  ##
 if __name__ == '__main__':
-    app.run(host='0.0.0.0',debug=True,use_reloader=True)
+    app.run(host='0.0.0.0')
+    # app.run(host='0.0.0.0',debug=True,use_reloader=True)

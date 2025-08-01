@@ -15,12 +15,12 @@
 {% block content %}
       <div class="container mb-6">
         <div class="row mb-2">
-          <form method="post" action="/" id="filterForm" name="filterForm">
+          <form method="post" action="../" id="filterForm" name="filterForm">
             <input type="hidden" id="active" name="active" value="{{ referrer.active }}">
             <input type="hidden" id="collection" name="collection" value="{{ referrer.collection }}">
             <input type="hidden" id="searchTerm" name="searchTerm" value="{{ referrer.query if (referrer.query != "" and referrer.query != None) else "" }}">
           </form>
-          <a href="/">gdsc</a>
+          <a href="../">gdsc</a>
           {% if referrer.query != "" and referrer.query != None and referrer.query != "None" %}
           &nbsp;>&nbsp;<a href="#" onclick="javascript:document.getElementById('filterForm').submit();">search [{{ referrer.query }}]
           {% endif %}</a>
@@ -214,7 +214,7 @@
             {% if document['gdsc_sponsor'] %}
             <span class="mt-1 d-block"><b>Sponsors:</b><br>
             {% for sponsor in document['gdsc_sponsor'] %}
-            <a href="{{ sponsor.split(';')[1] }}" target="_blank"><img src="/static/{{ sponsor.split(';')[0] }}-small.jpg" style="max-height:30px;"></a>
+            <a href="{{ sponsor.split(';')[1] }}" target="_blank"><img src="../static/{{ sponsor.split(';')[0] }}-small.jpg" style="max-height:30px;"></a>
             {% endfor %}
             </span>
             {% endif %}
