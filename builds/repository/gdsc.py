@@ -10,7 +10,7 @@ app = Flask(__name__)
 log = logging.getLogger('werkzeug')
 log.disabled = True
 
-BASE_PATH = 'http://solr.gdsc:8983/solr/dcat/select?wt=json&'
+BASE_PATH = 'http://gdsc-solr.gdsc:8983/solr'
 SNIP_LENGTH = 180
 QUERY_FIELDS = ['gdsc_collections','dct_title','dcat_keyword','dct_description','gdsc_attributes']
 
@@ -122,7 +122,7 @@ def index():
             }
 
     # send query to SOLR and gather paged results
-    results, numresults = query_solr(BASE_PATH,query_parameters)
+    results, numresults = query_solr(f'{BASE_PATH}/dcat/select?wt=json&',query_parameters)
 
     # check results for correct display
     for entry in results:
@@ -160,7 +160,7 @@ def detail(name_id):
 
     query_parameters = {"q": "gdsc_tablename:" + name_id}
     query_string  = urlencode(query_parameters)
-    connection = urlopen("{}{}".format(BASE_PATH, query_string))
+    connection = urlopen("{}{}".format(f'{BASE_PATH}/dcat/select?wt=json&', query_string))
     response = simplejson.load(connection)
     document = response['response']['docs'][0]
 
@@ -195,6 +195,9 @@ def download(download_path):
     if 'ImmutableMultiDict' in str(type(request.args)): args = request.args.to_dict()
     else: args = request.args
 
+    # in case of reverse proxy
+    download_path = download_path[download_path.index('data/'):]
+
     if 'format' in args:
         if args['format'] in ["sql","shp","geotiff"]:
             return send_from_directory(
@@ -215,7 +218,7 @@ def download(download_path):
  # always get the list of collections for reference
  ##
 COLLECTIONS, COLLECTIONS_COUNT = query_solr(
-    'http://solr.gdsc:8983/solr/collections/select?wt=json&',
+    f'{BASE_PATH}/collections/select?wt=json&',
     {
       "q.op": "OR",
       "q": "Status:published"
