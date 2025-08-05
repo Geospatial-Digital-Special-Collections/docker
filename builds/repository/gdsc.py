@@ -275,14 +275,15 @@ keys = [item['Collection_ID'][0] for item in COLLECTIONS]
 COLLECTIONS = dict(zip(keys, COLLECTIONS))
 COLLECTIONS = OrderedDict(sorted(COLLECTIONS.items(), key=lambda i: i[0].lower()))
 
-@app.route('/collections/<int:page>', methods=["GET", "POST"])
-def collections_view(page):
+@app.route('/collections', methods=["GET", "POST"])
+def collections_view():
     collection = list(COLLECTIONS.keys())[0]
     query, active = None, None
     query_parameters = {"q": "gdsc_collections:*"}
     q, qf = "", "gdsc_collections "
     numresults = 1
     results = []
+    page = int(request.args.get('page', default = '1'))
 
     if request.method == "POST":
         if 'ImmutableMultiDict' in str(type(request.form)):
