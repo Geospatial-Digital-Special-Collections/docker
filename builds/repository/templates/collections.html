@@ -111,19 +111,19 @@
         <nav aria-label="Page navigation example">
           <ul class="pagination">
             <li class="page-item {% if page == 1 %}disabled{% endif %}">
-              <a class="page-link" href="" onclick="setUrlParam(event, {{ page - 1 }})">
+              <a class="page-link" href="" onclick="setUrlParam(event, 'page', {{ page - 1 }})">
                 <span aria-hidden="true">&laquo;</span>
               </a>
             </li>
             {% for i in range(numresults//10 + 1) %}
             <li class="page-item {% if page == i + 1 %}active{% endif %}">
-              <a class="page-link" href="" onclick="setUrlParam(event, {{ i + 1}})">
+              <a class="page-link" href="" onclick="setUrlParam(event, 'page', {{ i + 1}})">
                 {{i+1}}
               </a>
             </li>
             {% endfor %}
             <li class="page-item {% if page == numresults//10 %}disabled{% endif %}">
-              <a class="page-link" href="" onclick="setUrlParam(event, {{ page + 1 }})">
+              <a class="page-link" href="" onclick="setUrlParam(event, 'page', {{ page + 1 }})">
                 <span aria-hidden="true">&raquo;</span>
               </a>
             </li>
@@ -237,11 +237,11 @@
     });
   </script>
   <script>
-    function setUrlParam(event, pageNumber) {
+    function setUrlParam(event, param, value) {
       event.preventDefault();
 
       const url = new URL(window.location);
-      url.searchParams.set('page', pageNumber);
+      url.searchParams.set(param, value);
       window.location.href = url;
       }
   </script>
