@@ -13,7 +13,7 @@ app = Flask(__name__)
 log = logging.getLogger('werkzeug')
 log.disabled = True
 
-BASE_PATH = 'http://solr.gdsc:8983/solr/dcat/select?wt=json&'
+BASE_PATH = 'http://gdsc-solr.gdsc:8983/solr/dcat/select?wt=json&'
 SNIP_LENGTH = 180
 QUERY_FIELDS = ['gdsc_collections','dct_title','dcat_keyword','dct_description','gdsc_attributes']
 RESULTS_PER_PAGE = 10
@@ -259,7 +259,7 @@ def download(download_path):
 
 # Get list of collections
 COLLECTIONS, COLLECTIONS_COUNT = query_solr(
-    'http://solr.gdsc:8983/solr/collections/select?wt=json&',
+    'http://gdsc-solr.gdsc:8983/solr/collections/select?wt=json&',
     {
         "q.op": "OR",
         "q": "Status:published"
