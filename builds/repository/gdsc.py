@@ -275,7 +275,8 @@ keys = [item['Collection_ID'][0] for item in COLLECTIONS]
 COLLECTIONS = dict(zip(keys, COLLECTIONS))
 COLLECTIONS = OrderedDict(sorted(COLLECTIONS.items(), key=lambda i: i[0].lower()))
 
-@app.route('/collections', methods=["GET", "POST"])
+
+@app.route('/collections', methods=["GET"])
 def collections_view():
     collection = list(COLLECTIONS.keys())[0]
     query, active = None, None
@@ -283,44 +284,57 @@ def collections_view():
     q, qf = "", "gdsc_collections "
     numresults = 1
     results = []
-    page = int(request.args.get('page', default = '1'))
-    collection_arg = request.args.get('collection', default = 'all')
-    search_term_arg = request.args.get('searchTerm', default = '')
 
-    if request.method == "POST":
-        if 'ImmutableMultiDict' in str(type(request.form)):
-            args = request.form.to_dict()
-        else:
-            args = request.form
-        if 'searchTerm' in args:
-            query = re.sub(r'[\+\-\&\|\!\(\)\{\}\[\]\^\"\~\*\?\\:\\]', '', args["searchTerm"])
+    # --- URL arguments from frontend ---
+    page = int(request.args.get('page', default='1'))
+    collection_arg = request.args.get('collection', default='all')
+    search_term_arg = request.args.get('searchTerm', default='')
+    active = request.args.get('active', default=None)
+
+    # --- Clean search term ---
+    if search_term_arg:
+        query = re.sub(r'[\+\-\&\|\!\(\)\{\}\[\]\^\"\~\*\?\\:\\]', '', search_term_arg)
         if query in ("None", ""):
             query = None
-        collection = args.get("collection", collection)
-        if 'active' in args:
-            active = args['active'] or None
 
-        q = collection
-        if collection in ('all', '*'):
-            collection = '*'
-            q = ""
-        query_parameters = {"q": f"gdsc_collections:{collection}"}
-        if query:
-            qf += ' '.join(QUERY_FIELDS)
-            q = f"{q} {query}".strip()
-        if active:
-            qf = f"{qf} gdsc_up"
-            q = f"{q} true".strip()
-        if qf.strip() != "gdsc_collections":
-            query_parameters = {
-                "q.op": "AND",
-                "defType": "dismax",
-                "qf": qf,
-                "q": q
-            }
+    # --- Collection handling ---
+    collection = collection_arg or collection
+    q = collection
+    if collection in ('all', '*'):
+        collection = '*'
+        q = ""
 
-    results, numresults = query_solr(BASE_PATH, query_parameters, (page-1)*RESULTS_PER_PAGE, page*RESULTS_PER_PAGE)
+    # --- Base query ---
+    query_parameters = {"q": f"gdsc_collections:{collection}"}
 
+    # --- Add search fields if query present ---
+    if query:
+        qf += ' '.join(QUERY_FIELDS)
+        q = f"{q} {query}".strip()
+
+    # --- Add active filter if requested ---
+    if active:
+        qf = f"{qf} gdsc_up"
+        q = f"{q} true".strip()
+
+    # --- Switch to dismax only if needed ---
+    if qf.strip() != "gdsc_collections":
+        query_parameters = {
+            "q.op": "AND",
+            "defType": "dismax",
+            "qf": qf,
+            "q": q
+        }
+
+    # --- Query Solr ---
+    results, numresults = query_solr(
+        BASE_PATH,
+        query_parameters,
+        (page - 1) * RESULTS_PER_PAGE,
+        page * RESULTS_PER_PAGE
+    )
+
+    # --- Post-process results ---
     for entry in results:
         if query:
             entry = highlight_query(entry, query)
@@ -332,6 +346,7 @@ def collections_view():
     if collection == "*":
         collection = 'all'
 
+    # --- Render response ---
     return render_template(
         'collections.html',
         collection=collection,
