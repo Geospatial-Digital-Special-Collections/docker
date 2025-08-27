@@ -69,35 +69,54 @@
 
   <div class="row border rounded p-4">
     <div class="col-3">
-      <form method="post" id="filterForm" name="filterForm" class="w-100">
-        <div>
-          <select class="form-control" id="collection" name="collection">
-            {% for coll in collections %}
-            <option value="{{ collections[coll]['Collection_ID'][0] }}" {{ "selected='selected'" if collection == collections[coll]['Collection_ID'][0] else "" }}>{{ collections[coll]['Title'][0] }}</option>
-            {% endfor %}
-          </select>
+      <form method="get" id="filterForm" name="filterForm" class="w-100">
+        <input type="hidden" name="page" value="{{ page }}">
+        <input type="hidden" name="collection" value="{{ collection_arg }}">
+        <div class="flex flex-col space-y-2">
+          {% for coll in collections %}
+            <a href="javascript:void(0);" 
+              class="row p-1 ml-1 mr-1 hover:bg-gray-100 {{ 'font-bold' if collection == collections[coll]['Collection_ID'][0] else '' }}"
+              onclick="updateCollection('{{ collections[coll]['Collection_ID'][0] }}')">
+              {{ collections[coll]['Title'][0] }}
+            </a>
+
+            <script>
+            function updateCollection(value) {
+              const form = document.getElementById("filterForm");
+              const input = form.querySelector("input[name=collection]");
+              input.value = value;
+              form.submit();
+            }
+            </script>
+          {% endfor %}
         </div>
-        <div>
-          <input type="checkbox" {{ "checked" if active == 'true' else "" }} id="active" name="active" value="true" class="ml-3 mt-3">
-          <label for="active">
+
+        <div class="mt-3">
+          <input type="checkbox"
+                 {{ "checked" if active == 'true' else "" }}
+                 id="active"
+                 name="active"
+                 value="true"
+                 class="ml-1"
+                 onchange="this.form.submit()">
+          <label for="active" class="ml-1">
             show only active datasets
           </label>
         </div>
       </form>
     </div>
     <div class="col-9">
-      <form method="post" id="filterForm" name="filterForm" class="w-100">
-        <div class="row mb-4 align-items-center justify-content-between">
-          <div class="col-auto float-left">
-            <button type="submit" class="btn btn-primary">Search</button>
-          </div>
+      <div class="row mb-4 align-items-center justify-content-between">
+        <div class="col-auto float-left">
+          <button type="submit" class="btn btn-primary" form="filterForm">Search</button>
+        </div>
 
-          <div class="col-auto float-left">
-            <input type="text" class="form-control" name="searchTerm"
-              placeholder="Enter search term(s)"
-              value="{{ query if (query != '' and query is not none) else '' }}"
-              style="width: auto; min-width: 200px;">
-          </div>
+        <div class="col-auto float-left">
+          <input type="text" class="form-control" name="searchTerm" form="filterForm"
+            placeholder="Enter search term(s)"
+            value="{{ search_term_arg }}"
+            style="width: auto; min-width: 200px;">
+        </div>
         <div class="col"></div>
 
         <div class="col-auto float-right">
@@ -111,24 +130,32 @@
         <nav aria-label="Page navigation example">
           <ul class="pagination">
             <li class="page-item {% if page == 1 %}disabled{% endif %}">
-              <a class="page-link" href="" onclick="setUrlParam(event, 'page', {{ page - 1 }})">
+              <button type="submit" class="page-link" form="filterForm" onclick="setPage({{ page-1 }})">
                 <span aria-hidden="true">&laquo;</span>
-              </a>
+              </button>
             </li>
             {% for i in range(numresults//10 + 1) %}
             <li class="page-item {% if page == i + 1 %}active{% endif %}">
-              <a class="page-link" href="" onclick="setUrlParam(event, 'page', {{ i + 1}})">
+              <button type="submit" class="page-link" form="filterForm" onclick="setPage({{ i+1 }})">
                 {{i+1}}
-              </a>
+              </button>
             </li>
             {% endfor %}
             <li class="page-item {% if page == numresults//10 %}disabled{% endif %}">
-              <a class="page-link" href="" onclick="setUrlParam(event, 'page', {{ page + 1 }})">
+              <button type="submit" class="page-link" form="filterForm" onclick="setPage({{ page+1 }})">
                 <span aria-hidden="true">&raquo;</span>
-              </a>
+              </button>
             </li>
           </ul>
         </nav>
+
+        <script>
+          function setPage(value) {
+            const form = document.getElementById("filterForm");
+            form.querySelector("input[name=page]").value = value;
+            form.submit();
+          }
+        </script>
       </div>
 
       {% if results and results|length > 0 %}
@@ -170,7 +197,6 @@
                     {% if document['dct_title'] %}{{ document['dct_title'][0] }}{% endif %} [gis dataset].
                     {% if document['dct_publisher'] %}{{ document['dct_publisher'][0] }}{% endif %}.
                     {% if document['dct_identifier'] %}<a href="{{ document['dct_identifier'][0] }}" target="_blank" class="text-wrap text-break">{{ document['dct_identifier'][0] }}</a>.{% endif %}
-                    <!-- {% if document['dcat_downloadURL'] %} from <a href="{{ document['dcat_downloadURL'][0] }}" target="_blank" class="text-wrap text-break">{{ document['dcat_downloadURL'][0] }}</a>{% endif %} -->
 
                   {% if document['found_in'] and document['found_in']['gdsc_attributes'] %}
                   <span class="mt-1 d-block"><b>Attributes with <span class="highlight-term">{{ query }}</span>:</b>
@@ -205,21 +231,21 @@
         <nav aria-label="Page navigation example">
           <ul class="pagination">
             <li class="page-item {% if page == 1 %}disabled{% endif %}">
-              <a class="page-link" href="" onclick="setUrlParam(event, {{ page - 1 }})">
+              <button type="submit" class="page-link" form="filterForm" name="page" value="{{ page - 1 }}">
                 <span aria-hidden="true">&laquo;</span>
-              </a>
+              </button>
             </li>
             {% for i in range(numresults//10 + 1) %}
             <li class="page-item {% if page == i + 1 %}active{% endif %}">
-              <a class="page-link" href="" onclick="setUrlParam(event, {{ i + 1}})">
+              <button type="submit" class="page-link" form="filterForm" name="page" value="{{ i + 1 }}">
                 {{i+1}}
-              </a>
+              </button>
             </li>
             {% endfor %}
             <li class="page-item {% if page == numresults//10 %}disabled{% endif %}">
-              <a class="page-link" href="" onclick="setUrlParam(event, {{ page + 1 }})">
+              <button type="submit" class="page-link" form="filterForm" name="page" value="{{ page + 1 }}">
                 <span aria-hidden="true">&raquo;</span>
-              </a>
+              </button>
             </li>
           </ul>
         </nav>
@@ -227,22 +253,4 @@
       {% endif %}
     </div>
   </div>
-
-  <script>
-    document.getElementById("collection").addEventListener("change", () => {
-      document.getElementById("filterForm").submit();
-    });
-    document.getElementById("active").addEventListener("change", () => {
-      document.getElementById("filterForm").submit();
-    });
-  </script>
-  <script>
-    function setUrlParam(event, param, value) {
-      event.preventDefault();
-
-      const url = new URL(window.location);
-      url.searchParams.set(param, value);
-      window.location.href = url;
-      }
-  </script>
 {% endblock %}

@@ -284,6 +284,8 @@ def collections_view():
     numresults = 1
     results = []
     page = int(request.args.get('page', default = '1'))
+    collection_arg = request.args.get('collection', default = 'all')
+    search_term_arg = request.args.get('searchTerm', default = '')
 
     if request.method == "POST":
         if 'ImmutableMultiDict' in str(type(request.form)):
@@ -340,7 +342,9 @@ def collections_view():
         collections=COLLECTIONS,
         switch_url=url_for('index'),
         switch_label='Standard',
-        page=page
+        page=page,
+        collection_arg=collection_arg,
+        search_term_arg=search_term_arg
     )
 
 if __name__ == '__main__':
