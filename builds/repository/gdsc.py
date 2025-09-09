@@ -29,11 +29,17 @@ def bibtex(name_id):
     # Assuming the response contains the document
     document = response['response']['docs'][0]
 
+    # get gdsc_tablename
+    tablename = document['gdsc_tablename'][0]
+
     # Constructing the BibTeX entry
     bibtex_entry = construct_bibtex_entry(document)
 
-    # Return the BibTeX entry as plain text
-    return Response(bibtex_entry, mimetype='text/plain')
+    response = make_response(bibtex_entry)
+    response.headers["Content-Disposition"] = f"attachment; filename={tablename}.bib"
+    response.headers["Content-Type"] = "text/plain"
+    
+    return response
 
 
 @app.route('/bibtex_collection/<collection>', methods=["GET"])
