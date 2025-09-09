@@ -99,7 +99,7 @@ Write-Host "arm: " $arm
 # add GDSC specific content to postGIS scripts
 $postgis="proxy node"
 if ( $postgis -Match $tag ) {
-  $postgis_version="12-3.4"
+  $postgis_version="15-3.5"
   (gc docker-postgis/$postgis_version/${subdir}Dockerfile) -replace "COPY .", "COPY ./builds/$tag" > $tag/Dockerfile
   gc $tag/Dockerfile-gdsc >> $tag/Dockerfile
   gc docker-postgis/$postgis_version/${subdir}initdb-postgis.sh, $tag/initdb-gdsc.sh > $tag/initdb-postgis.sh
