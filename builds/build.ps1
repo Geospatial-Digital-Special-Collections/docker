@@ -134,9 +134,9 @@ if ( $multi -eq 1 ) {
     $arch=(Get-CimInstance -ClassName Win32_Processor)
     $x86="Intel64"
     if ( $arch -Match $x86 ) {
-      $ptag="${ptag}-arm64"
+      $ptag="${ptag}-amd64"
     } else {
-      $ptag="$ptag-amd64"
+      $ptag="$ptag-arm64"
     }
   }
   # build single architecture (host) docker image
