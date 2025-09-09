@@ -199,7 +199,7 @@ def download(download_path):
     download_path = download_path[download_path.index('data/'):]
 
     if 'format' in args:
-        if args['format'] in ["sql","shp","geotiff"]:
+        if args['format'] in ["sql","shp","geotiff","geojson"]:
             return send_from_directory(
                 f"/{download_path}derived/",
                 f"{args['file']}.{args['format']}.tar.gz",

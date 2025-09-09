@@ -63,9 +63,9 @@ EOSQL
 EOSQL
 
 # create GDSC functions for GDSC proxy
-for script in $(ls /usr/lib/postgresql/12/scripts/*.sql)
+for script in $(ls /usr/lib/postgresql/15/scripts/*.sql)
 do
   sed 's/__USER__/'$POSTGRES_USER'/g' $script | \
-  sed 's/__PASS__/'$POSTGRES_PASSWORD'/g' | \
+  sed 's/__PASS__/'$PGPASSWORD'/g' | \
   "${psql[@]}" --dbname="gdsc"
 done

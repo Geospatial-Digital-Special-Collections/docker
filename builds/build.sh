@@ -115,7 +115,7 @@ fi
 postgis="proxy node"
 if [[ "${postgis#*$tag}" != "$postgis" ]]
 then
-  postgis_version=12-3.4
+  postgis_version=15-3.5
   sed 's/COPY .\//COPY .\/builds\/'"$tag"'\//g' docker-postgis/$postgis_version/${subdir}Dockerfile > $tag/Dockerfile
   cat $tag/Dockerfile-gdsc >> $tag/Dockerfile
   cat docker-postgis/$postgis_version/${subdir}initdb-postgis.sh $tag/initdb-gdsc.sh > $tag/initdb-postgis.sh
