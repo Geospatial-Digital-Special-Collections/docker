@@ -99,6 +99,9 @@ def construct_bibtex_entry(doc):
         entry += f"  publisher = {{{doc['dct_publisher'][0]}}},\n"
     if 'dct_identifier' in doc:
         entry += f"  url = {{{doc['dct_identifier'][0]}}},\n"
+    if 'dcat_keyword' in doc:
+        keywords = ', '.join([c.split(';')[0] for c in doc['dcat_keyword']])
+        entry += f"  keywords = {{{keywords}}},\n"
 
     entry += "}\n\n"
     return entry
