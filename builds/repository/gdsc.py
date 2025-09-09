@@ -74,13 +74,9 @@ def construct_bibtex_entry(doc):
     key_parts = []
 
     # Construct the BibTeX key
-    if 'dct_creator' in doc:
-        first_creator = doc['dct_creator'][0].split(';')[0].replace(' ', '')
+    if 'gdsc_tablename' in doc:
+        first_creator = doc['gdsc_tablename'][0]
         key_parts.append(first_creator)
-    if 'dct_issued' in doc:
-        key_parts.append(doc['dct_issued'][0][:4])  # Get the year
-    if 'dct_title' in doc:
-        key_parts.append(doc['dct_title'][0].split(' ')[0])  # Get the first word of the title
 
     bibkey = ''.join(key_parts) or 'citation'
     entry += bibkey + ",\n"
