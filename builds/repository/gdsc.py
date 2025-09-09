@@ -70,7 +70,7 @@ def bibtex_collection(collection):
 
 def construct_bibtex_entry(doc):
     # Initialize the BibTeX entry
-    entry = "@article{"
+    entry = "@misc{"
     key_parts = []
 
     # Construct the BibTeX key
