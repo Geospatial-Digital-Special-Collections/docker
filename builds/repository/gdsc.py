@@ -18,74 +18,65 @@ SNIP_LENGTH = 180
 QUERY_FIELDS = ['gdsc_collections','dct_title','dcat_keyword','dct_description','gdsc_attributes']
 RESULTS_PER_PAGE = 10
 
-@app.route('/bibtex/<name_id>', methods=["GET"])
-def bibtex(name_id):
-    # Query parameters to get the document for the given name_id
-    query_parameters = {"q": f"gdsc_tablename:{name_id}"}
-    query_string = urlencode(query_parameters)
-    connection = urlopen(f"{BASE_PATH}{query_string}")
-    response = simplejson.load(connection)
-    
-    # Assuming the response contains the document
-    document = response['response']['docs'][0]
+@app.route('/cite', methods=["GET"])
+def cite():
+    # Extract URL arguments
+    collection = request.args.get("collection", "all")
+    name_id = request.args.get("name_id")
+    fmt = request.args.get("format", "bibtex")    # default to bibtex
 
-    # Constructing the BibTeX entry
-    bibtex_entry = construct_bibtex_entry(document)
-
-    # Return the BibTeX entry as plain text
-    return Response(bibtex_entry, mimetype='text/plain')
-
-
-@app.route('/bibtex_collection/<collection>', methods=["GET"])
-def bibtex_collection(collection):
-    # Query parameters to get all documents in the specified collection
-    if collection == "all":
-        query_parameters = {"q": "*:*"}  # Query to get all documents
+    # Build query parameters
+    if name_id:
+        query_parameters = {"q": f"gdsc_tablename:{name_id}"}
+    elif collection:
+        if collection == "all":
+            query_parameters = {"q": "*:*"}
+        else:
+            query_parameters = {"q": f"gdsc_collections:{collection}"}
     else:
-        query_parameters = {"q": f"gdsc_collections:{collection}"}
-    
+        return {"error": "Please provide either 'collection' or 'name_id'."}, 400
+
+    # Fetch results
     query_string = urlencode(query_parameters)
     connection = urlopen(f"{BASE_PATH}{query_string}")
     response = simplejson.load(connection)
-
-    # Assuming the response contains the documents
     documents = response['response']['docs']
 
-    # Construct BibTeX entries for all documents
-    bibtex_entries = []
-    for doc in documents:
-        bibtex_entry = construct_bibtex_entry(doc)
-        bibtex_entries.append(bibtex_entry)
+    if not documents:
+        return {"error": "No documents found."}, 400
 
-    # Join all entries into a single string
-    bibtex_output = ''.join(bibtex_entries)
+    # Generate citations
+    if fmt == "bibtex":
+        citations = [construct_bibtex_entry(doc) for doc in documents]
+        output = ''.join(citations)
+        filename = (name_id or collection or "citations") + ".bib"
+        content_type = "text/plain"
+    elif fmt == "ris":
+        citations = [construct_ris_entry(doc) for doc in documents]
+        output = ''.join(citations)
+        filename = (name_id or collection or "citations") + ".ris"
+        content_type = "text/plain"
+    else:
+        return {"error": f"Unsupported format '{fmt}'."}, 400
 
-    # Create a response with the BibTeX entries as a downloadable file
-    response = make_response(bibtex_output)
-    response.headers["Content-Disposition"] = f"attachment; filename={collection}.bib"
-    response.headers["Content-Type"] = "text/plain"
-    
-    return response
+    # Build response
+    resp = make_response(output)
+    resp.headers["Content-Disposition"] = f"attachment; filename={filename}"
+    resp.headers["Content-Type"] = content_type
+    return resp
 
 
 def construct_bibtex_entry(doc):
-    # Initialize the BibTeX entry
-    entry = "@article{"
+    entry = "@misc{"
     key_parts = []
 
-    # Construct the BibTeX key
-    if 'dct_creator' in doc:
-        first_creator = doc['dct_creator'][0].split(';')[0].replace(' ', '')
+    if 'gdsc_tablename' in doc:
+        first_creator = doc['gdsc_tablename'][0]
         key_parts.append(first_creator)
-    if 'dct_issued' in doc:
-        key_parts.append(doc['dct_issued'][0][:4])  # Get the year
-    if 'dct_title' in doc:
-        key_parts.append(doc['dct_title'][0].split(' ')[0])  # Get the first word of the title
 
     bibkey = ''.join(key_parts) or 'citation'
     entry += bibkey + ",\n"
 
-    # Add fields to the BibTeX entry
     if 'dct_creator' in doc:
         creators = ' and '.join([c.split(';')[0] for c in doc['dct_creator']])
         entry += f"  author = {{{creators}}},\n"
@@ -97,8 +88,47 @@ def construct_bibtex_entry(doc):
         entry += f"  publisher = {{{doc['dct_publisher'][0]}}},\n"
     if 'dct_identifier' in doc:
         entry += f"  url = {{{doc['dct_identifier'][0]}}},\n"
+    if 'dcat_keyword' in doc:
+        keywords = ', '.join([c.split(';')[0] for c in doc['dcat_keyword']])
+        entry += f"  keywords = {{{keywords}}},\n"
+    if 'dct_modified' in doc:
+        timestamp = (doc['dct_modified'][0]).split('T')[0]
+        entry += f"  timestamp = {{{timestamp}}},\n"
+    if 'dct_language' in doc:
+        entry += f"  language = {{{doc['dct_language'][0]}}},\n"
 
     entry += "}\n\n"
+    return entry
+
+
+def construct_ris_entry(doc):
+    entry = "TY  - GEN\n"
+
+    if 'dct_creator' in doc:
+        creators = [c.split(';')[0] for c in doc['dct_creator']]
+        for creator in creators:
+            entry += f"AU  - {creator}\n"
+    if 'dct_issued' in doc:
+        year = doc['dct_issued'][0][:4]
+        entry += f"PY  - {year}\n"
+    if 'dct_title' in doc:
+        entry += f"TI  - {doc['dct_title'][0]}\n"
+    if 'dct_publisher' in doc:
+        entry += f"PB  - {doc['dct_publisher'][0]}\n"
+    if 'dct_identifier' in doc:
+        entry += f"UR  - {doc['dct_identifier'][0]}\n"
+    if 'dcat_keyword' in doc:
+        keywords = [k.split(';')[0] for k in doc['dcat_keyword']]
+        for keyword in keywords:
+            entry += f"KW  - {keyword}\n"
+    if 'dct_modified' in doc:
+        timestamp = doc['dct_modified'][0].split('T')[0]
+        entry += f"M1  - {timestamp}\n"
+    if 'dct_language' in doc:
+        entry += f"LA  - {doc['dct_language'][0]}\n"
+
+    entry += "ER  - \n\n"
+
     return entry
 
 
