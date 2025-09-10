@@ -102,12 +102,12 @@ def construct_bibtex_entry(doc):
 
 
 def construct_ris_entry(doc):
-    entry = "TY  - MISC\n"
+    entry = "TY  - GEN\n"
 
     if 'dct_creator' in doc:
-        for c in doc['dct_creator']:
-            author = c.split(';')[0]
-            entry += f"AU  - {author}\n"
+        creators = [c.split(';')[0] for c in doc['dct_creator']]
+        for creator in creators:
+            entry += f"AU  - {creator}\n"
     if 'dct_issued' in doc:
         year = doc['dct_issued'][0][:4]
         entry += f"PY  - {year}\n"
@@ -118,8 +118,8 @@ def construct_ris_entry(doc):
     if 'dct_identifier' in doc:
         entry += f"UR  - {doc['dct_identifier'][0]}\n"
     if 'dcat_keyword' in doc:
-        for kw in doc['dcat_keyword']:
-            keyword = kw.split(';')[0]
+        keywords = [k.split(';')[0] for k in doc['dcat_keyword']]
+        for keyword in keywords:
             entry += f"KW  - {keyword}\n"
     if 'dct_modified' in doc:
         timestamp = doc['dct_modified'][0].split('T')[0]

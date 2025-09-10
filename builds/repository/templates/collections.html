@@ -161,10 +161,22 @@
       {% if results and results|length > 0 %}
       <div class="row mb-4 m-0">
         <h5 class="float-left mb-1">Datasets in collection ({{ numresults }}):</h5>
-        <div class="col ml-4 pr-0">
-          <a href="cite?format=bibtex&collection={{collection}}" class="btn btn-success float-right">
-            Download Citations (BibTeX)
-          </a>
+        <div class="col ml-4 pr-0 dropdown">
+          <button class="btn btn-success float-right dropdown-toggle" data-bs-toggle="dropdown" type="button" aria-expanded="true">
+            Download Citations
+          </button>
+          <ul class="dropdown-menu pt-0 pb-0">
+            <li class="dropdown-item p-0">
+              <a href="cite?format=bibtex&collection={{collection}}" class="btn">
+                BibTeX
+              </a>
+            </li>
+            <li class="dropdown-item p-0">
+              <a href="cite?format=ris&collection={{collection}}" class="btn">
+                RIS
+              </a>
+            </li>
+          </ul>
         </div>
       </div>
       {% for document in results %}
