@@ -102,6 +102,9 @@ def construct_bibtex_entry(doc):
     if 'dcat_keyword' in doc:
         keywords = ', '.join([c.split(';')[0] for c in doc['dcat_keyword']])
         entry += f"  keywords = {{{keywords}}},\n"
+    if 'dct_modified' in doc:
+        timestamp = (doc['dct_modified'][0]).split('T')[0]
+        entry += f"  timestamp = {{{timestamp}}},\n"
 
     entry += "}\n\n"
     return entry
