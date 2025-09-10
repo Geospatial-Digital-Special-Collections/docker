@@ -18,68 +18,53 @@ SNIP_LENGTH = 180
 QUERY_FIELDS = ['gdsc_collections','dct_title','dcat_keyword','dct_description','gdsc_attributes']
 RESULTS_PER_PAGE = 10
 
-@app.route('/bibtex/<name_id>', methods=["GET"])
-def bibtex(name_id):
-    # Query parameters to get the document for the given name_id
-    query_parameters = {"q": f"gdsc_tablename:{name_id}"}
-    query_string = urlencode(query_parameters)
-    connection = urlopen(f"{BASE_PATH}{query_string}")
-    response = simplejson.load(connection)
-    
-    # Assuming the response contains the document
-    document = response['response']['docs'][0]
+@app.route('/cite', methods=["GET"])
+def cite():
+    # Extract URL arguments
+    collection = request.args.get("collection", "all")
+    name_id = request.args.get("name_id")
+    fmt = request.args.get("format", "bibtex")    # default to bibtex
 
-    # get gdsc_tablename
-    tablename = document['gdsc_tablename'][0]
-
-    # Constructing the BibTeX entry
-    bibtex_entry = construct_bibtex_entry(document)
-
-    response = make_response(bibtex_entry)
-    response.headers["Content-Disposition"] = f"attachment; filename={tablename}.bib"
-    response.headers["Content-Type"] = "text/plain"
-    
-    return response
-
-
-@app.route('/bibtex_collection/<collection>', methods=["GET"])
-def bibtex_collection(collection):
-    # Query parameters to get all documents in the specified collection
-    if collection == "all":
-        query_parameters = {"q": "*:*"}  # Query to get all documents
+    # Build query parameters
+    if name_id:
+        query_parameters = {"q": f"gdsc_tablename:{name_id}"}
+    elif collection:
+        if collection == "all":
+            query_parameters = {"q": "*:*"}
+        else:
+            query_parameters = {"q": f"gdsc_collections:{collection}"}
     else:
-        query_parameters = {"q": f"gdsc_collections:{collection}"}
-    
+        return {"error": "Please provide either 'collection' or 'name_id'."}, 400
+
+    # Fetch results
     query_string = urlencode(query_parameters)
     connection = urlopen(f"{BASE_PATH}{query_string}")
     response = simplejson.load(connection)
-
-    # Assuming the response contains the documents
     documents = response['response']['docs']
 
-    # Construct BibTeX entries for all documents
-    bibtex_entries = []
-    for doc in documents:
-        bibtex_entry = construct_bibtex_entry(doc)
-        bibtex_entries.append(bibtex_entry)
+    if not documents:
+        return {"error": "No documents found."}, 400
 
-    # Join all entries into a single string
-    bibtex_output = ''.join(bibtex_entries)
+    # Generate citations
+    if fmt == "bibtex":
+        citations = [construct_bibtex_entry(doc) for doc in documents]
+        output = ''.join(citations)
+        filename = (name_id or collection or "citations") + ".bib"
+        content_type = "text/plain"
+    else:
+        return {"error": f"Unsupported format '{fmt}'."}, 400
 
-    # Create a response with the BibTeX entries as a downloadable file
-    response = make_response(bibtex_output)
-    response.headers["Content-Disposition"] = f"attachment; filename={collection}.bib"
-    response.headers["Content-Type"] = "text/plain"
-    
-    return response
+    # Build response
+    resp = make_response(output)
+    resp.headers["Content-Disposition"] = f"attachment; filename={filename}"
+    resp.headers["Content-Type"] = content_type
+    return resp
 
 
 def construct_bibtex_entry(doc):
-    # Initialize the BibTeX entry
     entry = "@misc{"
     key_parts = []
 
-    # Construct the BibTeX key
     if 'gdsc_tablename' in doc:
         first_creator = doc['gdsc_tablename'][0]
         key_parts.append(first_creator)
@@ -87,7 +72,6 @@ def construct_bibtex_entry(doc):
     bibkey = ''.join(key_parts) or 'citation'
     entry += bibkey + ",\n"
 
-    # Add fields to the BibTeX entry
     if 'dct_creator' in doc:
         creators = ' and '.join([c.split(';')[0] for c in doc['dct_creator']])
         entry += f"  author = {{{creators}}},\n"

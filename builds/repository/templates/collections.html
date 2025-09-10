@@ -162,7 +162,7 @@
       <div class="row mb-4 m-0">
         <h5 class="float-left mb-1">Datasets in collection ({{ numresults }}):</h5>
         <div class="col ml-4 pr-0">
-          <a href="bibtex_collection/{{collection}}" class="btn btn-success float-right">
+          <a href="cite?format=bibtex&collection={{collection}}" class="btn btn-success float-right">
             Download Citations (BibTeX)
           </a>
         </div>
@@ -212,11 +212,9 @@
                   </button>
                   <ul class="dropdown-menu p-1" style="width: auto; min-width: 0">
                     <li>
-                      {% if 'dct_identifier' in document and document['dct_identifier'] %}
-                        <a class="dropdown-item p-1" href="bibtex/{{document['gdsc_tablename'][0]}}" download>
+                      <a class="dropdown-item p-1" href="cite?format=bibtex&name_id={{document['gdsc_tablename'][0]}}&collection={{collection}}">
                           BibTeX
                         </a>
-                      {% endif %}
                     </li>
                   </ul>
                 </div>
