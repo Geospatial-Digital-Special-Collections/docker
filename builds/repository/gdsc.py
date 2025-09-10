@@ -105,6 +105,8 @@ def construct_bibtex_entry(doc):
     if 'dct_modified' in doc:
         timestamp = (doc['dct_modified'][0]).split('T')[0]
         entry += f"  timestamp = {{{timestamp}}},\n"
+    if 'dct_language' in doc:
+        entry += f"  language = {{{doc['dct_language'][0]}}},\n"
 
     entry += "}\n\n"
     return entry
