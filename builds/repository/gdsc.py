@@ -51,6 +51,11 @@ def cite():
         output = ''.join(citations)
         filename = (name_id or collection or "citations") + ".bib"
         content_type = "text/plain"
+    elif fmt == "ris":
+        citations = [construct_ris_entry(doc) for doc in documents]
+        output = ''.join(citations)
+        filename = (name_id or collection or "citations") + ".ris"
+        content_type = "text/plain"
     else:
         return {"error": f"Unsupported format '{fmt}'."}, 400
 
@@ -93,6 +98,37 @@ def construct_bibtex_entry(doc):
         entry += f"  language = {{{doc['dct_language'][0]}}},\n"
 
     entry += "}\n\n"
+    return entry
+
+
+def construct_ris_entry(doc):
+    entry = "TY  - MISC\n"
+
+    if 'dct_creator' in doc:
+        for c in doc['dct_creator']:
+            author = c.split(';')[0]
+            entry += f"AU  - {author}\n"
+    if 'dct_issued' in doc:
+        year = doc['dct_issued'][0][:4]
+        entry += f"PY  - {year}\n"
+    if 'dct_title' in doc:
+        entry += f"TI  - {doc['dct_title'][0]}\n"
+    if 'dct_publisher' in doc:
+        entry += f"PB  - {doc['dct_publisher'][0]}\n"
+    if 'dct_identifier' in doc:
+        entry += f"UR  - {doc['dct_identifier'][0]}\n"
+    if 'dcat_keyword' in doc:
+        for kw in doc['dcat_keyword']:
+            keyword = kw.split(';')[0]
+            entry += f"KW  - {keyword}\n"
+    if 'dct_modified' in doc:
+        timestamp = doc['dct_modified'][0].split('T')[0]
+        entry += f"M1  - {timestamp}\n"
+    if 'dct_language' in doc:
+        entry += f"LA  - {doc['dct_language'][0]}\n"
+
+    entry += "ER  - \n\n"
+
     return entry
 
 
