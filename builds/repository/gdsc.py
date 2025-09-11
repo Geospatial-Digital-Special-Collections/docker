@@ -129,6 +129,8 @@ def construct_ris_entry(doc):
         entry += f"M1  - {timestamp}\n"
     if 'dct_language' in doc:
         entry += f"LA  - {doc['dct_language'][0]}\n"
+    if 'dct_description' in doc:
+        entry += f"AB  - {doc['dct_description'][0]}\n"
 
     entry += "ER  - \n\n"
 
