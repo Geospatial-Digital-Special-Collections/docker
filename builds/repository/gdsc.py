@@ -96,6 +96,9 @@ def construct_bibtex_entry(doc):
         entry += f"  timestamp = {{{timestamp}}},\n"
     if 'dct_language' in doc:
         entry += f"  language = {{{doc['dct_language'][0]}}},\n"
+    if 'dct_description' in doc:
+        entry += f"  abstract = {{{doc['dct_description'][0]}}},\n"
+
 
     entry += "}\n\n"
     return entry
