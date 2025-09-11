@@ -105,7 +105,7 @@ def construct_bibtex_entry(doc):
 
 
 def construct_ris_entry(doc):
-    entry = "TY  - GEN\n"
+    entry = "TY  - DATA\n"
 
     if 'dct_creator' in doc:
         creators = [c.split(';')[0] for c in doc['dct_creator']]
