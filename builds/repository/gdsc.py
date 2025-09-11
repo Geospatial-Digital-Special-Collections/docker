@@ -104,13 +104,15 @@ def construct_bibtex_entry(doc):
         entry += f"  annote = {{{doc['dct_description'][0]}}},\n"
 
 
-
     entry += "}\n\n"
     return entry
 
 
 def construct_ris_entry(doc):
     entry = "TY  - DATA\n"
+
+    # date of resource access
+    entry += f"Y3  - {date.today().isoformat()}\n"
 
     if 'dct_creator' in doc:
         creators = [c.split(';')[0] for c in doc['dct_creator']]
