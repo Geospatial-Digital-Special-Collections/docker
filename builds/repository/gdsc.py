@@ -97,7 +97,7 @@ def construct_bibtex_entry(doc):
     if 'dct_language' in doc:
         entry += f"  language = {{{doc['dct_language'][0]}}},\n"
     if 'dct_description' in doc:
-        entry += f"  abstract = {{{doc['dct_description'][0]}}},\n"
+        entry += f"  annote = {{{doc['dct_description'][0]}}},\n"
 
 
     entry += "}\n\n"
