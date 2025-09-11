@@ -8,6 +8,7 @@ from collections import OrderedDict
 from flask import Response
 import io
 from flask import make_response
+from datetime import date
 
 app = Flask(__name__)
 log = logging.getLogger('werkzeug')
@@ -77,6 +78,9 @@ def construct_bibtex_entry(doc):
     bibkey = ''.join(key_parts) or 'citation'
     entry += bibkey + ",\n"
 
+    # date of resource access
+    entry += f"  urldate = {{{date.today().isoformat()}}},\n"
+
     if 'dct_creator' in doc:
         creators = ' and '.join([c.split(';')[0] for c in doc['dct_creator']])
         entry += f"  author = {{{creators}}},\n"
@@ -98,6 +102,7 @@ def construct_bibtex_entry(doc):
         entry += f"  language = {{{doc['dct_language'][0]}}},\n"
     if 'dct_description' in doc:
         entry += f"  annote = {{{doc['dct_description'][0]}}},\n"
+
 
 
     entry += "}\n\n"
