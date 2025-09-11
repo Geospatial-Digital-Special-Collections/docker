@@ -131,6 +131,8 @@ def construct_ris_entry(doc):
         entry += f"LA  - {doc['dct_language'][0]}\n"
     if 'dct_description' in doc:
         entry += f"AB  - {doc['dct_description'][0]}\n"
+    if 'gdsc_version' in doc:
+        entry += f"WV  - {doc['gdsc_version'][0]}\n"
 
     entry += "ER  - \n\n"
 
