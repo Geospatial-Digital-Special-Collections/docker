@@ -126,7 +126,7 @@ def construct_ris_entry(doc):
             entry += f"KW  - {keyword}\n"
     if 'dct_modified' in doc:
         timestamp = doc['dct_modified'][0].split('T')[0]
-        entry += f"M1  - {timestamp}\n"
+        entry += f"Y2  - {timestamp}\n"
     if 'dct_language' in doc:
         entry += f"LA  - {doc['dct_language'][0]}\n"
     if 'dct_description' in doc:
