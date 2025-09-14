@@ -37,11 +37,7 @@ def cite():
     else:
         return {"error": "Please provide either 'collection' or 'name_id'."}, 400
 
-    # Fetch results
-    query_string = urlencode(query_parameters)
-    connection = urlopen(f"{BASE_PATH}{query_string}")
-    response = simplejson.load(connection)
-    documents = response['response']['docs']
+    documents, numresults = query_solr(BASE_PATH, query_parameters)
 
     if not documents:
         return {"error": "No documents found."}, 400
@@ -268,10 +264,11 @@ def detail(name_id):
     args = request.args.to_dict()
 
     query_parameters = {"q": f"gdsc_tablename:{name_id}"}
-    query_string = urlencode(query_parameters)
-    connection = urlopen(f"{BASE_PATH}{query_string}")
-    response = simplejson.load(connection)
-    document = response['response']['docs'][0]
+
+    documents, numresults = query_solr(BASE_PATH, query_parameters)
+    if not documents:
+        return {"error": "No document found."}, 400
+    document = documents[0]
 
     if 'gdsc_attributes' in document:
         document['gdsc_columns'] = [attr.split(';')[0] for attr in document['gdsc_attributes']]
