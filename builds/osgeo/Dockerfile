@@ -14,3 +14,9 @@ RUN mkdir -p -m 444 /openssl
 COPY --chmod=444 ./builds/osgeo/openssl.conf /openssl/openssl.conf
 
 USER $USER
+WORKDIR /home/gdsc
+
+# copy the init script
+COPY --chown=$USER:$USER --chmod=777 ./builds/osgeo/init.sh .
+
+ENTRYPOINT ["/home/gdsc/init.sh"]

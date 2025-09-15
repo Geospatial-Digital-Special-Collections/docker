@@ -97,13 +97,14 @@ Write-Host "multi: " $multi
 Write-Host "arm: " $arm
 
 # add GDSC specific content to postGIS scripts
-$postgis="proxy node"
+$postgis="proxy"
 if ( $postgis -Match $tag ) {
   $postgis_version="15-3.5"
-  (gc docker-postgis/$postgis_version/${subdir}Dockerfile) -replace "COPY .", "COPY ./builds/$tag" > $tag/Dockerfile
-  gc $tag/Dockerfile-gdsc >> $tag/Dockerfile
-  gc docker-postgis/$postgis_version/${subdir}initdb-postgis.sh, $tag/initdb-gdsc.sh > $tag/initdb-postgis.sh
-  gc docker-postgis/$postgis_version/${subdir}update-postgis.sh > $tag/update-postgis.sh
+  $customNewline = "`n"
+  (((gc docker-postgis/$postgis_version/${subdir}Dockerfile) -replace "COPY .", "COPY ./builds/$tag") -join $customNewline)  | Out-File -FilePath $tag/Dockerfile -Encoding UTF8 -NoNewline
+  ((gc $tag/Dockerfile-gdsc) -join $customNewline) | Out-File -FilePath $tag/Dockerfile -Encoding UTF8 -Append -NoNewline
+  ((gc docker-postgis/$postgis_version/${subdir}initdb-postgis.sh, $tag/initdb-gdsc.sh) -join $customNewline) | Out-File -FilePath $tag/initdb-postgis.sh -Encoding UTF8 -NoNewline
+  ((gc docker-postgis/$postgis_version/${subdir}update-postgis.sh) -join $customNewline) | Out-File -FilePath $tag/update-postgis.sh -Encoding UTF8 -NoNewline
 }
 
 Write-Host "pre-build with push="$push" and multi="$multi
