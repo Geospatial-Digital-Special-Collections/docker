@@ -8,6 +8,7 @@ from collections import OrderedDict
 from flask import Response
 import io
 from flask import make_response
+from datetime import date
 
 app = Flask(__name__)
 log = logging.getLogger('werkzeug')
@@ -36,11 +37,7 @@ def cite():
     else:
         return {"error": "Please provide either 'collection' or 'name_id'."}, 400
 
-    # Fetch results
-    query_string = urlencode(query_parameters)
-    connection = urlopen(f"{BASE_PATH}{query_string}")
-    response = simplejson.load(connection)
-    documents = response['response']['docs']
+    documents, numresults = query_solr(BASE_PATH, query_parameters)
 
     if not documents:
         return {"error": "No documents found."}, 400
@@ -77,6 +74,9 @@ def construct_bibtex_entry(doc):
     bibkey = ''.join(key_parts) or 'citation'
     entry += bibkey + ",\n"
 
+    # date of resource access
+    entry += f"  urldate = {{{date.today().isoformat()}}},\n"
+
     if 'dct_creator' in doc:
         creators = ' and '.join([c.split(';')[0] for c in doc['dct_creator']])
         entry += f"  author = {{{creators}}},\n"
@@ -96,13 +96,19 @@ def construct_bibtex_entry(doc):
         entry += f"  timestamp = {{{timestamp}}},\n"
     if 'dct_language' in doc:
         entry += f"  language = {{{doc['dct_language'][0]}}},\n"
+    if 'dct_description' in doc:
+        entry += f"  annote = {{{doc['dct_description'][0]}}},\n"
+
 
     entry += "}\n\n"
     return entry
 
 
 def construct_ris_entry(doc):
-    entry = "TY  - GEN\n"
+    entry = "TY  - DATA\n"
+
+    # date of resource access
+    entry += f"Y3  - {date.today().isoformat()}\n"
 
     if 'dct_creator' in doc:
         creators = [c.split(';')[0] for c in doc['dct_creator']]
@@ -123,9 +129,15 @@ def construct_ris_entry(doc):
             entry += f"KW  - {keyword}\n"
     if 'dct_modified' in doc:
         timestamp = doc['dct_modified'][0].split('T')[0]
-        entry += f"M1  - {timestamp}\n"
+        entry += f"Y2  - {timestamp}\n"
     if 'dct_language' in doc:
         entry += f"LA  - {doc['dct_language'][0]}\n"
+    if 'dct_description' in doc:
+        entry += f"AB  - {doc['dct_description'][0]}\n"
+    if 'gdsc_version' in doc:
+        entry += f"WV  - {doc['gdsc_version'][0]}\n"
+    if 'gdsc_collections' in doc:
+        entry += f"T3  - {doc['gdsc_collections'][0]}\n"
 
     entry += "ER  - \n\n"
 
@@ -252,10 +264,11 @@ def detail(name_id):
     args = request.args.to_dict()
 
     query_parameters = {"q": f"gdsc_tablename:{name_id}"}
-    query_string = urlencode(query_parameters)
-    connection = urlopen(f"{BASE_PATH}{query_string}")
-    response = simplejson.load(connection)
-    document = response['response']['docs'][0]
+
+    documents, numresults = query_solr(BASE_PATH, query_parameters)
+    if not documents:
+        return {"error": "No document found."}, 400
+    document = documents[0]
 
     if 'gdsc_attributes' in document:
         document['gdsc_columns'] = [attr.split(';')[0] for attr in document['gdsc_attributes']]
