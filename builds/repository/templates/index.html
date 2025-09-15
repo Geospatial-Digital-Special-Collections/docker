@@ -60,7 +60,7 @@
       <div class="row border rounded p-2">
 
         <!-- filters -->
-        <div class="col-3" style="max-width: 300px;">
+        <div class="col-lg-3" style="max-width: 300px;">
           <form method="post" id="filterForm" name="filterForm">
             <div class="container">
               <div class="row mt-3">
@@ -74,22 +74,24 @@
                 </select>
               </div>
               <hr>
-              <div class="row mt-3 mb-2">
+              <div class="row mt-3 mb-4 mb-lg-2">
                 <div class="col-1 m-0 p-0"><input type="checkbox" {{ "checked" if active == 'true' else "" }} id="active" name="active" value="true"></div>
                 <div class="col-11 m-0 p-0"><label for="active">show only active datasets</label></div>
               </div>
-              <hr>
+              <!-- <hr> -->
               <!-- toggle button to collections view -->
-              <div class="row mt-3">
+              <!-- <div class="row mt-3">
                 <a href="{{ switch_url }}" class="btn btn-outline-secondary">
                   {{ switch_label }}
                 </a>
-              </div>
+              </div> -->
             </div>
           </form>
         </div>
 
-        <div class="col mb-4 container">
+        <div class="col-lg-9 mb-4 container">
+
+          <div class="row d-block d-lg-none border-top"></div>
 
           <!-- results count and search -->
           {% if results and results|length > 0 %}
@@ -98,10 +100,10 @@
             <div class="col-6 container">
               <form method="post" id="searchForm" name="searchForm">
                 <div class="row">
-                  <div class="col-10">
+                  <div class="col-md-10 pb-2 pb-md-0">
                     <input type="text" class="form-control" name="searchTerm" placeholder="Enter search term(s)" value="{{ query if (query != "" and query != None) else "" }}">
                   </div>
-                  <div class="col-2">
+                  <div class="col-md-2 pt-2 pt-md-0 text-end">
                     <button type="submit" class="btn btn-primary mb-2">Search</button>
                   </div>
                 </div>
