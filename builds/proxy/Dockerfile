@@ -1,11 +1,11 @@
-﻿#
+#
 # NOTE: THIS DOCKERFILE IS GENERATED VIA "make update"! PLEASE DO NOT EDIT IT DIRECTLY.
 #
 
-FROM postgres:15-bullseye
+FROM postgres:16-bullseye
 
 LABEL maintainer="PostGIS Project - https://postgis.net" \
-      org.opencontainers.image.description="PostGIS 3.5.2+dfsg-1.pgdg110+1 spatial database extension with PostgreSQL 15 bullseye" \
+      org.opencontainers.image.description="PostGIS 3.5.2+dfsg-1.pgdg110+1 spatial database extension with PostgreSQL 16 bullseye" \
       org.opencontainers.image.source="https://github.com/postgis/docker-postgis"
 
 ENV POSTGIS_MAJOR 3
@@ -34,9 +34,9 @@ RUN apt-get update -y \
 
 # provide the ArcGIS geometry libraries for postGIS
 ENV LD_LIBRARY_PATH /usr/lib/postgresql
-COPY ./config/ESRI/PostgreSQL/12/Linux64/st_geometry.so /usr/lib/postgresql/15/lib
-RUN chmod 644 /usr/lib/postgresql/15/lib/st_geometry.so
+COPY ./config/ESRI/PostgreSQL/12/Linux64/st_geometry.so /usr/lib/postgresql/16/lib
+RUN chmod 644 /usr/lib/postgresql/16/lib/st_geometry.so
 
 # provide function to create foreign data wrappers, foreign tables, and views
-RUN mkdir /usr/lib/postgresql/15/scripts
-COPY ./scripts/sql /usr/lib/postgresql/15/scripts
+RUN mkdir /usr/lib/postgresql/16/scripts
+COPY ./scripts/sql /usr/lib/postgresql/16/scripts

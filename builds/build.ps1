@@ -99,7 +99,7 @@ Write-Host "arm: " $arm
 # add GDSC specific content to postGIS scripts
 $postgis="proxy"
 if ( $postgis -Match $tag ) {
-  $postgis_version="15-3.5"
+  $postgis_version="16-3.5"
   $customNewline = "`n"
   (((gc docker-postgis/$postgis_version/${subdir}Dockerfile) -replace "COPY .", "COPY ./builds/$tag") -join $customNewline)  | Out-File -FilePath $tag/Dockerfile -Encoding UTF8 -NoNewline
   ((gc $tag/Dockerfile-gdsc) -join $customNewline) | Out-File -FilePath $tag/Dockerfile -Encoding UTF8 -Append -NoNewline
@@ -127,7 +127,7 @@ if ( $multi -eq 1 ) {
   } else {
     docker buildx build --platform=linux/amd64,linux/arm64 -t $user/${name}:${tag} -f ./builds/$tag/Dockerfile .
   }
-  docker buildx use default
+  docker context use default
 } else {
   $ptag = $tag
   # a hack to get around difficult multi-architecture builds for postGIS on alpine

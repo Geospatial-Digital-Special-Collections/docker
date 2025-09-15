@@ -112,10 +112,10 @@ then
 fi
 
 # add GDSC specific content to postGIS scripts
-postgis="proxy node"
+postgis="proxy"
 if [[ "${postgis#*$tag}" != "$postgis" ]]
 then
-  postgis_version=15-3.5
+  postgis_version=16-3.5
   sed 's/COPY .\//COPY .\/builds\/'"$tag"'\//g' docker-postgis/$postgis_version/${subdir}Dockerfile > $tag/Dockerfile
   cat $tag/Dockerfile-gdsc >> $tag/Dockerfile
   cat docker-postgis/$postgis_version/${subdir}initdb-postgis.sh $tag/initdb-gdsc.sh > $tag/initdb-postgis.sh
@@ -144,7 +144,7 @@ then
   else
     docker buildx build --platform=linux/amd64,linux/arm64 -t $user/$name:$tag -f ./builds/$tag/Dockerfile .
   fi
-  docker buildx use default
+  docker context use default
 else
   ptag=$tag
   # a hack to get around difficult multi-architecture builds for postGIS on alpine
