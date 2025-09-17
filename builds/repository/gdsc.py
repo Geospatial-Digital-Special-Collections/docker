@@ -259,7 +259,7 @@ def index():
         switch_label='Bibliography'
     )
 
-@app.route('/detail/<name_id>', methods=["GET", "POST"])
+@app.route('/detail/<name_id>', methods=["GET"])
 def detail(name_id):
     args = request.args.to_dict()
 
