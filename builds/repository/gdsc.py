@@ -284,17 +284,17 @@ def detail(name_id):
 
     return render_template('detail.html', name_id=name_id, document=document, referrer=request.args)
 
-@app.route('/download/<path:download_path>', methods=["GET", "POST"])
+@app.route('/download/<path:download_path>', methods=["GET"])
 def download(download_path):
-    if 'ImmutableMultiDict' in str(type(request.args)):
-        args = request.args.to_dict()
-    else:
-        args = request.args
+    args = request.args.to_dict()
 
-    if 'format' in args and args['format'] in ("sql", "shp", "geotiff"):
+    file_name = args.get("file")
+    file_format = args.get("format")
+
+    if file_name and file_format in ("sql", "shp", "geotiff"):
         return send_from_directory(
             f"/{download_path}derived/",
-            f"{args['file']}.{args['format']}.tar.gz",
+            f"{file_name}.{file_format}.tar.gz",
             as_attachment=True
         )
 
