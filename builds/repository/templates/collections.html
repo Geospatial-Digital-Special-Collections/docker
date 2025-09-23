@@ -127,28 +127,6 @@
       </div>
       
       <div class="row mb-2 m-0">
-        <nav aria-label="Page navigation example">
-          <ul class="pagination">
-            <li class="page-item {% if page == 1 %}disabled{% endif %}">
-              <button type="submit" class="page-link" form="filterForm" onclick="setPage({{ page-1 }})">
-                <span aria-hidden="true">&laquo;</span>
-              </button>
-            </li>
-            {% for i in range(numresults//10 + 1) %}
-            <li class="page-item {% if page == i + 1 %}active{% endif %}">
-              <button type="submit" class="page-link" form="filterForm" onclick="setPage({{ i+1 }})">
-                {{i+1}}
-              </button>
-            </li>
-            {% endfor %}
-            <li class="page-item {% if page == numresults//10 %}disabled{% endif %}">
-              <button type="submit" class="page-link" form="filterForm" onclick="setPage({{ page+1 }})">
-                <span aria-hidden="true">&raquo;</span>
-              </button>
-            </li>
-          </ul>
-        </nav>
-
         <script>
           function setPage(value) {
             const form = document.getElementById("filterForm");
