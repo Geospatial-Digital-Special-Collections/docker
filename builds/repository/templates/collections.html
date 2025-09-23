@@ -70,7 +70,6 @@
   <div class="row border rounded p-4">
     <div class="col-3">
       <form method="get" id="filterForm" name="filterForm" class="w-100">
-        <input type="hidden" name="page" value="{{ page }}">
         <input type="hidden" name="collection" value="{{ collection_arg }}">
         <div class="flex flex-col space-y-2">
           {% for coll in collections %}
@@ -225,10 +224,10 @@
           <ul class="pagination">
             <li class="page-item {% if page == 1 %}disabled{% endif %}">
               <button type="submit" class="page-link" form="filterForm" name="page" value="{{ page - 1 }}">
-                <span aria-hidden="true">&laquo;</span>
+                <span aria-hidden="true">Previous</span>
               </button>
             </li>
-            {% for i in range(numresults//10 + 1) %}
+            {% for i in (range(0,3) if page == 1 else range(page - 2, page + 1)) %}
             <li class="page-item {% if page == i + 1 %}active{% endif %}">
               <button type="submit" class="page-link" form="filterForm" name="page" value="{{ i + 1 }}">
                 {{i+1}}
@@ -237,7 +236,7 @@
             {% endfor %}
             <li class="page-item {% if page == numresults//10 %}disabled{% endif %}">
               <button type="submit" class="page-link" form="filterForm" name="page" value="{{ page + 1 }}">
-                <span aria-hidden="true">&raquo;</span>
+                <span aria-hidden="true">Next</span>
               </button>
             </li>
           </ul>
