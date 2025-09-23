@@ -61,15 +61,17 @@
 
         <!-- filters -->
         <div class="col-lg-3" style="max-width: 300px;">
-          <form method="post" id="filterForm" name="filterForm">
+          <form method="get" id="filterForm" name="filterForm">
+            <input type="hidden" name="searchTerm" value="{{ search_term_arg }}">
+
             <div class="container">
               <div class="row mt-3">
                 <h5 class="mr-2">Collection: </h5>
               </div>
               <div class="row mb-2">
-                <select class="form-control mb-2" id="collection" name="collection">
+                <select class="form-control mb-2" form="filterForm" name="collection">
                   {% for coll in collections %}
-                  <option value="{{ collections[coll]['Collection_ID'][0] }}" {{ "selected='selected'" if collection == collections[coll]['Collection_ID'][0] else "" }}>{{ collections[coll]['Title'][0] }}</option>
+                  <option value="{{ collections[coll]['Collection_ID'][0] }}" {{ "selected='selected'" if collection_arg == collections[coll]['Collection_ID'][0] else "" }}>{{ collections[coll]['Title'][0] }}</option>
                   {% endfor %}
                 </select>
               </div>
@@ -98,10 +100,10 @@
           <div class="row mt-2 mb-2 p-2 container-xxl">
             <div class="col-6"><h5 class="ml-2">Results (n={{ numresults }}):</h5></div>
             <div class="col-6 container">
-              <form method="post" id="searchForm" name="searchForm">
+              <form method="get" id="searchForm" name="searchForm">
                 <div class="row">
                   <div class="col-md-10 pb-2 pb-md-0">
-                    <input type="text" class="form-control" name="searchTerm" placeholder="Enter search term(s)" value="{{ query if (query != "" and query != None) else "" }}">
+                    <input type="text" class="form-control" name="searchTerm" placeholder="Enter search term(s)" value="{{ search_term_arg if search_term_arg else ""}}">
                   </div>
                   <div class="col-md-2 pt-2 pt-md-0 text-end">
                     <button type="submit" class="btn btn-primary mb-2">Search</button>
@@ -194,13 +196,10 @@
       </div>
 
       <script>
-        const collection = document.getElementById("collection");
-        collection.addEventListener("change", function() {
-         document.getElementById("filterForm").submit();
+      document.querySelectorAll('#filterForm input, #filterForm select').forEach(el => {
+        el.addEventListener('change', () => {
+          document.getElementById('filterForm').submit();
         });
-        const active = document.getElementById("active");
-        active.addEventListener("change", function() {
-         document.getElementById("filterForm").submit();
-        });
+      });
       </script>
 {% endblock %}

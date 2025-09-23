@@ -261,12 +261,11 @@ def search_solr(
 
     return results, numresults, collection, query
 
-@app.route('/', methods=["GET", "POST"])
+@app.route('/', methods=["GET"])
 def index():
-    args = request.form.to_dict() if request.method == "POST" else {}
-    collection_arg = args.get("collection", "all")
-    search_term_arg = args.get("searchTerm")
-    active = args.get("active")
+    collection_arg = request.args.get("collection", "all")
+    search_term_arg = request.args.get("searchTerm")
+    active = request.args.get("active")
 
     results, numresults, collection, query = search_solr(
         collection_arg=collection_arg,
@@ -283,7 +282,9 @@ def index():
         numresults=numresults,
         results=results,
         collections=COLLECTIONS,
-        switch_url=url_for("collections_view"),
+        collection_arg=collection_arg,
+        search_term_arg=search_term_arg,
+        switch_url="/collections",
         switch_label="Bibliography"
     )
 
