@@ -193,70 +193,128 @@ def highlight_query(document, query):
 
     return document
 
-@app.route('/', methods=["GET", "POST"])
-def index():
-    collection = 'all'
-    query, active = None, None
-    query_parameters = {"q": "gdsc_collections:*"}
-    q, qf = "", "gdsc_collections "
-    numresults = 1
-    results = []
+def search_solr(
+    collection_arg="all",
+    search_term=None,
+    active=None,
+    page=1,
+    results_per_page=RESULTS_PER_PAGE
+):
+    """
+    Shared Solr querying logic for / and /collections endpoints.
+    Returns (results, numresults, collection, query).
+    """
 
-    if request.method == "POST":
-        if 'ImmutableMultiDict' in str(type(request.form)):
-            args = request.form.to_dict()
-        else:
-            args = request.form
-        if 'searchTerm' in args:
-            query = re.sub(r'[\+\-\&\|\!\(\)\{\}\[\]\^\"\~\*\?\\:\\]', '', args["searchTerm"])
-        if query in ("None", ""):
-            query = None
-        collection = args.get("collection", collection)
-        if 'active' in args:
-            active = args["active"] or None
+    collection = collection_arg or "all"
+    query = None
+    q, qf = collection, "gdsc_collections "
 
-        q = collection
-        if collection in ('all', '*'):
-            collection = '*'
-            q = ""
-        query_parameters = {"q": f"gdsc_collections:{collection}"}
-        if query:
-            qf += ' '.join(QUERY_FIELDS)
-            q = f"{q} {query}".strip()
-        if active:
-            qf = f"{qf} gdsc_up"
-            q = f"{q} true".strip()
-        if qf.strip() != "gdsc_collections":
-            query_parameters = {
-                "q.op": "AND",
-                "defType": "dismax",
-                "qf": qf,
-                "q": q
-            }
+    # --- Clean query term ---
+    if search_term:
+        cleaned = re.sub(r'[\+\-\&\|\!\(\)\{\}\[\]\^\"\~\*\?\\:\\]', '', search_term)
+        if cleaned not in ("None", ""):
+            query = cleaned
 
-    results, numresults = query_solr(BASE_PATH, query_parameters)
+    # --- Collection handling ---
+    if collection in ("all", "*"):
+        collection = "*"
+        q = ""
 
+    # --- Base query ---
+    query_parameters = {"q": f"gdsc_collections:{collection}"}
+
+    # --- Add search fields if query present ---
+    if query:
+        qf += " ".join(QUERY_FIELDS)
+        q = f"{q} {query}".strip()
+
+    # --- Add active filter if requested ---
+    if active:
+        qf = f"{qf} gdsc_up"
+        q = f"{q} true".strip()
+
+    # --- Switch to dismax only if needed ---
+    if qf.strip() != "gdsc_collections":
+        query_parameters = {
+            "q.op": "AND",
+            "defType": "dismax",
+            "qf": qf,
+            "q": q
+        }
+
+    # --- Query Solr ---
+    start = (page - 1) * results_per_page
+    end = page * results_per_page
+    results, numresults = query_solr(BASE_PATH, query_parameters, start, end)
+
+    # --- Post-process results ---
     for entry in results:
         if query:
             entry = highlight_query(entry, query)
-        if entry.get('dct_description'):
-            entry['display_description'] = entry['dct_description'][0]
-            if len(entry['display_description']) > SNIP_LENGTH:
-                entry['display_description'] = entry['dct_description'][0][:SNIP_LENGTH] + '...'
+        if entry.get("dct_description"):
+            entry["display_description"] = entry["dct_description"][0]
+            if len(entry["display_description"]) > SNIP_LENGTH:
+                entry["display_description"] = entry["dct_description"][0][:SNIP_LENGTH] + "..."
 
     if collection == "*":
-        collection = 'all'
+        collection = "all"
+
+    return results, numresults, collection, query
+
+@app.route('/', methods=["GET", "POST"])
+def index():
+    args = request.form.to_dict() if request.method == "POST" else {}
+    collection_arg = args.get("collection", "all")
+    search_term_arg = args.get("searchTerm")
+    active = args.get("active")
+
+    results, numresults, collection, query = search_solr(
+        collection_arg=collection_arg,
+        search_term=search_term_arg,
+        active=active,
+        page=1  # index always shows page 1
+    )
 
     return render_template(
-        'index.html',
+        "index.html",
         collection=collection,
         query=query,
         active=active,
         numresults=numresults,
         results=results,
         collections=COLLECTIONS,
-        switch_url=url_for('collections_view'),
-        switch_label='Bibliography'
+        switch_url=url_for("collections_view"),
+        switch_label="Bibliography"
+    )
+
+
+@app.route('/collections', methods=["GET"])
+def collections_view():
+    page = int(request.args.get("page", 1))
+    collection_arg = request.args.get("collection", "all")
+    search_term_arg = request.args.get("searchTerm")
+    active = request.args.get("active")
+
+    results, numresults, collection, query = search_solr(
+        collection_arg=collection_arg,
+        search_term=search_term_arg,
+        active=active,
+        page=page
+    )
+
+    return render_template(
+        "collections.html",
+        collection=collection,
+        query=query,
+        active=active,
+        numresults=numresults,
+        results=results,
+        collections=COLLECTIONS,
+        switch_url=url_for("index"),
+        switch_label="Standard",
+        page=page,
+        collection_arg=collection_arg,
+        search_term_arg=search_term_arg
     )
 
 @app.route('/detail/<name_id>', methods=["GET"])
@@ -318,92 +376,6 @@ keys = [item['Collection_ID'][0] for item in COLLECTIONS]
 COLLECTIONS = dict(zip(keys, COLLECTIONS))
 COLLECTIONS = OrderedDict(sorted(COLLECTIONS.items(), key=lambda i: i[0].lower()))
 
-
-@app.route('/collections', methods=["GET"])
-def collections_view():
-    collection = list(COLLECTIONS.keys())[0]
-    query, active = None, None
-    query_parameters = {"q": "gdsc_collections:*"}
-    q, qf = "", "gdsc_collections "
-    numresults = 1
-    results = []
-
-    # --- URL arguments from frontend ---
-    page = int(request.args.get('page', default='1'))
-    collection_arg = request.args.get('collection', default='all')
-    search_term_arg = request.args.get('searchTerm', default='')
-    active = request.args.get('active', default=None)
-
-    # --- Clean search term ---
-    if search_term_arg:
-        query = re.sub(r'[\+\-\&\|\!\(\)\{\}\[\]\^\"\~\*\?\\:\\]', '', search_term_arg)
-        if query in ("None", ""):
-            query = None
-
-    # --- Collection handling ---
-    collection = collection_arg or collection
-    q = collection
-    if collection in ('all', '*'):
-        collection = '*'
-        q = ""
-
-    # --- Base query ---
-    query_parameters = {"q": f"gdsc_collections:{collection}"}
-
-    # --- Add search fields if query present ---
-    if query:
-        qf += ' '.join(QUERY_FIELDS)
-        q = f"{q} {query}".strip()
-
-    # --- Add active filter if requested ---
-    if active:
-        qf = f"{qf} gdsc_up"
-        q = f"{q} true".strip()
-
-    # --- Switch to dismax only if needed ---
-    if qf.strip() != "gdsc_collections":
-        query_parameters = {
-            "q.op": "AND",
-            "defType": "dismax",
-            "qf": qf,
-            "q": q
-        }
-
-    # --- Query Solr ---
-    results, numresults = query_solr(
-        BASE_PATH,
-        query_parameters,
-        (page - 1) * RESULTS_PER_PAGE,
-        page * RESULTS_PER_PAGE
-    )
-
-    # --- Post-process results ---
-    for entry in results:
-        if query:
-            entry = highlight_query(entry, query)
-        if entry.get('dct_description'):
-            entry['display_description'] = entry['dct_description'][0]
-            if len(entry['display_description']) > SNIP_LENGTH:
-                entry['display_description'] = entry['dct_description'][0][:SNIP_LENGTH] + '...'
-
-    if collection == "*":
-        collection = 'all'
-
-    # --- Render response ---
-    return render_template(
-        'collections.html',
-        collection=collection,
-        query=query,
-        active=active,
-        numresults=numresults,
-        results=results,
-        collections=COLLECTIONS,
-        switch_url=url_for('index'),
-        switch_label='Standard',
-        page=page,
-        collection_arg=collection_arg,
-        search_term_arg=search_term_arg
-    )
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', debug=True, use_reloader=True)
