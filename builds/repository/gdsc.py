@@ -53,9 +53,58 @@ bibtex = {
         "type": "single",
         "key": "dct_language"
     },
-    "annote":{
+    "annote": {
         "type": "single",
         "key": "dct_description"
+    }
+
+}
+
+
+ris = {
+    "AU": {
+        "type": "list",
+        "key": "dct_creator"
+    },
+    "PY": {
+        "type": "year",
+        "key": "dct_issued"
+    },
+    "TI": {
+        "type": "single",
+        "key": "dct_title"
+    },
+    "PB": {
+        "type": "single",
+        "key": "dct_publisher"
+    },
+    "UR": {
+        "type": "single",
+        "key": "dct_identifier"
+    },
+    "KW": {
+        "type": "list",
+        "key": "dcat_keyword"
+    },
+    "Y2": {
+        "type": "single",
+        "key": "dct_modified"
+    },
+    "LA": {
+        "type": "single",
+        "key": "dct_language"
+    },
+    "AB": {
+        "type": "single",
+        "key": "dct_description"
+    },
+    "WV": {
+        "type": "single",
+        "key": "gdsc_version"
+    },
+    "T3": {
+        "type": "single",
+        "key": "gdsc_collections"
     }
 
 }
