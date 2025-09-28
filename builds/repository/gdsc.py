@@ -19,6 +19,48 @@ SNIP_LENGTH = 180
 QUERY_FIELDS = ['gdsc_collections','dct_title','dcat_keyword','dct_description','gdsc_attributes']
 RESULTS_PER_PAGE = 10
 
+
+bibtex = {
+    "author": {
+        "type": "list",
+        "key": "dct_creator"
+    },
+    "year": {
+        "type": "year",
+        "key": "dct_issued"
+    },
+    "title": {
+        "type": "single",
+        "key": "dct_title"
+    },
+    "publisher": {
+        "type": "single",
+        "key": "dct_publisher"
+    },
+    "url": {
+        "type": "single",
+        "key": "dct_identifier"
+    },
+    "keywords": {
+        "type": "list",
+        "key": "dcat_keyword"
+    },
+    "timestamp": {
+        "type": "single",
+        "key": "dct_modified"
+    },
+    "language": {
+        "type": "single",
+        "key": "dct_language"
+    },
+    "annote":{
+        "type": "single",
+        "key": "dct_description"
+    }
+
+}
+
+
 @app.route('/cite', methods=["GET"])
 def cite():
     # Extract URL arguments
