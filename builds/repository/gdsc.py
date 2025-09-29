@@ -46,7 +46,7 @@ bibtex = {
         "key": "dcat_keyword"
     },
     "timestamp": {
-        "type": "single",
+        "type": "date",
         "key": "dct_modified"
     },
     "language": {
@@ -135,12 +135,12 @@ def cite():
 
     # Generate citations
     if fmt == "bibtex":
-        citations = [construct_bibtex_entry(doc) for doc in documents]
+        citations = [construct_citation_entry(doc, "bibtex") for doc in documents]
         output = ''.join(citations)
         filename = (name_id or collection or "citations") + ".bib"
         content_type = "text/plain"
     elif fmt == "ris":
-        citations = [construct_ris_entry(doc) for doc in documents]
+        citations = [construct_citation_entry(doc, "ris") for doc in documents]
         output = ''.join(citations)
         filename = (name_id or collection or "citations") + ".ris"
         content_type = "text/plain"
@@ -154,84 +154,76 @@ def cite():
     return resp
 
 
-def construct_bibtex_entry(doc):
-    entry = "@misc{"
-    key_parts = []
+def construct_citation_entry(doc, citation_type):
+    if citation_type == "bibtex":
+        # citation key constuction
+        entry = "@misc{"
+        key_parts = []
 
-    if 'gdsc_tablename' in doc:
-        first_creator = doc['gdsc_tablename'][0]
-        key_parts.append(first_creator)
+        if 'gdsc_tablename' in doc:
+            first_creator = doc['gdsc_tablename'][0]
+            key_parts.append(first_creator)
 
-    bibkey = ''.join(key_parts) or 'citation'
-    entry += bibkey + ",\n"
+        bibkey = ''.join(key_parts) or 'citation'
+        entry += bibkey + ",\n"
 
-    # date of resource access
-    entry += f"  urldate = {{{date.today().isoformat()}}},\n"
+        # looped citation body construction
+        for component in bibtex:
+            if bibtex[component]["type"] == "single":
+                key = bibtex[component]["key"]
+                if key in doc:
+                    entry += f"  {component} = {{{doc[key][0]}}},\n"
+        
+        # nonprocedural citation body construction
+        entry += f"  urldate = {{{date.today().isoformat()}}},\n"
 
-    if 'dct_creator' in doc:
-        creators = ' and '.join([c.split(';')[0] for c in doc['dct_creator']])
-        entry += f"  author = {{{creators}}},\n"
-    if 'dct_issued' in doc:
-        entry += f"  year = {{{doc['dct_issued'][0][:4]}}},\n"
-    if 'dct_title' in doc:
-        entry += f"  title = {{{doc['dct_title'][0]}}},\n"
-    if 'dct_publisher' in doc:
-        entry += f"  publisher = {{{doc['dct_publisher'][0]}}},\n"
-    if 'dct_identifier' in doc:
-        entry += f"  url = {{{doc['dct_identifier'][0]}}},\n"
-    if 'dcat_keyword' in doc:
-        keywords = ', '.join([c.split(';')[0] for c in doc['dcat_keyword']])
-        entry += f"  keywords = {{{keywords}}},\n"
-    if 'dct_modified' in doc:
-        timestamp = (doc['dct_modified'][0]).split('T')[0]
-        entry += f"  timestamp = {{{timestamp}}},\n"
-    if 'dct_language' in doc:
-        entry += f"  language = {{{doc['dct_language'][0]}}},\n"
-    if 'dct_description' in doc:
-        entry += f"  annote = {{{doc['dct_description'][0]}}},\n"
-
-
-    entry += "}\n\n"
-    return entry
+        if 'dct_creator' in doc:
+            creators = ' and '.join([c.split(';')[0] for c in doc['dct_creator']])
+            entry += f"  author = {{{creators}}},\n"
+        if 'dct_issued' in doc:
+            entry += f"  year = {{{doc['dct_issued'][0][:4]}}},\n"
+        if 'dcat_keyword' in doc:
+            keywords = ', '.join([c.split(';')[0] for c in doc['dcat_keyword']])
+            entry += f"  keywords = {{{keywords}}},\n"
+        if 'dct_modified' in doc:
+            timestamp = (doc['dct_modified'][0]).split('T')[0]
+            entry += f"  timestamp = {{{timestamp}}},\n"
+            
+        # close out entry
+        entry += "}\n\n"
 
 
-def construct_ris_entry(doc):
-    entry = "TY  - DATA\n"
+    elif citation_type == "ris":
+        # citation key constuction
+        entry = "TY  - DATA\n"
+        entry += f"Y3  - {date.today().isoformat()}\n"
 
-    # date of resource access
-    entry += f"Y3  - {date.today().isoformat()}\n"
+        # looped citation body construction
+        for component in ris:
+            if ris[component]["type"] == "single":
+                key = ris[component]["key"]
+                if key in doc:
+                    entry += f"{component}  - {doc[key][0]}\n"
 
-    if 'dct_creator' in doc:
-        creators = [c.split(';')[0] for c in doc['dct_creator']]
-        for creator in creators:
-            entry += f"AU  - {creator}\n"
-    if 'dct_issued' in doc:
-        year = doc['dct_issued'][0][:4]
-        entry += f"PY  - {year}\n"
-    if 'dct_title' in doc:
-        entry += f"TI  - {doc['dct_title'][0]}\n"
-    if 'dct_publisher' in doc:
-        entry += f"PB  - {doc['dct_publisher'][0]}\n"
-    if 'dct_identifier' in doc:
-        entry += f"UR  - {doc['dct_identifier'][0]}\n"
-    if 'dcat_keyword' in doc:
-        keywords = [k.split(';')[0] for k in doc['dcat_keyword']]
-        for keyword in keywords:
-            entry += f"KW  - {keyword}\n"
-    if 'dct_modified' in doc:
-        timestamp = doc['dct_modified'][0].split('T')[0]
-        entry += f"Y2  - {timestamp}\n"
-    if 'dct_language' in doc:
-        entry += f"LA  - {doc['dct_language'][0]}\n"
-    if 'dct_description' in doc:
-        entry += f"AB  - {doc['dct_description'][0]}\n"
-    if 'gdsc_version' in doc:
-        entry += f"WV  - {doc['gdsc_version'][0]}\n"
-    if 'gdsc_collections' in doc:
-        entry += f"T3  - {doc['gdsc_collections'][0]}\n"
+        # nonprocedural citation body construction
+        if 'dct_creator' in doc:
+            creators = [c.split(';')[0] for c in doc['dct_creator']]
+            for creator in creators:
+                entry += f"AU  - {creator}\n"
+        if 'dct_issued' in doc:
+            year = doc['dct_issued'][0][:4]
+            entry += f"PY  - {year}\n"
+        if 'dcat_keyword' in doc:
+            keywords = [k.split(';')[0] for k in doc['dcat_keyword']]
+            for keyword in keywords:
+                entry += f"KW  - {keyword}\n"
+        if 'dct_modified' in doc:
+            timestamp = doc['dct_modified'][0].split('T')[0]
+            entry += f"Y2  - {timestamp}\n"
 
-    entry += "ER  - \n\n"
-
+        # close out entry
+        entry += "ER  - \n\n"
+     
     return entry
 
 
