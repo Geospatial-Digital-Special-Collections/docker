@@ -14,7 +14,7 @@
 
 {% block content %}
       <div class="container mb-6">
-        <div class="row mb-2">
+        <div class="row mb-4">
           <form method="post" action="/" id="filterForm" name="filterForm">
             <input type="hidden" id="active" name="active" value="{{ referrer.active }}">
             <input type="hidden" id="collection" name="collection" value="{{ referrer.collection }}">
@@ -28,12 +28,12 @@
         {% autoescape off %}
         <div class="row border rounded p-2">
           <div class="row">
-            <div class="col-7 align-top">
+            <div class="col-md-7 align-top">
               <h4 class="float-left">{% if document['dct_title'] %}{{ document['dct_title'][0] }}{% endif %}
                 <div class="float-left circle {{ 'green-fill' if document['gdsc_up'][0] or document['gdsc_tileUrl'] else 'red-fill' }}"></div>
               </h4>
             </div>
-            <div class="col-5 align-top">
+            <div class="col-md-5 align-top">
               {% if document['gdsc_collections'] and document['gdsc_collections']|length > 0 %}
               <span class="d-block float-right align-top text-right"><b>Collections:</b>
                 {% for collection in document['gdsc_collections'] %}{{ collection }}{{ " | " if not loop.last else "" }}{% endfor %}
