@@ -1,13 +1,11 @@
-from flask import Flask, render_template, request, send_from_directory, url_for
+from flask import Flask, Response, render_template, request, send_from_directory, url_for, make_response
 from urllib.request import urlopen
 from urllib.parse import urlencode
 import simplejson
 import logging
 import re
 from collections import OrderedDict
-from flask import Response
 import io
-from flask import make_response
 from datetime import date
 
 app = Flask(__name__)
@@ -19,96 +17,82 @@ SNIP_LENGTH = 180
 QUERY_FIELDS = ['gdsc_collections','dct_title','dcat_keyword','dct_description','gdsc_attributes']
 RESULTS_PER_PAGE = 10
 
-
-bibtex = {
-    "author": {
-        "type": "list",
-        "key": "dct_creator"
+cite_formats = {
+    "formatters": {
+        "bibtex": {
+            "begin": "@misc{",
+            "indent": "  ",
+            "seperator": " = ",
+            "quote_start": "{",
+            "quote_end": "}",
+            "line_seperator": ",",
+            "end": "}"
+        },
+        "ris": {
+            "begin": "TY  - DATA\n",
+            "indent": "",
+            "seperator": "  - ",
+            "quote_start": "",
+            "quote_end": "",
+            "line_seperator": "",
+            "end": "ER  - \n\n"
+        }
     },
-    "year": {
-        "type": "year",
-        "key": "dct_issued"
+    "extension": {
+        "bibtex": "bib",
+        "ris": "ris"
     },
-    "title": {
-        "type": "single",
-        "key": "dct_title"
-    },
-    "publisher": {
-        "type": "single",
-        "key": "dct_publisher"
-    },
-    "url": {
-        "type": "single",
-        "key": "dct_identifier"
-    },
-    "keywords": {
-        "type": "list",
-        "key": "dcat_keyword"
-    },
-    "timestamp": {
-        "type": "date",
-        "key": "dct_modified"
-    },
-    "language": {
-        "type": "single",
-        "key": "dct_language"
-    },
-    "annote": {
-        "type": "single",
-        "key": "dct_description"
+    "fields" : {
+        "dct_creator": {
+            "type": "list",
+            "bibtex": "author",
+            "ris": "AU"
+        },
+        "dct_issued": {
+            "type": "date",
+            "bibtex": "year",
+            "ris": "PY"
+        },
+        "dct_title": {
+            "type": "single",
+            "bibtex": "title",
+            "ris": "TI"
+        },
+        "dct_publisher": {
+            "type": "single",
+            "bibtex": "publisher",
+            "ris": "PB"
+        },
+        "dct_identifier": {
+            "type": "single",
+            "bibtex": "url",
+            "ris": "UR"
+        },
+        "dcat_keyword": {
+            "type": "list",
+            "bibtex": "keywords",
+            "ris": "KW"
+        },
+        "dct_modified": {
+            "type": "date",
+            "bibtex": "timestamp",
+            "ris": "Y2"
+        },
+        "dct_language": {
+            "type": "single",
+            "bibtex": "language",
+            "ris": "LA"
+        },
+        "gdsc_version": {
+            "type": "single",
+            "ris": "WV"
+        },
+        "gdsc_collections": {
+            "type": "single",
+            "ris": "T3"
+        }
     }
-
 }
-
-
-ris = {
-    "AU": {
-        "type": "list",
-        "key": "dct_creator"
-    },
-    "PY": {
-        "type": "year",
-        "key": "dct_issued"
-    },
-    "TI": {
-        "type": "single",
-        "key": "dct_title"
-    },
-    "PB": {
-        "type": "single",
-        "key": "dct_publisher"
-    },
-    "UR": {
-        "type": "single",
-        "key": "dct_identifier"
-    },
-    "KW": {
-        "type": "list",
-        "key": "dcat_keyword"
-    },
-    "Y2": {
-        "type": "single",
-        "key": "dct_modified"
-    },
-    "LA": {
-        "type": "single",
-        "key": "dct_language"
-    },
-    "AB": {
-        "type": "single",
-        "key": "dct_description"
-    },
-    "WV": {
-        "type": "single",
-        "key": "gdsc_version"
-    },
-    "T3": {
-        "type": "single",
-        "key": "gdsc_collections"
-    }
-
-}
-
 
 @app.route('/cite', methods=["GET"])
 def cite():
@@ -134,15 +118,10 @@ def cite():
         return {"error": "No documents found."}, 400
 
     # Generate citations
-    if fmt == "bibtex":
-        citations = [construct_citation_entry(doc, "bibtex") for doc in documents]
+    if fmt in ["bibtex","ris"]:
+        citations = [build_citation(doc, fmt) for doc in documents]
         output = ''.join(citations)
-        filename = (name_id or collection or "citations") + ".bib"
-        content_type = "text/plain"
-    elif fmt == "ris":
-        citations = [construct_citation_entry(doc, "ris") for doc in documents]
-        output = ''.join(citations)
-        filename = (name_id or collection or "citations") + ".ris"
+        filename = (name_id or collection or "citations") + f".{cite_formats['extension'][fmt]}"
         content_type = "text/plain"
     else:
         return {"error": f"Unsupported format '{fmt}'."}, 400
@@ -153,79 +132,40 @@ def cite():
     resp.headers["Content-Type"] = content_type
     return resp
 
+def build_citation(doc, type):
+    """
+    Returns a citation entry built from the doc in the given type
+    """
 
-def construct_citation_entry(doc, citation_type):
-    if citation_type == "bibtex":
-        # citation key constuction
-        entry = "@misc{"
-        key_parts = []
+    def build_element(field,value):
+        return (
+            f"{formatters['indent']}{field}{formatters['seperator']}"
+            f"{formatters['quote_start']}{value}{formatters['quote_end']}"
+            f"{formatters['line_seperator']}\n"
+        )
 
-        if 'gdsc_tablename' in doc:
-            first_creator = doc['gdsc_tablename'][0]
-            key_parts.append(first_creator)
+    formatters = cite_formats['formatters'][type]
+    entry = formatters['begin']
+    if type == "bibtex":
+        entry += f"{doc['gdsc_tablename'][0]}\n" or "citation\n"
 
-        bibkey = ''.join(key_parts) or 'citation'
-        entry += bibkey + ",\n"
+    formatters = cite_formats['formatters'][type]
+    # looped citation body construction
+    for dc_term in cite_formats['fields']:
+        field = cite_formats['fields'][dc_term]
+        if type in field:
+            if dc_term in doc:
+                val = doc[dc_term]       
+                if field['type'] in ["single", "date"]:
+                    if dc_term in ["dct_issued"]: val[0] = val[0][:4]
+                    if dc_term in ["dct_modified"]: val[0] = val[0].split('T')[0]    
+                    entry += build_element(field[type],val[0])
+                elif field['type'] == "list":
+                    for item in val:
+                        entry += build_element(field[type],item.split(";")[0])
 
-        # looped citation body construction
-        for component in bibtex:
-            if bibtex[component]["type"] == "single":
-                key = bibtex[component]["key"]
-                if key in doc:
-                    entry += f"  {component} = {{{doc[key][0]}}},\n"
-        
-        # nonprocedural citation body construction
-        entry += f"  urldate = {{{date.today().isoformat()}}},\n"
-
-        if 'dct_creator' in doc:
-            creators = ' and '.join([c.split(';')[0] for c in doc['dct_creator']])
-            entry += f"  author = {{{creators}}},\n"
-        if 'dct_issued' in doc:
-            entry += f"  year = {{{doc['dct_issued'][0][:4]}}},\n"
-        if 'dcat_keyword' in doc:
-            keywords = ', '.join([c.split(';')[0] for c in doc['dcat_keyword']])
-            entry += f"  keywords = {{{keywords}}},\n"
-        if 'dct_modified' in doc:
-            timestamp = (doc['dct_modified'][0]).split('T')[0]
-            entry += f"  timestamp = {{{timestamp}}},\n"
-            
-        # close out entry
-        entry += "}\n\n"
-
-
-    elif citation_type == "ris":
-        # citation key constuction
-        entry = "TY  - DATA\n"
-        entry += f"Y3  - {date.today().isoformat()}\n"
-
-        # looped citation body construction
-        for component in ris:
-            if ris[component]["type"] == "single":
-                key = ris[component]["key"]
-                if key in doc:
-                    entry += f"{component}  - {doc[key][0]}\n"
-
-        # nonprocedural citation body construction
-        if 'dct_creator' in doc:
-            creators = [c.split(';')[0] for c in doc['dct_creator']]
-            for creator in creators:
-                entry += f"AU  - {creator}\n"
-        if 'dct_issued' in doc:
-            year = doc['dct_issued'][0][:4]
-            entry += f"PY  - {year}\n"
-        if 'dcat_keyword' in doc:
-            keywords = [k.split(';')[0] for k in doc['dcat_keyword']]
-            for keyword in keywords:
-                entry += f"KW  - {keyword}\n"
-        if 'dct_modified' in doc:
-            timestamp = doc['dct_modified'][0].split('T')[0]
-            entry += f"Y2  - {timestamp}\n"
-
-        # close out entry
-        entry += "ER  - \n\n"
-     
+    entry += formatters['end']
     return entry
-
 
 def query_solr(path, parameters, start=0, end=None):
     results = []
@@ -246,6 +186,10 @@ def query_solr(path, parameters, start=0, end=None):
     return results, numresults
 
 def highlight_query(document, query):
+    """
+    Returns a document with the query string highlighted for web page display
+    """
+
     def add_tags(string_value, term):
         return re.sub(
             rf'({term})',
