@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% block title %}{{ name_id }}{% endblock %}
 {% block head %}
-    {{ super() }}
+    {{ super() -}}
     <style>
       .grid-color {
         background:#ddd
@@ -10,7 +10,32 @@
         background:#fff;
       }
     </style>
-{% endblock %}
+    {% if document['dct_description'] %}<meta name="description" content="{{ document['dct_description'][0] | replace('\n',' ') }}" />{% endif %}
+    {% if document['dct_identifier'] %}<meta name="DC.identifier" content="{{ document['dct_identifier'][0] }}" />{% endif %}
+    <meta name="DC.type" content="Dataset" />
+    {% if document['dct_title'] %}<meta name="DC.title" content="{{ document['dct_title'][0] }}" />{% endif %}
+    {% if document['dct_issued'] %}<meta name="DC.date" content="{{ document['dct_issued'][0] }}" />{% endif %}
+    {% if document['dct_publisher'] %}<meta name="DC.publisher" content="{{ document['dct_publisher'][0] }}" />{% endif %}
+    {% if document['dct_description'] %}<meta name="DC.description" content="{{ document['dct_description'][0] | replace('\n',' ') }}" />{% endif %}
+    {% if document['dct_creator'] %}{% for creator in document['dct_creator'] -%}
+    {%- set creator = creator.split(';') -%}
+    <meta name="DC.creator" content="{{ creator[0] }}" />
+    {%- endfor %}{% endif %}
+    {% if document['dcat_keyword'] %}{% for keyword in document['dcat_keyword'] -%}
+    <meta name="DC.subject" content="{{ keyword[0] }}" />
+    {%- endfor %}{% endif %}
+    {% if document['dct_title'] %}<meta property="og:title" content="{{ document['dct_title'][0] }}" />{% endif %}
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content="https://gdsc.idsc.miami.edu/detail/{{ name_id  }}" />
+    <meta property="og:site_name" content="University of Miami Geospatial Digitial Special Collections" />
+    {% if document['dct_description'] %}<meta property="og:description" content="{{ document['dct_description'][0] | replace('\n',' ') }}" />{% endif -%}
+    {% if document['dct_creator'] %}{% for creator in document['dct_creator'] -%}
+    {% set creator = creator.split(';') %}
+    <meta property="article:author" content="{{ creator[0] }}" />
+    {%- endfor %}{% endif %}
+    {% if document['dct_issued'] %}<meta property="article:published_time" content="{{ document['dct_issued'][0] }}" />{% endif %}
+    <script type="application/ld+json">{{ json_ld | tojson }}</script>
+{%- endblock %}
 
 {% block content %}
       <div class="container mb-6">

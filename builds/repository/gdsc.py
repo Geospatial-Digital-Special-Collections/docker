@@ -5,6 +5,7 @@ import simplejson
 import logging
 import re
 from collections import OrderedDict
+import json
 
 app = Flask(__name__)
 log = logging.getLogger('werkzeug')
@@ -178,12 +179,19 @@ def detail(name_id):
     if 'gdsc_derivatives' in document:
         document['gdsc_derived'] = [attr.split(';') for attr in document['gdsc_derived']]
 
+    with open(f"/data/{name_id}/meta_json-ld_{name_id}.json", 'r', encoding='utf-8') as f:
+        json_ld = json.load(f)
+
+    #json_ld = json_ld.replace("\n","").replace(" ","")
+    print(json_ld)
+
     return render_template(
         'detail.html', 
         name_id=name_id, 
         document=document, 
         referrer=args,
-        root='../'
+        root='../',
+        json_ld=json_ld
     )
 
 ##
