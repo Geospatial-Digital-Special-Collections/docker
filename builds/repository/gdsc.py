@@ -95,9 +95,10 @@ cite_formats = {
 }
 
 @app.route('/bibliography/<collection>/<fmt>', methods=["GET"])
-def cite(collection, fmt, name_id=None):
-    # default format handling
-    fmt = fmt.lower() if fmt else "bibtex"
+@app.route('/cite/<table_id>/<fmt>', methods=["GET"])
+def cite(collection=None, table_id=None, fmt=None):
+    # Normalize parameters
+    name_id = table_id  # reuse variable name for clarity
 
     # Build query parameters
     if name_id:
@@ -108,27 +109,28 @@ def cite(collection, fmt, name_id=None):
         else:
             query_parameters = {"q": f"gdsc_collections:{collection}"}
     else:
-        return {"error": "Please provide either a collection or name_id."}, 400
+        return {"error": "Please provide either 'collection' or 'table_id'."}, 400
 
-    # query solr
     documents, numresults = query_solr(BASE_PATH, query_parameters)
-
     if not documents:
         return {"error": "No documents found."}, 400
 
-    # Generate citations
-    if fmt in ["bibtex", "ris"]:
-        citations = [build_citation(doc, fmt) for doc in documents]
+    # Generate output
+    if fmt == "bibtex":
+        citations = [build_citation(doc, "bibtex") for doc in documents]
         output = ''.join(citations)
-        filename = (name_id or collection or "citations") + f".{cite_formats['extension'][fmt]}"
-        content_type = "text/plain"
+        filename = (name_id or collection or "citations") + ".bib"
+    elif fmt == "ris":
+        citations = [build_citation(doc, "ris") for doc in documents]
+        output = ''.join(citations)
+        filename = (name_id or collection or "citations") + ".ris"
     else:
         return {"error": f"Unsupported format '{fmt}'."}, 400
 
     # Build response
     resp = make_response(output)
     resp.headers["Content-Disposition"] = f"attachment; filename={filename}"
-    resp.headers["Content-Type"] = content_type
+    resp.headers["Content-Type"] = "text/plain"
     return resp
 
 def build_citation(doc, type):
