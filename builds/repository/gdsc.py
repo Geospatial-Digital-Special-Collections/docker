@@ -94,12 +94,10 @@ cite_formats = {
     }
 }
 
-@app.route('/cite', methods=["GET"])
-def cite():
-    # Extract URL arguments
-    collection = request.args.get("collection", "all")
-    name_id = request.args.get("name_id")
-    fmt = request.args.get("format", "bibtex")    # default to bibtex
+@app.route('/bibliography/<collection>/<fmt>', methods=["GET"])
+def cite(collection, fmt, name_id=None):
+    # default format handling
+    fmt = fmt.lower() if fmt else "bibtex"
 
     # Build query parameters
     if name_id:
@@ -110,15 +108,16 @@ def cite():
         else:
             query_parameters = {"q": f"gdsc_collections:{collection}"}
     else:
-        return {"error": "Please provide either 'collection' or 'name_id'."}, 400
+        return {"error": "Please provide either a collection or name_id."}, 400
 
+    # query solr
     documents, numresults = query_solr(BASE_PATH, query_parameters)
 
     if not documents:
         return {"error": "No documents found."}, 400
 
     # Generate citations
-    if fmt in ["bibtex","ris"]:
+    if fmt in ["bibtex", "ris"]:
         citations = [build_citation(doc, fmt) for doc in documents]
         output = ''.join(citations)
         filename = (name_id or collection or "citations") + f".{cite_formats['extension'][fmt]}"
