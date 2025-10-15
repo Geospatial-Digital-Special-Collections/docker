@@ -7,6 +7,7 @@ import re
 from collections import OrderedDict
 import io
 from datetime import date
+from collections import Counter
 
 app = Flask(__name__)
 log = logging.getLogger('werkzeug')
@@ -221,18 +222,52 @@ def highlight_query(document, query):
 
     return document
 
+
+def get_all_keywords():
+    """
+    fetches every document from solr and returns a list of unique keywords
+    sorted by popularity (descending order of occurrence).
+    """
+    start = 0
+    rows = 1000  # adjust batch size as needed
+    keyword_counter = Counter()
+
+    # First, get the total number of docs
+    initial_params = {"q": "*:*"}
+    _, total_docs = query_solr(BASE_PATH, initial_params)
+
+    # Loop through all docs in batches
+    while start < total_docs:
+        params = {"q": "*:*", "rows": rows}
+        docs, _ = query_solr(BASE_PATH, params, start=start, end=start+rows)
+
+        for doc in docs:
+            if 'dcat_keyword' in doc:
+                for kw in doc['dcat_keyword']:
+                    # Normalize keywords (strip whitespace and lowercase)
+                    keyword_counter[kw.strip().lower()] += 1
+
+        start += rows
+
+    # Sort keywords by frequency (most common first)
+    sorted_keywords = sorted(keyword_counter.items(), key=lambda x: x[1], reverse=True)
+
+    # Return just the list of keywords sorted by popularity
+    return sorted_keywords
+
+
 def search_solr(
     collection_arg="all",
     search_term=None,
     active=None,
     page=1,
     results_per_page=RESULTS_PER_PAGE,
-    geometry=None
+    geometry=None,
+    keywords=None
 ):
 
     collection = collection_arg or "all"
     query = None
-    q, qf = collection, "gdsc_collections "
 
     # --- Clean query term ---
     if search_term:
@@ -243,37 +278,46 @@ def search_solr(
     # --- Collection handling ---
     if collection in ("all", "*"):
         collection = "*"
-        q = ""
 
     # --- Base query ---
     query_parameters = {"q": f"gdsc_collections:{collection}"}
 
-    # add filters
-    for g in geometry:
-        query_parameters["q"] += f" adms_representationTechnique:{g}"
+    # --- Prepare filter queries (fq) ---
+    fq_filters = []
 
-    # --- Add search fields if query present ---
-    if query:
-        qf += " ".join(QUERY_FIELDS)
-        q = f"{q} {query}".strip()
+    # Geometry filter (OR within geometries)
+    if geometry:
+        geom_filter = " OR ".join([f"adms_representationTechnique:{g}" for g in geometry])
+        fq_filters.append(f"({geom_filter})")
 
-    # --- Add active filter if requested ---
+    # Keyword filter (OR within keywords)
+    if keywords:
+        kw_filter = " OR ".join([f'dcat_keyword:"{k}"' for k in keywords])
+        fq_filters.append(f"({kw_filter})")
+
+    # Active filter
     if active:
-        qf = f"{qf} gdsc_up"
-        q = f"{q} true".strip()
+        fq_filters.append("gdsc_up:true")
 
-    # --- Switch to dismax only if needed ---
-    if qf.strip() != "gdsc_collections":
-        query_parameters = {
-            "q.op": "AND",
+    # Attach fq filters
+    if fq_filters:
+        query_parameters["fq"] = " AND ".join(fq_filters)
+
+    # --- Add search term to q if present ---
+    if query:
+        qf = " ".join(QUERY_FIELDS)
+        query_parameters.update({
             "defType": "dismax",
             "qf": qf,
-            "q": q
-        }
+            "q": query,
+            "q.op": "AND"
+        })
 
-    # --- Query Solr ---
+    # --- Pagination ---
     start = (page - 1) * results_per_page
     end = page * results_per_page
+
+    # --- Query Solr ---
     results, numresults = query_solr(BASE_PATH, query_parameters, start, end)
 
     # --- Post-process results ---
@@ -325,13 +369,15 @@ def collections_view():
     search_term_arg = request.args.get("searchTerm")
     active = request.args.get("active")
     geometry_arg = request.args.getlist("geometry")
+    keywords_arg = request.args.getlist("keywords")
 
     results, numresults, collection, query = search_solr(
         collection_arg=collection_arg,
         search_term=search_term_arg,
         active=active,
         page=page,
-        geometry=geometry_arg
+        geometry=geometry_arg,
+        keywords=keywords_arg
     )
 
     return render_template(
@@ -347,7 +393,9 @@ def collections_view():
         page=page,
         collection_arg=collection_arg,
         search_term_arg=search_term_arg,
-        geometry_arg=geometry_arg
+        geometry_arg=geometry_arg,
+        keywords_list=get_all_keywords(),
+        keywords_arg=keywords_arg
     )
 
 @app.route('/detail/<name_id>', methods=["GET"])
