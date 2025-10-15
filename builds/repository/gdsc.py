@@ -226,12 +226,9 @@ def search_solr(
     search_term=None,
     active=None,
     page=1,
-    results_per_page=RESULTS_PER_PAGE
+    results_per_page=RESULTS_PER_PAGE,
+    geometry=None
 ):
-    """
-    Shared Solr querying logic for / and /collections endpoints.
-    Returns (results, numresults, collection, query).
-    """
 
     collection = collection_arg or "all"
     query = None
@@ -250,6 +247,10 @@ def search_solr(
 
     # --- Base query ---
     query_parameters = {"q": f"gdsc_collections:{collection}"}
+
+    # add filters
+    for g in geometry:
+        query_parameters["q"] += f" adms_representationTechnique:{g}"
 
     # --- Add search fields if query present ---
     if query:
@@ -323,12 +324,14 @@ def collections_view():
     collection_arg = request.args.get("collection", "all")
     search_term_arg = request.args.get("searchTerm")
     active = request.args.get("active")
+    geometry_arg = request.args.getlist("geometry")
 
     results, numresults, collection, query = search_solr(
         collection_arg=collection_arg,
         search_term=search_term_arg,
         active=active,
-        page=page
+        page=page,
+        geometry=geometry_arg
     )
 
     return render_template(
@@ -343,7 +346,8 @@ def collections_view():
         switch_label="Standard",
         page=page,
         collection_arg=collection_arg,
-        search_term_arg=search_term_arg
+        search_term_arg=search_term_arg,
+        geometry_arg=geometry_arg
     )
 
 @app.route('/detail/<name_id>', methods=["GET"])

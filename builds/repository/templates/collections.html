@@ -81,7 +81,7 @@
         </div>
 
         <div class="mt-3">
-          <label for="active" class="form-control">
+          <label for="active" class="form-control mb-4">
             <input type="checkbox"
                    {{ "checked" if active == 'true' else "" }}
                    id="active"
@@ -91,6 +91,20 @@
                    onchange="this.form.submit()">
             show only active datasets
           </label>
+          {% for g in ("point", "raster", "vector") %}
+          <label class="form-control mt-2" for="{{ g }}">
+            <input type="checkbox"
+                   {{ "checked" if g in geometry_arg else "" }}
+                   id="{{ g }}"
+                   name="geometry"
+                   value="{{ g.lower() }}"
+                   class="ml-1">
+              {{ g }}
+              <img src="/static/{{ g.lower() }}.jpg" class="mb-1" style="max-width: 18px;">
+            </label>
+          {% endfor %}
+
+
         </div>
       </form>
     </div>
