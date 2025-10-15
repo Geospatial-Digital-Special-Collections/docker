@@ -87,8 +87,7 @@
                    id="active"
                    name="active"
                    value="true"
-                   class="ml-1"
-                   onchange="this.form.submit()">
+                   class="ml-1">
             show only active datasets
           </label>
           {% for g in ("point", "raster", "vector") %}
@@ -127,16 +126,6 @@
             {{ switch_label }}
           </a>
         </div>
-      </div>
-      
-      <div class="row mb-2 m-0">
-        <script>
-          function setPage(value) {
-            const form = document.getElementById("filterForm");
-            form.querySelector("input[name=page]").value = value;
-            form.submit();
-          }
-        </script>
       </div>
 
       {% if results and results|length > 0 %}
