@@ -90,7 +90,7 @@
                    class="ml-1">
             show only active datasets
           </label>
-          {% for g in ("point", "raster", "vector") %}
+          {% for g in ("raster", "vector") %}
           <label class="form-control mt-2" for="{{ g }}">
             <input type="checkbox"
                    {{ "checked" if g in geometry_arg else "" }}
