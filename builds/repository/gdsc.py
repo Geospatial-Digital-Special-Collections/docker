@@ -256,6 +256,39 @@ def get_all_keywords():
     return sorted_keywords
 
 
+def get_all_creators():
+    """
+    fetches every document from solr and returns a list of unique creators
+    sorted by popularity (descending order of occurrence).
+    """
+    start = 0
+    rows = 1000  # adjust batch size as needed
+    creator_counter = Counter()
+
+    # First, get the total number of docs
+    initial_params = {"q": "*:*"}
+    _, total_docs = query_solr(BASE_PATH, initial_params)
+
+    # Loop through all docs in batches
+    while start < total_docs:
+        params = {"q": "*:*", "rows": rows}
+        docs, _ = query_solr(BASE_PATH, params, start=start, end=start+rows)
+
+        for doc in docs:
+            if 'dct_creator' in doc:
+                for kw in doc['dct_creator']:
+                    # Normalize creators (strip whitespace and lowercase)
+                    creator_counter[kw.strip().lower()] += 1
+
+        start += rows
+
+    # Sort creators by frequency (most common first)
+    sorted_creators = sorted(creator_counter.items(), key=lambda x: x[1], reverse=True)
+
+    # Return just the list of creators sorted by popularity
+    return sorted_creators
+
+
 def search_solr(
     collection_arg="all",
     search_term=None,
@@ -263,7 +296,8 @@ def search_solr(
     page=1,
     results_per_page=RESULTS_PER_PAGE,
     geometry=None,
-    keywords=None
+    keywords=None,
+    creators=None
 ):
 
     collection = collection_arg or "all"
@@ -370,6 +404,7 @@ def collections_view():
     active = request.args.get("active")
     geometry_arg = request.args.getlist("geometry")
     keywords_arg = request.args.getlist("keywords")
+    creators_arg = request.args.getlist("creators")
 
     results, numresults, collection, query = search_solr(
         collection_arg=collection_arg,
@@ -377,7 +412,8 @@ def collections_view():
         active=active,
         page=page,
         geometry=geometry_arg,
-        keywords=keywords_arg
+        keywords=keywords_arg,
+        creators=creators_arg
     )
 
     return render_template(
@@ -395,7 +431,9 @@ def collections_view():
         search_term_arg=search_term_arg,
         geometry_arg=geometry_arg,
         keywords_list=get_all_keywords(),
-        keywords_arg=keywords_arg
+        keywords_arg=keywords_arg,
+        creators_list=get_all_creators(),
+        creators_arg=creators_arg
     )
 
 @app.route('/detail/<name_id>', methods=["GET"])
