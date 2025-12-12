@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, send_from_directory
+from flask import Flask, Response, render_template, request, send_from_directory, url_for, make_response
 from urllib.request import urlopen
 from urllib.parse import urlencode
 import simplejson
@@ -15,16 +15,30 @@ BASE_PATH = 'http://gdsc-solr.gdsc:8983/solr'
 SNIP_LENGTH = 180
 QUERY_FIELDS = ['gdsc_collections','dct_title','dcat_keyword','dct_description','gdsc_attributes']
 
+
 ##
- # get solr data
+ # Local functions
  ##
-def query_solr(path,parameters):
+
+
+def query_solr(path: str, parameters: dict) -> tuple:
+    """
+    py:function:: query_solr(path, parameters)
+
+    Query the SOLR API with the an index for the catalog or collections.
+
+    :param str path: the base url for the SOLR API
+    :param dict parameters: the query parameters
+    :return: the query results, the number of results
+    :rtype: tuple
+    """
 
     numresults = 1
     results = []
 
     # send query to SOLR and gather paged results
     query_string  = urlencode(parameters).replace('-','+')
+    print("{}{}".format(path, query_string))
     while numresults > len(results):
         connection = urlopen("{}{}".format(path, query_string))
         response = simplejson.load(connection)
@@ -36,10 +50,18 @@ def query_solr(path,parameters):
 
     return results, numresults
 
-##
- # highlight found instances of query in document metadata
- ##
-def highlight_query(document,query):
+
+def highlight_query(document: dict, query: str) -> dict:
+    """
+    py:function:: query_solr(path, parameters)
+
+    Highlight the query text in the given document.
+
+    :param dict document: the document metadata
+    :param str query: string to highlight in the document
+    :return: the document metadata with css class elements added to html content in dict entries found in QUERY_FIELDS
+    :rtype: dict
+    """
 
     def add_tags(string_value,query):
         return re.sub(
@@ -72,6 +94,125 @@ def highlight_query(document,query):
             if len(attrs) > 0: document['found_in'][field] = attrs
 
     return document
+
+def build_citation(document: dict, type: str) -> str:
+    """
+    py:function:: build_citation(document, type)
+
+    Create a formatted citation string for the document in the given format type.
+
+    :param dict document: the document metadata
+    :param str type: the format type ["bibtex", "ris"]
+    :return: the formatted ciatation
+    :rtype: str
+    """
+
+    cite_formats = {
+        "formatters": {
+            "bibtex": {
+                "begin": "@misc{",
+                "indent": "  ",
+                "seperator": " = ",
+                "quote_start": "{",
+                "quote_end": "}",
+                "line_seperator": ",",
+                "end": "}"
+            },
+            "ris": {
+                "begin": "TY  - DATA\n",
+                "indent": "",
+                "seperator": "  - ",
+                "quote_start": "",
+                "quote_end": "",
+                "line_seperator": "",
+                "end": "ER  - \n\n"
+            }
+        },
+        "extension": {
+            "bibtex": "bib",
+            "ris": "ris"
+        },
+        "fields" : {
+            "dct_creator": {
+                "type": "list",
+                "bibtex": "author",
+                "ris": "AU"
+            },
+            "dct_issued": {
+                "type": "date",
+                "bibtex": "year",
+                "ris": "PY"
+            },
+            "dct_title": {
+                "type": "single",
+                "bibtex": "title",
+                "ris": "TI"
+            },
+            "dct_publisher": {
+                "type": "single",
+                "bibtex": "publisher",
+                "ris": "PB"
+            },
+            "dct_identifier": {
+                "type": "single",
+                "bibtex": "url",
+                "ris": "UR"
+            },
+            "dcat_keyword": {
+                "type": "list",
+                "bibtex": "keywords",
+                "ris": "KW"
+            },
+            "dct_modified": {
+                "type": "date",
+                "bibtex": "timestamp",
+                "ris": "Y2"
+            },
+            "dct_language": {
+                "type": "single",
+                "bibtex": "language",
+                "ris": "LA"
+            },
+            "gdsc_version": {
+                "type": "single",
+                "ris": "WV"
+            },
+            "gdsc_collections": {
+                "type": "single",
+                "ris": "T3"
+            }
+        }
+    }
+
+    def build_element(field,value):
+        return (
+            f"{formatters['indent']}{field}{formatters['seperator']}"
+            f"{formatters['quote_start']}{value}{formatters['quote_end']}"
+            f"{formatters['line_seperator']}\n"
+        )
+
+    formatters = cite_formats['formatters'][type]
+    entry = formatters['begin']
+    if type == "bibtex":
+        entry += f"{document['gdsc_tablename'][0]}\n" or "citation\n"
+
+    formatters = cite_formats['formatters'][type]
+    # looped citation body construction
+    for dc_term in cite_formats['fields']:
+        field = cite_formats['fields'][dc_term]
+        if type in field:
+            if dc_term in document:
+                val = document[dc_term]       
+                if field['type'] in ["single", "date"]:
+                    if dc_term in ["dct_issued"]: val[0] = val[0][:4]
+                    if dc_term in ["dct_modified"]: val[0] = val[0].split('T')[0]    
+                    entry += build_element(field[type],val[0])
+                elif field['type'] == "list":
+                    for item in val:
+                        entry += build_element(field[type],item.split(";")[0])
+
+    entry += formatters['end']
+    return entry
 
 ##
  # run SOLR query and render results for main page
@@ -179,12 +320,11 @@ def detail(name_id):
     if 'gdsc_derivatives' in document:
         document['gdsc_derived'] = [attr.split(';') for attr in document['gdsc_derived']]
 
+    # get json_ld 
     with open(f"/data/{name_id}/meta_json-ld_{name_id}.json", 'r', encoding='utf-8') as f:
         json_ld = json.load(f)
-
-    #json_ld = json_ld.replace("\n","").replace(" ","")
-    print(json_ld)
-
+        
+    # render page
     return render_template(
         'detail.html', 
         name_id=name_id, 
@@ -193,6 +333,41 @@ def detail(name_id):
         root='../',
         json_ld=json_ld
     )
+
+@app.route('/bibliography/<collection>/<fmt>', methods=["GET"])
+@app.route('/cite/<table_id>/<fmt>', methods=["GET"])
+def cite(collection=None, table_id=None, fmt=None):
+    # Normalize parameters
+    name_id = table_id  # reuse variable name for clarity
+
+    # Build query parameters
+    if name_id:
+        query_parameters = {"q": f"gdsc_tablename:{name_id}"}
+    elif collection:
+        if collection == "all":
+            query_parameters = {"q": "*:*"}
+        else:
+            query_parameters = {"q": f"gdsc_collections:{collection}"}
+    else:
+        return {"error": "Please provide either 'collection' or 'table_id'."}, 400
+
+    documents, numresults = query_solr(f"{BASE_PATH}/dcat/select?wt=json&", query_parameters)
+    if not documents:
+        return {"error": "No documents found."}, 400
+
+    # Generate output
+    if fmt in ["bibtex", "ris"]:
+        citations = [build_citation(doc, fmt) for doc in documents]
+        output = ''.join(citations)
+        filename = (name_id or collection or "citations") + f".{fmt}"
+    else:
+        return {"error": f"Unsupported format '{fmt}'."}, 400
+
+    # Build response
+    resp = make_response(output)
+    resp.headers["Content-Disposition"] = f"attachment; filename={filename}"
+    resp.headers["Content-Type"] = "text/plain"
+    return resp
 
 ##
  # provide download api for derivate files

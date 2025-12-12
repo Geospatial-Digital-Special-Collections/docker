@@ -96,20 +96,37 @@
           <!-- results count and search -->
           {% if results and results|length > 0 %}
           <div class="row mt-2 mb-2 p-2 container-xxl">
-            <div class="col-6"><h5 class="ml-2">Results (n={{ numresults }}):</h5></div>
-            <div class="col-6 container">
+            <div class="col-md-3 order-md-1"><h5 class="ml-2">Results (n={{ numresults }}):</h5></div>
+            <div class="col-md-6 order-md-2 container">
               <form method="post" id="searchForm" name="searchForm">
                 <div class="row">
-                  <div class="col-md-10 pb-2 pb-md-0">
+                  <div class="col-md-8 pb-2 pb-md-0">
                     <input type="text" class="form-control" name="searchTerm" placeholder="Enter search term(s)" value="{{ query if (query != "" and query != None) else "" }}">
                   </div>
-                  <div class="col-md-2 pt-2 pt-md-0 text-end">
+                  <div class="col-md-4 pt-2 pt-md-0">
                     <button type="submit" class="btn btn-primary mb-2">Search</button>
                   </div>
                   <input type="hidden" id="collection" name="collection" value="{{ collection }}">
                 </div>
                 <input type="hidden" id="collection" name="collection" value="{{ collection }}">
               </form>
+            </div>
+            <div class="col-md-3 order-last dropdown text-end">
+              <button class="btn float-right dropdown-toggle" data-bs-toggle="dropdown" type="button" aria-expanded="true">
+                Download Citations
+              </button>
+              <ul class="dropdown-menu pt-0 pb-0">
+                <li class="dropdown-item p-0">
+                  <a href="/bibliography/{{collection}}/bibtex" class="btn">
+                    BibTeX
+                  </a>
+                </li>
+                <li class="dropdown-item p-0">
+                  <a href="/bibliography/{{collection}}/ris" class="btn">
+                    RIS
+                  </a>
+                </li>
+              </ul>
             </div>
           </div>
 
@@ -137,7 +154,7 @@
                   <div class="float-left circle {{ 'green-fill' if document['gdsc_up'][0] or document['gdsc_tileUrl'] else 'red-fill' }}"></div>
                 </h5>
               </div>
-              <div class="col-md-5 align-top text-end mb-2">
+              <div class="col-md-5 align-top text-end mb-dm-2 mb-0">
                 {% if document['gdsc_collections'] and document['gdsc_collections']|length > 0 %}
                   <b>Collections:</b> {% for collection in document['gdsc_collections'] %}{{ collection }}{{ " | " if not loop.last else "" }}{% endfor %}
                 {% endif %}
@@ -175,8 +192,25 @@
                 {% endif %}
                 {% endif %}
               </div>
-              <div class="col-md-3 align-top text-end mt-2i order-first">
-                {% if document['dct_modified'] %} <p class="d-block float-right align-top text-right">last updated: {{ document['dct_modified'][0][:10] }}</p> {% endif %}
+              <div class="col-md-3 align-top mt-2i order-first pl-2 text-md-start text-end mb-3 mb-md-0">
+                <div class="dropdown mt-0">
+                  <button class="btn float-right dropdown-toggle" data-bs-toggle="dropdown" type="button" aria-expanded="true">
+                    Cite
+                  </button>
+                  <ul class="dropdown-menu pt-0 pb-0">
+                    <li class="dropdown-item p-0">
+                      <a href="/cite/{{ document['gdsc_tablename'][0] }}/bibtex" class="btn">
+                        BibTeX
+                      </a>
+                    </li>
+                    <li class="dropdown-item p-0">
+                      <a href="/cite/{{ document['gdsc_tablename'][0] }}/ris" class="btn">
+                        RIS
+                      </a>
+                    </li>
+                  </ul>
+                </div>
+                {% if document['dct_modified'] %} <div class="ml-2">last updated: {{ document['dct_modified'][0][:10] }}</div> {% endif %}
               </div>
             </div>
 
