@@ -95,6 +95,7 @@ def highlight_query(document: dict, query: str) -> dict:
 
     return document
 
+
 def build_citation(document: dict, type: str) -> str:
     """
     py:function:: build_citation(document, type)
@@ -213,6 +214,7 @@ def build_citation(document: dict, type: str) -> str:
 
     entry += formatters['end']
     return entry
+
 
 ##
  # run SOLR query and render results for main page
@@ -397,9 +399,11 @@ def download(download_path):
 
     return "File not found", 400
 
+
 ##
  # always get the list of collections for reference
  ##
+
 COLLECTIONS, COLLECTIONS_COUNT = query_solr(
     f'{BASE_PATH}/collections/select?wt=json&',
     {
@@ -411,9 +415,11 @@ keys = [item['Collection_ID'][0] for item in COLLECTIONS]
 COLLECTIONS = dict(zip(keys, COLLECTIONS))
 COLLECTIONS = OrderedDict(sorted(COLLECTIONS.items(), key=lambda i: i[0].lower()))
 
+
 ##
  # run the app if called from the command line
  ##
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0')
     # app.run(host='0.0.0.0',debug=True,use_reloader=True)
