@@ -159,56 +159,6 @@
             </div>
           </div>
 
-          <div class="row mb-2 m-0">
-            <nav aria-label="Page navigation example">
-              <ul class="pagination">
-
-                <!-- Previous -->
-                <li class="page-item {% if page == 1 %}disabled{% endif %}">
-                  <button
-                    class="page-link"
-                    type="submit"
-                    form="filterForm"
-                    name="page"
-                    value="{{ page - 1 }}"
-                    {% if page == 1 %}disabled{% endif %}
-                  >
-                    <span aria-hidden="true">&laquo;</span>
-                  </button>
-                </li>
-
-                <!-- Page numbers -->
-                {% for i in range(numresults//10 + 1) %}
-                <li class="page-item {% if page == i + 1 %}active{% endif %}">
-                  <button
-                    class="page-link"
-                    type="submit"
-                    form="filterForm"
-                    name="page"
-                    value="{{ i + 1 }}"
-                  >
-                    {{ i + 1 }}
-                  </button>
-                </li>
-                {% endfor %}
-
-                <!-- Next -->
-                <li class="page-item {% if page >= numresults//10%}disabled{% endif %}">
-                  <button
-                    class="page-link"
-                    type="submit"
-                    form="filterForm"
-                    name="page"
-                    value="{{ page + 1 }}"
-                    {% if page >= numresults//10%}disabled{% endif %}
-                  >
-                    <span aria-hidden="true">&raquo;</span>
-                  </button>
-                </li>
-              </ul>
-            </nav>
-          </div>
-
           <!-- results -->
           {% for document in results %}
           {% autoescape off %}
@@ -302,6 +252,57 @@
           </div></div>
           {% endautoescape %}
           {% endfor %}
+
+          <div class="row mb-2 m-0">
+            <nav aria-label="Page navigation example">
+              <ul class="pagination">
+
+                <!-- Previous -->
+                <li class="page-item {% if page == 1 %}disabled{% endif %}">
+                  <button
+                    class="page-link"
+                    type="submit"
+                    form="filterForm"
+                    name="page"
+                    value="{{ page - 1 }}"
+                    {% if page == 1 %}disabled{% endif %}
+                  >
+                    <span aria-hidden="true">&laquo;</span>
+                  </button>
+                </li>
+
+                <!-- Page numbers -->
+                {% for i in range(numresults//10 + 1) %}
+                <li class="page-item {% if page == i + 1 %}active{% endif %}">
+                  <button
+                    class="page-link"
+                    type="submit"
+                    form="filterForm"
+                    name="page"
+                    value="{{ i + 1 }}"
+                  >
+                    {{ i + 1 }}
+                  </button>
+                </li>
+                {% endfor %}
+
+                <!-- Next -->
+                <li class="page-item {% if page >= numresults//10%}disabled{% endif %}">
+                  <button
+                    class="page-link"
+                    type="submit"
+                    form="filterForm"
+                    name="page"
+                    value="{{ page + 1 }}"
+                    {% if page >= numresults//10%}disabled{% endif %}
+                  >
+                    <span aria-hidden="true">&raquo;</span>
+                  </button>
+                </li>
+              </ul>
+            </nav>
+          </div>
+
           {% endif %}
         </div>
 
