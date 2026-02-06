@@ -14,6 +14,7 @@ log.disabled = True
 BASE_PATH = 'http://gdsc-solr.gdsc:8983/solr'
 SNIP_LENGTH = 180
 QUERY_FIELDS = ['gdsc_collections','dct_title','dcat_keyword','dct_description','gdsc_attributes']
+DEFAULT_ROWS = 10
 
 
 ##
@@ -23,30 +24,30 @@ QUERY_FIELDS = ['gdsc_collections','dct_title','dcat_keyword','dct_description',
 
 def query_solr(path: str, parameters: dict) -> tuple:
     """
-    py:function:: query_solr(path, parameters)
-
-    Query the SOLR API with the an index for the catalog or collections.
+    Query the SOLR API with an index for the catalog or collections.
 
     :param str path: the base url for the SOLR API
-    :param dict parameters: the query parameters
+    :param dict parameters: the query parameters    
     :return: the query results, the number of results
     :rtype: tuple
     """
 
-    numresults = 1
-    results = []
+    # Build the query string
+    query_string = urlencode(parameters).replace('-', '+')
+    url = f"{path}{query_string}"
+    print(url)
 
-    # send query to SOLR and gather paged results
-    query_string  = urlencode(parameters).replace('-','+')
-    print("{}{}".format(path, query_string))
-    while numresults > len(results):
-        connection = urlopen("{}{}".format(path, query_string))
-        response = simplejson.load(connection)
-        numresults = response['response']['numFound']
-        results = response['response']['docs']
-        parameters["rows"] = numresults
-        query_string  = urlencode(parameters).replace('-','+')
-    if results == None: results = []
+    # Send the request
+    try:
+        with urlopen(url) as connection:
+            response = simplejson.load(connection)
+    except Exception as e:
+        print(f"Error querying SOLR: {e}")
+        return [], 0
+
+    # Extract results
+    numresults = response.get('response', {}).get('numFound', 0)
+    results = response.get('response', {}).get('docs', [])
 
     return results, numresults
 
@@ -220,9 +221,10 @@ def build_citation(document: dict, type: str) -> str:
 @app.route('/', methods=["GET"])
 def index():
     # these are the preferred
-    collection = request.args.get("collection", "")
+    collection = request.args.get("collection", "all")
     query = request.args.get("query", "")
     active = request.args.get("active", "")
+    page = int(request.args.get("page", 1))
 
 
     query_parameters = {"q": "gdsc_collections:*"}
@@ -251,12 +253,15 @@ def index():
         "defType": "edismax",
         "fq": fq,
         "q": q,
-        "qf": ' '.join(QUERY_FIELDS)
+        "qf": ' '.join(QUERY_FIELDS),
+        "start": (page - 1) * DEFAULT_ROWS,
+        "rows": DEFAULT_ROWS
     }
 
     # send query to SOLR and gather paged results
     results, numresults = query_solr(f'{BASE_PATH}/dcat/select?wt=json&',query_parameters)
-
+    
+    print("recieved")
     # check results for correct display
     for entry in results:
 
@@ -278,6 +283,7 @@ def index():
         collection=collection,
         query=query,
         active=active,
+        page=page,
         numresults=numresults,
         results=results,
         collections=COLLECTIONS,
