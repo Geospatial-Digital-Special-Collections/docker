@@ -103,37 +103,37 @@
 
             </div>
 
-          <div class="dropdown">
+          {% macro dropdown(label, name, possible, selected, prefix) %}
+          <div class="dropdown mb-2">
             <button class="btn btn-outline-primary dropdown-toggle"
                     type="button"
                     data-bs-toggle="dropdown"
                     data-bs-auto-close="outside">
-              Select Keywords
+              Select {{ label }}
             </button>
 
             <div class="dropdown-menu p-3" style="min-width: 260px;">
 
-              <!-- Keyword list -->
-              <div id="keywordList">
+              <div id="{{ prefix }}List">
 
-                {% set total = possible_keywords|length // 2 %}
+                {% set total = possible|length // 2 %}
 
-                {% for i in range(0, possible_keywords|length, 2) %}
-                  {% set keyword = possible_keywords[i] %}
-                  {% set count = possible_keywords[i+1] %}
+                {% for i in range(0, possible|length, 2) %}
+                  {% set item = possible[i] %}
+                  {% set count = possible[i+1] %}
                   {% set index = loop.index0 %}
 
-                  <div class="form-check keyword-item {% if index >= 5 %}d-none extra-item{% endif %}">
+                  <div class="form-check {{ prefix }}-item {% if index >= 5 %}d-none extra-{{ prefix }}{% endif %}">
                     <input class="form-check-input"
                            type="checkbox"
-                           name="keyword"
-                           value="{{ keyword }}"
-                           id="kw{{ index }}"
-                           {% if keyword in keywords %}checked{% endif %}
+                           name="{{ name }}"
+                           value="{{ item }}"
+                           id="{{ prefix }}{{ index }}"
+                           {% if item in selected %}checked{% endif %}
                            onchange="this.form.submit()">
 
-                    <label class="form-check-label w-100" for="kw{{ index }}">
-                      {{ keyword }}
+                    <label class="form-check-label w-100" for="{{ prefix }}{{ index }}">
+                      {{ item }}
                       <span class="text-muted float-end">({{ count }})</span>
                     </label>
                   </div>
@@ -142,108 +142,46 @@
               </div>
 
               {% if total > 5 %}
-              <!-- Toggle button -->
-              <button class="btn btn-sm btn-link w-100 mt-2"
-                      id="toggleKeywords"
-                      type="button">
+              <button class="btn btn-sm btn-link w-100 mt-2 toggle-btn"
+                      type="button"
+                      data-prefix="{{ prefix }}">
                 Show more
               </button>
               {% endif %}
 
             </div>
           </div>
+          {% endmacro %}
 
 
-          <script>
-          document.addEventListener("DOMContentLoaded", function () {
-            const toggleBtn = document.getElementById("toggleKeywords");
-            if (!toggleBtn) return;
+          <!-- === DROPDOWNS === -->
 
-            const extraItems = document.querySelectorAll(".extra-item");
-            let expanded = false;
-
-            toggleBtn.addEventListener("click", function () {
-              expanded = !expanded;
-
-              extraItems.forEach(el => {
-                el.classList.toggle("d-none", !expanded);
-              });
-
-              toggleBtn.textContent = expanded ? "Show less" : "Show more";
-            });
-          });
-          </script>
-
-          <div class="dropdown">
-            <button class="btn btn-outline-primary dropdown-toggle"
-                    type="button"
-                    data-bs-toggle="dropdown"
-                    data-bs-auto-close="outside">
-              Select Geometries
-            </button>
-
-            <div class="dropdown-menu p-3" style="min-width: 260px;">
-
-              <!-- geometry list -->
-              <div id="Geometry List">
-
-                {% set total = possible_geometries|length // 2 %}
-
-                {% for i in range(0, possible_geometries|length, 2) %}
-                  {% set geometry = possible_geometries[i] %}
-                  {% set count = possible_geometries[i+1] %}
-                  {% set index = loop.index0 %}
-
-                  <div class="form-check keyword-item {% if index >= 5 %}d-none extra-item{% endif %}">
-                    <input class="form-check-input"
-                           type="checkbox"
-                           name="geometry"
-                           value="{{ geometry }}"
-                           id="ge{{ index }}"
-                           {% if geometry in geometries %}checked{% endif %}
-                           onchange="this.form.submit()">
-
-                    <label class="form-check-label w-100" for="ge{{ index }}">
-                      {{ geometry }}
-                      <span class="text-muted float-end">({{ count }})</span>
-                    </label>
-                  </div>
-
-                {% endfor %}
-              </div>
-
-              {% if total > 5 %}
-              <!-- Toggle button -->
-              <button class="btn btn-sm btn-link w-100 mt-2"
-                      id="toggleGeometries"
-                      type="button">
-                Show more
-              </button>
-              {% endif %}
-
-            </div>
-          </div>
-
+          {{ dropdown("Keywords", "keyword", possible_keywords, keywords, "kw") }}
 
           <script>
           document.addEventListener("DOMContentLoaded", function () {
-            const toggleBtn = document.getElementById("toggleGeometries");
-            if (!toggleBtn) return;
 
-            const extraItems = document.querySelectorAll(".extra-item");
-            let expanded = false;
+            document.querySelectorAll(".toggle-btn").forEach(btn => {
 
-            toggleBtn.addEventListener("click", function () {
-              expanded = !expanded;
+              let expanded = false;
+              const prefix = btn.dataset.prefix;
+              const extraItems = document.querySelectorAll(".extra-" + prefix);
 
-              extraItems.forEach(el => {
-                el.classList.toggle("d-none", !expanded);
+              btn.addEventListener("click", function () {
+                expanded = !expanded;
+
+                extraItems.forEach(el => {
+                  el.classList.toggle("d-none", !expanded);
+                });
+
+                btn.textContent = expanded ? "Show less" : "Show more";
               });
 
-              toggleBtn.textContent = expanded ? "Show less" : "Show more";
             });
+
           });
           </script>
+
           </form>
         </div>
 
