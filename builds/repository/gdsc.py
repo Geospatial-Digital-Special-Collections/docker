@@ -16,6 +16,24 @@ SNIP_LENGTH = 180
 QUERY_FIELDS = ['gdsc_collections','dct_title','dcat_keyword','dct_description','gdsc_attributes']
 DEFAULT_ROWS = 10
 
+FILTER_SPECS = {
+    "keyword": {
+        "field": "dcat_keyword",
+        "facet_name": "possible_keywords"
+    },
+    "geometry": {
+        "field": "locn_geometry",
+        "facet_name": "possible_geometries"
+    },
+    "representation": {
+        "field": "adms_representationTechnique",
+        "facet_name": "possible_representations"
+    },
+    "right": {
+        "field": "dct_rights",
+        "facet_name": "possible_rights"
+    }
+}
 
 ##
  # Local functions
@@ -223,82 +241,77 @@ def build_citation(document: dict, type: str) -> str:
     return entry
 
 
+def build_filter_clause(field, values):
+    if not values:
+        return ""
+
+    clauses = [f'{field}:"{v}"' for v in values]
+    return f" ({' OR '.join(clauses)})"
+
+def fetch_facets(field):
+    params = {
+        "q": "*:*",
+        "facet.field": field,
+        "indent": "true",
+        "q.op": "OR",
+        "rows": "0",
+        "facet": "true"
+    }
+
+    return query_solr(
+        f'{BASE_PATH}/dcat/select?wt=json&',
+        params,
+        field
+    )
+
 ##
  # run SOLR query and render results for main page
  ##
 @app.route('/', methods=["GET"])
 def index():
-    # these are the preferred
+
     collection = request.args.get("collection", "all")
     query = request.args.get("query", "")
     active = request.args.get("active", "")
     page = int(request.args.get("page", 1))
-    keywords = request.args.getlist("keyword")
-    geometries = request.args.getlist("geometry")
-    print("geometries: " + str(geometries))
 
-    
+    # --- Collect filters dynamically ---
+    selected_filters = {
+        key: request.args.getlist(key)
+        for key in FILTER_SPECS
+    }
 
-    query_parameters = {"q": "gdsc_collections:*"}
-    numresults = 1
-    results = []
+    # --- Fetch facet values dynamically ---
+    facet_data = {}
 
-    possible_keyword_query_parameters = {
-      "q":"*:*",
-      "facet.field":"dcat_keyword",
-      "indent":"true",
-      "q.op":"OR",
-      "rows":"0",
-      "facet":"true"
-      }
+    for key, spec in FILTER_SPECS.items():
+        values, count = fetch_facets(spec["field"])
+        facet_data[spec["facet_name"]] = values
 
-    possible_keywords, num_possible_keywords = query_solr(f'{BASE_PATH}/dcat/select?wt=json&', possible_keyword_query_parameters, "dcat_keyword")
+    # --- Base query ---
+    q = query or "*"
 
-    possible_geometry_query_parameters = {
-      "q":"*:*",
-      "facet.field":"locn_geometry",
-      "indent":"true",
-      "q.op":"OR",
-      "rows":"0",
-      "facet":"true"
-      }
-
-    possible_geometries, num_possible_geometries = query_solr(f'{BASE_PATH}/dcat/select?wt=json&', possible_geometry_query_parameters, "locn_geometry")
-
-    q = query
-
-    fq = f'gdsc_collections:"{collection}"'
+    fq_parts = []
 
     if collection == "all":
-        collection = "*"
-        fq = 'gdsc_collections:*'
+        fq_parts.append("gdsc_collections:*")
+    else:
+        fq_parts.append(f'gdsc_collections:"{collection}"')
 
-    if query == "":
-        q = "*"
-    
-    if active != "":
-        fq += " " + "gdsc_up:\"true\""
+    if active:
+        fq_parts.append('gdsc_up:"true"')
         active = "true"
 
-    if keywords != []:
-        fq += " ("
-        for i in range(len(keywords)):
-            if len(keywords) != 1 and i != 0:
-                fq += " OR"
-            fq += " dcat_keyword:"
-            fq += f'"{keywords[i]}"'
-        fq += ")"
+    # --- Apply programmatic filters ---
+    for key, values in selected_filters.items():
+        field = FILTER_SPECS[key]["field"]
+        clause = build_filter_clause(field, values)
+        if clause:
+            fq_parts.append(clause)
 
-    if geometries != []:
-        fq += " ("
-        for i in range(len(geometries)):
-            if len(geometries) != 1 and i != 0:
-                fq += " OR"
-            fq += " locn_geometry:"
-            fq += f'"{geometries[i]}"'
-        fq += ")"
+    fq = " ".join(fq_parts)
 
-
+    # --- Solr query ---
     query_parameters = {
         "q.op": "AND",
         "defType": "edismax",
@@ -309,40 +322,40 @@ def index():
         "rows": DEFAULT_ROWS
     }
 
-    # send query to SOLR and gather paged results
-    results, numresults = query_solr(f'{BASE_PATH}/dcat/select?wt=json&',query_parameters)
-    
-    print("recieved")
-    # check results for correct display
+    results, numresults = query_solr(
+        f'{BASE_PATH}/dcat/select?wt=json&',
+        query_parameters
+    )
+
+    # --- Post-processing ---
     for entry in results:
 
-        # highlight search term in results
-        if query != None and query != 'None' and query != '':
-            entry = highlight_query(entry,query)
+        if query:
+            entry = highlight_query(entry, query)
 
-        # snip abstracts
-        if entry['dct_description']:
-            entry['display_description'] = entry['dct_description'][0]
-            if len(entry['display_description']) > SNIP_LENGTH:
-                entry['display_description'] = entry['dct_description'][0][0:SNIP_LENGTH] + '...'
+        if entry.get('dct_description'):
+            desc = entry['dct_description'][0]
+            entry['display_description'] = (
+                desc[:SNIP_LENGTH] + '...'
+                if len(desc) > SNIP_LENGTH else desc
+            )
 
-    if collection == "*": 
-        collection = 'all'
+    if collection == "*":
+        collection = "all"
 
+    # --- Render ---
     return render_template(
-        'index.html',
+        "index.html",
         collection=collection,
         query=query,
         active=active,
         page=page,
-        keywords=keywords,
-        possible_keywords=possible_keywords,
-        geometries=geometries,
-        possible_geometries=possible_geometries,
-        numresults=numresults,
         results=results,
+        numresults=numresults,
         collections=COLLECTIONS,
-        root='./'
+        root="./",
+        **selected_filters,
+        **facet_data
     )
 
 ##
