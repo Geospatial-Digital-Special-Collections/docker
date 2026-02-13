@@ -22,13 +22,13 @@ DEFAULT_ROWS = 10
  ##
 
 
-def query_solr(path: str, parameters: dict, get_facet: bool = False) -> tuple:
+def query_solr(path: str, parameters: dict, facet_field: str = None) -> tuple:
     """
     Query the SOLR API with an index for the catalog or collections.
 
     :param str path: the base url for the SOLR API
     :param dict parameters: the query parameters
-    :param get_facet: whether to fetch the facet component of the solr respons or behave normally
+    :param facet_field: optional field for which to get all possible options for froma all documents, if unspecified, query normally
     :return: the query results, the number of results
     :rtype: tuple
     """
@@ -47,8 +47,8 @@ def query_solr(path: str, parameters: dict, get_facet: bool = False) -> tuple:
         return [], 0
 
     # Extract results
-    if get_facet:
-        results = response.get('facet_counts', {}).get('facet_fields', {}).get('dcat_keyword', [])
+    if facet_field != None:
+        results = response.get('facet_counts', {}).get('facet_fields', {}).get(facet_field, [])
         numresults = len(results)
         print("getting facets")
     else:
@@ -234,7 +234,9 @@ def index():
     active = request.args.get("active", "")
     page = int(request.args.get("page", 1))
     keywords = request.args.getlist("keyword")
-    print("keywords: " + str(keywords))
+    geometries = request.args.getlist("geometry")
+    print("geometries: " + str(geometries))
+
     
 
     query_parameters = {"q": "gdsc_collections:*"}
@@ -250,7 +252,18 @@ def index():
       "facet":"true"
       }
 
-    possible_keywords, num_possible_keywords = query_solr(f'{BASE_PATH}/dcat/select?wt=json&', possible_keyword_query_parameters, True)
+    possible_keywords, num_possible_keywords = query_solr(f'{BASE_PATH}/dcat/select?wt=json&', possible_keyword_query_parameters, "dcat_keyword")
+
+    possible_geometry_query_parameters = {
+      "q":"*:*",
+      "facet.field":"locn_geometry",
+      "indent":"true",
+      "q.op":"OR",
+      "rows":"0",
+      "facet":"true"
+      }
+
+    possible_geometries, num_possible_geometries = query_solr(f'{BASE_PATH}/dcat/select?wt=json&', possible_geometry_query_parameters, "locn_geometry")
 
     q = query
 
@@ -274,6 +287,15 @@ def index():
                 fq += " OR"
             fq += " dcat_keyword:"
             fq += f'"{keywords[i]}"'
+        fq += ")"
+
+    if geometries != []:
+        fq += " ("
+        for i in range(len(geometries)):
+            if len(geometries) != 1 and i != 0:
+                fq += " OR"
+            fq += " locn_geometry:"
+            fq += f'"{geometries[i]}"'
         fq += ")"
 
 
@@ -315,6 +337,8 @@ def index():
         page=page,
         keywords=keywords,
         possible_keywords=possible_keywords,
+        geometries=geometries,
+        possible_geometries=possible_geometries,
         numresults=numresults,
         results=results,
         collections=COLLECTIONS,
