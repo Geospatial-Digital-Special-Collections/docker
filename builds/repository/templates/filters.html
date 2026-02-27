@@ -1,0 +1,97 @@
+{% macro accordion_item(label, name, possible, selected, prefix) %}
+<div class="accordion-item mb-2">
+  <h2 class="accordion-header" id="heading-{{ prefix }}">
+    <button class="accordion-button collapsed"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#collapse-{{ prefix }}"
+            aria-expanded="false"
+            aria-controls="collapse-{{ prefix }}">
+      Select {{ label }}
+    </button>
+  </h2>
+
+  <div id="collapse-{{ prefix }}"
+       class="accordion-collapse collapse"
+       aria-labelledby="heading-{{ prefix }}">
+    <div class="accordion-body">
+
+      <div id="{{ prefix }}List">
+
+        {% set total = possible|length // 2 %}
+
+        {% for i in range(0, possible|length, 2) %}
+          {% set item = possible[i] %}
+          {% set count = possible[i+1] %}
+          {% set index = loop.index0 %}
+
+          <div class="form-check {{ prefix }}-item {% if index >= 5 %}d-none extra-{{ prefix }}{% endif %}">
+            <input class="form-check-input"
+                   type="checkbox"
+                   name="{{ name }}"
+                   value="{{ item }}"
+                   id="{{ prefix }}{{ index }}"
+                   {% if item in selected %}checked{% endif %}
+                   onchange="this.form.submit()">
+
+            <label class="form-check-label w-100" for="{{ prefix }}{{ index }}">
+              {{ item }}
+              <span class="text-muted float-end">({{ count }})</span>
+            </label>
+          </div>
+
+        {% endfor %}
+      </div>
+
+      {% if total > 5 %}
+      <button class="btn btn-sm btn-link w-100 mt-2 toggle-btn"
+              type="button"
+              data-prefix="{{ prefix }}">
+        Show more
+      </button>
+      {% endif %}
+
+    </div>
+  </div>
+</div>
+{% endmacro %}
+
+
+<div class="accordion" id="filterAccordion">
+
+  {{ accordion_item("Keywords", "keyword", possible_keywords, keywords, "kw") }}
+
+  {{ accordion_item("Geometry", "geometry", possible_geometries, geometries, "ge") }}
+
+  {{ accordion_item("Representation", "representation", possible_representations, representations, "re") }}
+
+  {{ accordion_item("Rights", "right", possible_rights, rights, "ri") }}
+
+  {{ accordion_item("Activity", "active", possible_activity, activive, "ac") }}
+
+</div>
+
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+  document.querySelectorAll(".toggle-btn").forEach(btn => {
+
+    let expanded = false;
+    const prefix = btn.dataset.prefix;
+    const extraItems = document.querySelectorAll(".extra-" + prefix);
+
+    btn.addEventListener("click", function () {
+      expanded = !expanded;
+
+      extraItems.forEach(el => {
+        el.classList.toggle("d-none", !expanded);
+      });
+
+      btn.textContent = expanded ? "Show less" : "Show more";
+    });
+
+  });
+
+});
+</script>

@@ -116,11 +116,10 @@
 
             <!-- filters -->
             <div class="col-lg-3" style="max-width: 300px;">
-              <h5>Refine results</h5>
               <form method="get" id="filterForm" name="filterForm">
                 <div class="container">
 
-                  <div class="row mt-3">
+                  <div class="row">
                     <h5 class="mr-2">Collection: </h5>
                   </div>
 
@@ -138,112 +137,12 @@
                     </select>
                   </div>
 
-                  <hr>
-
-                  <div class="row mt-3 mb-4 mb-lg-2">
-                    <div class="col-1 mt-1 mx-0 p-0">
-                      <input type="checkbox"
-                             id="active"
-                             name="active"
-                             value="true"
-                             {{ "checked" if active == "true" else "false" }}
-                             onchange="this.form.submit()">
-                    </div>
-                    <div class="col-11 m-0 p-0">
-                      <label for="active">show only active datasets</label>
-                    </div>
-                  </div>
-
                   <!-- preserve search query -->
                   <input type="hidden" name="query" value="{{ query }}">
 
                 </div>
 
-              {% macro dropdown(label, name, possible, selected, prefix) %}
-              <div class="dropdown mb-2">
-                <button class="btn dropdown-toggle"
-                        type="button"
-                        data-bs-toggle="dropdown"
-                        data-bs-auto-close="outside">
-                  Select {{ label }}
-                </button>
-
-                <div class="dropdown-menu p-3" style="min-width: 260px;">
-
-                  <div id="{{ prefix }}List">
-
-                    {% set total = possible|length // 2 %}
-
-                    {% for i in range(0, possible|length, 2) %}
-                      {% set item = possible[i] %}
-                      {% set count = possible[i+1] %}
-                      {% set index = loop.index0 %}
-
-                      <div class="form-check {{ prefix }}-item {% if index >= 5 %}d-none extra-{{ prefix }}{% endif %}">
-                        <input class="form-check-input"
-                               type="checkbox"
-                               name="{{ name }}"
-                               value="{{ item }}"
-                               id="{{ prefix }}{{ index }}"
-                               {% if item in selected %}checked{% endif %}
-                               onchange="this.form.submit()">
-
-                        <label class="form-check-label w-100" for="{{ prefix }}{{ index }}">
-                          {{ item }}
-                          <span class="text-muted float-end">({{ count }})</span>
-                        </label>
-                      </div>
-
-                    {% endfor %}
-                  </div>
-
-                  {% if total > 5 %}
-                  <button class="btn btn-sm btn-link w-100 mt-2 toggle-btn"
-                          type="button"
-                          data-prefix="{{ prefix }}">
-                    Show more
-                  </button>
-                  {% endif %}
-
-                </div>
-              </div>
-              {% endmacro %}
-
-
-              <!-- === DROPDOWNS === -->
-
-              {{ dropdown("Keywords", "keyword", possible_keywords, keywords, "kw") }}
-
-              {{ dropdown("Geometry", "geometry", possible_geometries, geometries, "ge") }}
-
-              {{ dropdown("Representation", "representation", possible_representations, representations, "re") }}
-
-              {{ dropdown("Rights", "right", possible_rights, rights, "ri") }}
-
-
-              <script>
-              document.addEventListener("DOMContentLoaded", function () {
-
-                document.querySelectorAll(".toggle-btn").forEach(btn => {
-
-                  let expanded = false;
-                  const prefix = btn.dataset.prefix;
-                  const extraItems = document.querySelectorAll(".extra-" + prefix);
-
-                  btn.addEventListener("click", function () {
-                    expanded = !expanded;
-
-                    extraItems.forEach(el => {
-                      el.classList.toggle("d-none", !expanded);
-                    });
-
-                    btn.textContent = expanded ? "Show less" : "Show more";
-                  });
-
-                });
-
-              });
-              </script>
+              {% include "filters.html" %}
 
               </form>
             </div>
@@ -400,7 +299,6 @@
             </div>
           </div>
 
-          
         </div>
 
       </div>

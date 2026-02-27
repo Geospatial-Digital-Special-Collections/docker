@@ -32,6 +32,10 @@ FILTER_SPECS = {
     "right": {
         "field": "dct_rights",
         "facet_name": "possible_rights"
+    },
+    "active": {
+        "field": "gdsc_up",
+        "facet_name": "possible_activity"
     }
 }
 
@@ -272,7 +276,6 @@ def index():
 
     collection = request.args.get("collection", "all")
     query = request.args.get("query", "")
-    active = request.args.get("active", "")
     page = int(request.args.get("page", 1))
 
     # --- Collect filters dynamically ---
@@ -297,10 +300,6 @@ def index():
         fq_parts.append("gdsc_collections:*")
     else:
         fq_parts.append(f'gdsc_collections:"{collection}"')
-
-    if active:
-        fq_parts.append('gdsc_up:"true"')
-        active = "true"
 
     # --- Apply programmatic filters ---
     for key, values in selected_filters.items():
@@ -348,7 +347,6 @@ def index():
         "index.html",
         collection=collection,
         query=query,
-        active=active,
         page=page,
         results=results,
         numresults=numresults,
