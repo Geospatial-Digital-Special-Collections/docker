@@ -283,6 +283,8 @@ def index():
         key: request.args.getlist(key)
         for key in FILTER_SPECS
     }
+    print("filters: ")
+    print(selected_filters)
 
     # --- Fetch facet values dynamically ---
     facet_data = {}
