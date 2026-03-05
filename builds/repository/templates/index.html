@@ -257,6 +257,18 @@
               <div class="row mb-2 m-0">
                 <nav aria-label="Page navigation example">
                   <ul class="pagination">
+                    <!-- First-->
+                    <li class="page-item {% if page == 1 %}disabled{% endif %}">
+                      <button
+                        class="page-link"
+                        type="submit"
+                        form="filterForm"
+                        name="page"
+                        value="{{ 1 }}"
+                        {% if page == 1 %}disabled{% endif %}>
+                        <span aria-hidden="true">&laquo;</span>
+                      </button>
+                    </li>
 
                     <!-- Previous -->
                     <li class="page-item {% if page == 1 %}disabled{% endif %}">
@@ -266,9 +278,8 @@
                         form="filterForm"
                         name="page"
                         value="{{ page - 1 }}"
-                        {% if page == 1 %}disabled{% endif %}
-                      >
-                        <span aria-hidden="true">&laquo;</span>
+                        {% if page == 1 %}disabled{% endif %}>
+                        <span aria-hidden="true">&lsaquo;</span>
                       </button>
                     </li>
 
@@ -280,23 +291,34 @@
                         type="submit"
                         form="filterForm"
                         name="page"
-                        value="{{ i + 1 }}"
-                      >
+                        value="{{ i + 1 }}">
                         {{ i + 1 }}
                       </button>
                     </li>
                     {% endfor %}
 
                     <!-- Next -->
-                    <li class="page-item {% if page >= numresults//10%}disabled{% endif %}">
+                    <li class="page-item {% if page > numresults//10%}disabled{% endif %}">
                       <button
                         class="page-link"
                         type="submit"
                         form="filterForm"
                         name="page"
                         value="{{ page + 1 }}"
-                        {% if page >= numresults//10%}disabled{% endif %}
-                      >
+                        {% if page > numresults//10%}disabled{% endif %}>
+                        <span aria-hidden="true">&rsaquo;</span>
+                      </button>
+                    </li>
+
+                    <!-- Next -->
+                    <li class="page-item {% if page > numresults//10%}disabled{% endif %}">
+                      <button
+                        class="page-link"
+                        type="submit"
+                        form="filterForm"
+                        name="page"
+                        value="{{ numresults//10 + 1 }}"
+                        {% if page > numresults//10%}disabled{% endif %}>
                         <span aria-hidden="true">&raquo;</span>
                       </button>
                     </li>
