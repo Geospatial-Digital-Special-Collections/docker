@@ -250,7 +250,7 @@ def build_filter_clause(field, values):
         return ""
 
     clauses = [f'{field}:"{v}"' for v in values]
-    return f" ({' OR '.join(clauses)})"
+    return f" ({' AND '.join(clauses)})"
 
 def fetch_facets(field):
     params = {
