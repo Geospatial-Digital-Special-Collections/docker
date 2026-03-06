@@ -252,12 +252,13 @@ def build_filter_clause(field, values):
     clauses = [f'{field}:"{v}"' for v in values]
     return f" ({' AND '.join(clauses)})"
 
-def fetch_facets(field):
+def fetch_facets(field, query, fq):
     params = {
-        "q": "*:*",
+        "q": query,
+        "fq": fq,
         "facet.field": field,
         "indent": "true",
-        "q.op": "OR",
+        "q.op": "AND",
         "rows": "0",
         "facet": "true"
     }
@@ -285,13 +286,6 @@ def index():
     }
     print("filters: ")
     print(selected_filters)
-
-    # --- Fetch facet values dynamically ---
-    facet_data = {}
-
-    for key, spec in FILTER_SPECS.items():
-        values, count = fetch_facets(spec["field"])
-        facet_data[spec["facet_name"]] = values
 
     # --- Base query ---
     q = query or "*"
@@ -343,6 +337,13 @@ def index():
 
     if collection == "*":
         collection = "all"
+
+    # --- Fetch facet values dynamically ---
+    facet_data = {}
+
+    for key, spec in FILTER_SPECS.items():
+        values, count = fetch_facets(spec["field"], q, fq)
+        facet_data[spec["facet_name"]] = values
 
     # --- Render ---
     return render_template(

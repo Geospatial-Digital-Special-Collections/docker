@@ -26,33 +26,8 @@
         {% set count = possible[i+1] %}
         {% set index = loop.index0 %}
 
-        {% if index < 5 %}
-        <div class="form-check">
-          <input class="form-check-input"
-                 type="checkbox"
-                 name="{{ name }}"
-                 value="{{ item }}"
-                 id="{{ prefix }}{{ index }}"
-                 {% if item in selected %}checked{% endif %}
-                 onchange="this.form.submit()">
-
-          <label class="form-check-label w-100" for="{{ prefix }}{{ index }}">
-            {{ item }}
-            <span class="text-muted float-end">({{ count }})</span>
-          </label>
-        </div>
-        {% endif %}
-      {% endfor %}
-
-      {% if total > 5 %}
-      <!-- Collapsed extra items -->
-      <div class="collapse mt-2" id="more-{{ prefix }}">
-        {% for i in range(0, possible|length, 2) %}
-          {% set item = possible[i] %}
-          {% set count = possible[i+1] %}
-          {% set index = loop.index0 %}
-
-          {% if index >= 5 %}
+        {% if count > 0 %}
+          {% if index < 5 %}
           <div class="form-check">
             <input class="form-check-input"
                    type="checkbox"
@@ -67,6 +42,35 @@
               <span class="text-muted float-end">({{ count }})</span>
             </label>
           </div>
+          {% endif %}
+        {% endif %}
+      {% endfor %}
+
+      {% if total > 5 %}
+      <!-- Collapsed extra items -->
+      <div class="collapse mt-2" id="more-{{ prefix }}">
+        {% for i in range(0, possible|length, 2) %}
+          {% set item = possible[i] %}
+          {% set count = possible[i+1] %}
+          {% set index = loop.index0 %}
+          
+          {% if count > 0 %}
+            {% if index >= 5 %}
+            <div class="form-check">
+              <input class="form-check-input"
+                     type="checkbox"
+                     name="{{ name }}"
+                     value="{{ item }}"
+                     id="{{ prefix }}{{ index }}"
+                     {% if item in selected %}checked{% endif %}
+                     onchange="this.form.submit()">
+
+              <label class="form-check-label w-100" for="{{ prefix }}{{ index }}">
+                {{ item }}
+                <span class="text-muted float-end">({{ count }})</span>
+              </label>
+            </div>
+            {% endif %}
           {% endif %}
         {% endfor %}
       </div>
