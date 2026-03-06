@@ -284,8 +284,6 @@ def index():
         key: request.args.getlist(key)
         for key in FILTER_SPECS
     }
-    print("filters: ")
-    print(selected_filters)
 
     # --- Base query ---
     q = query or "*"

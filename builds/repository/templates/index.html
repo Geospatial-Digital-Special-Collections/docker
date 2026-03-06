@@ -111,6 +111,35 @@
               </ul>
             </div>
           </div>
+          
+          <div class="mb-3">
+            <div class="d-flex flex-wrap gap-2">
+              {% for selected, list_name in [(keyword, "keyword"), (geometry, "geometry"), (representation, "representation"), (right, "right"), (active, "active")] %}
+                {% for item in selected %}
+                <span class="badge rounded-pill bg-primary d-flex align-items-center">
+                  
+                  {{ item }}  
+
+                  <input type="checkbox"
+                          checked=""
+                          name="{{ list_name }}"
+                          value="{{ item }}"
+                          form="filterForm"
+                          id="{{ item }}"
+                          hidden
+                          onchange="this.form.submit()">
+                  </label>
+                  <label class="btn-close btn-close-white ms-2"
+                         for="{{ item }}"
+                         aria-label="Remove"
+                         style="font-size:0.6rem;">
+                  </label>
+
+                </span>
+                {% endfor %}
+              {% endfor %}
+            </div>
+          </div>
 
           <div class="row">
 
