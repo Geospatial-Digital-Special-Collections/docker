@@ -1,5 +1,5 @@
 {% macro accordion_item(label, name, possible, selected, prefix) %}
-<div class="accordion-item mb-2">
+<div class="accordion-item mb-0 border-0">
   <h2 class="accordion-header" id="heading-{{ prefix }}">
     <button class="accordion-button collapsed"
             type="button"
@@ -7,7 +7,7 @@
             data-bs-target="#collapse-{{ prefix }}"
             aria-expanded="false"
             aria-controls="collapse-{{ prefix }}">
-      Select {{ label }}
+      {{ label }}
     </button>
   </h2>
 

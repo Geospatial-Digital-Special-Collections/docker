@@ -64,7 +64,7 @@
           <div class="row d-block d-lg-none border-top"></div>
 
           <!-- results count and search -->
-          <div class="row mt-2 mb-2 p-2 container-xxl">
+          <div class="row mt-2 mb-0 p-2 container-xxl">
             <div class="col-md-3"></div>
             <div class="col-md-6 order-md-2 container">
               <form method="get" id="filterForm" name="filterForm">
@@ -112,11 +112,12 @@
             </div>
           </div>
           
-          <div class="mb-3">
-            <div class="d-flex flex-wrap gap-2">
+          <div class="row mt-0 mb-4 container-xxl">
+            <div class="col-md-3"></div>
+            <div class="col-md-9 d-flex flex-wrap gap-2">
               {% for selected, list_name in [(keyword, "keyword"), (geometry, "geometry"), (representation, "representation"), (right, "right"), (active, "active")] %}
                 {% for item in selected %}
-                <span class="badge rounded-pill bg-primary d-flex align-items-center">
+                <span class="badge rounded-pill bg-light text-dark d-flex align-items-center">
                   
                   {{ item }}  
 
@@ -129,7 +130,7 @@
                           hidden
                           onchange="this.form.submit()">
                   </label>
-                  <label class="btn-close btn-close-white ms-2"
+                  <label class="btn-close btn-close-dark ms-2"
                          for="{{ item }}"
                          aria-label="Remove"
                          style="font-size:0.6rem;">
@@ -174,11 +175,13 @@
                 {% from "filters.html" import accordion_item%}
 
                 <div class="accordion" id="filterAccordion">
+                  <hr />
+                  Refine by:
                   {{ accordion_item("Keywords", "keyword", possible_keywords, keyword, "kw") }}
                   {{ accordion_item("Geometry", "geometry", possible_geometries, geometry, "ge") }}
                   {{ accordion_item("Representation", "representation", possible_representations, representation, "re") }}
                   {{ accordion_item("Rights", "right", possible_rights, right, "ri") }}
-                  {{ accordion_item("Activity", "active", possible_activity, active, "ac") }}
+                  {{ accordion_item("Running", "active", possible_activity, active, "ac") }}
                 </div>
 
               </form>
