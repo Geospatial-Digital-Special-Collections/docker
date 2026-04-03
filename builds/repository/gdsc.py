@@ -19,23 +19,28 @@ DEFAULT_ROWS = 10
 FILTER_SPECS = {
     "keyword": {
         "field": "dcat_keyword",
-        "facet_name": "possible_keywords"
+        "facet_name": "possible_keywords",
+        "frontend_name": "Keywords"
     },
     "geometry": {
         "field": "locn_geometry",
-        "facet_name": "possible_geometries"
+        "facet_name": "possible_geometries",
+        "frontend_name": "Geometry"
     },
     "representation": {
         "field": "adms_representationTechnique",
-        "facet_name": "possible_representations"
+        "facet_name": "possible_representations",
+        "frontend_name": "Representation"
     },
     "right": {
         "field": "dct_rights",
-        "facet_name": "possible_rights"
+        "facet_name": "possible_rights",
+        "frontend_name": "Rights"
     },
     "active": {
         "field": "gdsc_up",
-        "facet_name": "possible_activity"
+        "facet_name": "possible_activity",
+        "frontend_name": "Running"
     }
 }
 
@@ -352,9 +357,10 @@ def index():
         results=results,
         numresults=numresults,
         collections=COLLECTIONS,
+        filter_specs=FILTER_SPECS,
         root="./",
-        **selected_filters,
-        **facet_data
+        facet_data=facet_data,
+        selected_filters=selected_filters
     )
 
 ##

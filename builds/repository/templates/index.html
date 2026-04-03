@@ -115,15 +115,15 @@
           <div class="row mt-0 mb-4 container-xxl">
             <div class="col-md-3"></div>
             <div class="col-md-9 d-flex flex-wrap gap-2">
-              {% for selected, list_name in [(keyword, "keyword"), (geometry, "geometry"), (representation, "representation"), (right, "right"), (active, "active")] %}
-                {% for item in selected %}
+              {% for key in filter_specs %}
+                {% for item in selected_filters[key] %}
                 <span class="badge rounded-pill bg-light text-dark d-flex align-items-center">
                   
                   {{ item }}  
 
                   <input type="checkbox"
                           checked=""
-                          name="{{ list_name }}"
+                          name="{{ key }}"
                           value="{{ item }}"
                           form="filterForm"
                           id="{{ item }}"
@@ -176,12 +176,9 @@
 
                 <div class="accordion" id="filterAccordion">
                   <hr />
-                  Refine by:
-                  {{ accordion_item("Keywords", "keyword", possible_keywords, keyword, "kw") }}
-                  {{ accordion_item("Geometry", "geometry", possible_geometries, geometry, "ge") }}
-                  {{ accordion_item("Representation", "representation", possible_representations, representation, "re") }}
-                  {{ accordion_item("Rights", "right", possible_rights, right, "ri") }}
-                  {{ accordion_item("Running", "active", possible_activity, active, "ac") }}
+                  {% for key in filter_specs %}
+                    {{  accordion_item(filter_specs[key]["frontend_name"], key, facet_data[filter_specs[key]["facet_name"]], selected_filters[key]) }}
+                  {% endfor %}
                 </div>
 
               </form>
