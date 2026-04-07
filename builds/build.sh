@@ -19,6 +19,7 @@ function  showhelp() {
   echo '-g                  build gdsc python image'
   echo '-d                  build degaussAPI image'
   echo '-r                  build gdsc repository interface image'
+  echo '-t                  build the gdsc tools interface'
   echo '-u <user>           dockerhub account username (defaults to: tibben)'
   echo '-b <name>           base name for docker repository (defaults to: pg)'
   echo '--push              push image to dockerhub (optional, default push=0)'
@@ -84,6 +85,8 @@ do
           dedup; tag=degaussAPI;;
         -r) # build the gdsc interface image
           dedup; tag=repository;;
+        -t) # build the gdsc tools interface image
+          dedup; tag=tools;;
         -u) # set dockerhub user name
           p=user;;
         -b) # set base name for docker image

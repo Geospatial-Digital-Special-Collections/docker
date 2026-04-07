@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% block title %}GDSC{% endblock %}
+{% block head %}
+    {{ super() }}
+    <style>
+      .btn-link.btn-anchor {
+          outline: none !important;
+          padding: 0;
+          border: 0;
+          vertical-align: baseline;
+      }
+      .btn-link.btn-anchor:focus {
+          box-shadow: none !important;
+      }
+    </style>
+{% endblock %}
+
+{% block content %}
+
+      <!-- Collection information -->
+      <div>
+        Hello World
+      </div>
+{% endblock %}

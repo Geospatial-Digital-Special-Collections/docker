@@ -17,6 +17,7 @@ function showhelp {
   Write-Host '-g                  build gdsc python image'
   Write-Host '-d                  build degaussAPI container'
   Write-Host '-r                  build gdsc repository interface container'
+  Write-Host '-t                  build the gdsc tools interface'
   Write-Host '-u <user>           dockerhub account username (defaults to: tibben)'
   Write-Host '-b <name>           base name for docker repository (defaults to: pg)'
   Write-Host '--push              push image to dockerhub (optional, default push=0)'
@@ -71,6 +72,7 @@ for ( $i = 0; $i -lt $args.count; $i++ ) {
         "-g" { dedup; $tag="gdsc"; Break }
         "-d" { dedup; $tag="degaussAPI"; Break }
         "-r" { dedup; $tag="repository"; Break }
+        "-t" { dedup; $tag="tools"; Break }
         "-u" { $p=$user; Break }
         "-b" { $p=$name; Break }
         default { dupfail; Break }
