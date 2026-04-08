@@ -1,3 +1,5 @@
 .DS_Store
 nohup.out
 nodeOld/
+__pycache__/
+*.pyc

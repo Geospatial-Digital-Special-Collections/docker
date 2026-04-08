@@ -10,6 +10,20 @@ app = Flask(__name__)
 log = logging.getLogger('werkzeug')
 log.disabled = True
 
+# instantiate gdsc
+auth = gdsc.authentication.Auth(env="local-k8s-flask")
+pods = gdsc.pod.Pods(api=auth.api, pg=auth.pg)
+
+# get metadata
+meta = gdsc.metadata.Meta()
+
+# finally the etl class
+loader = gdsc.etl.Etl(
+    api = auth.api,
+    pg = auth.pg,
+    meta = meta,
+    pods = pods
+)
 
 @app.route('/', methods=["GET"])
 def index():
@@ -17,7 +31,8 @@ def index():
 
     # --- Render ---
     return render_template(
-        "index.html"
+        "index.html",
+        pods=pods.pods
     )
 
 ##

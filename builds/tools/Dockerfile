@@ -10,5 +10,8 @@ RUN pip install --no-cache-dir --upgrade -r requirements.txt
 
 # copy the app and start it running
 COPY ./builds/tools ./
+COPY --chmod=0755 ./builds/tools/entrypoint.sh ./entrypoint.sh
+
+ENTRYPOINT ["./entrypoint.sh"]
 # CMD ["nohup", "python", "./gdsc.py", "&"]
-# CMD ["uvicorn", "gdsc:app", "--host", "0.0.0.0", "--port", "5000"]
+# CMD ["uvicorn", "gdsc:app", "--host", "0.0.0.0", "--port", "5150"]

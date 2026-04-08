@@ -17,8 +17,28 @@
 
 {% block content %}
 
-      <!-- Collection information -->
-      <div>
-        Hello World
+      <h3>GDSC is up</h3>
+      <hr />
+
+      <!-- running pods -->
+      <div class="col-lg-12 container mb-4">
+        <div class="row">
+          <div class="col">
+            <h4>service pods:</h4>
+            {% for pod in pods['service'] %}
+              <div>
+                <strong>{{ pod }}:</strong> {{ pods['service'][pod] }}
+              </div>
+            {% endfor %}
+          </div>
+          <div class="col">
+            <h4>data pods:</h4>
+            {% for pod in pods['data'] %}
+              <div>
+                <strong>{{ pod }}:</strong> {{ pods['data'][pod]['table'] }}
+              </div>
+            {% endfor %}
+          </div>          
+        </div>
       </div>
 {% endblock %}
