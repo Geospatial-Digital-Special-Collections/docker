@@ -409,7 +409,7 @@ COLLECTIONS, COLLECTIONS_COUNT = query_solr(
       "q": "Status:published"
     }
 )
-keys = [item['Collection_ID'][0] for item in COLLECTIONS]
+keys = [item['CollectionID'][0] for item in COLLECTIONS]
 COLLECTIONS = dict(zip(keys, COLLECTIONS))
 COLLECTIONS = OrderedDict(sorted(COLLECTIONS.items(), key=lambda i: i[0].lower()))
 

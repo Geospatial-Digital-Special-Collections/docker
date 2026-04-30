@@ -74,8 +74,8 @@
                         name="collection"
                         onchange="this.form.submit()">
                   {% for coll in collections %}
-                  <option value="{{ collections[coll]['Collection_ID'][0] }}"
-                    {{ "selected" if collection == collections[coll]['Collection_ID'][0] else "" }}>
+                  <option value="{{ collections[coll]['CollectionID'][0] }}"
+                    {{ "selected" if collection == collections[coll]['CollectionID'][0] else "" }}>
                     {{ collections[coll]['Title'][0] }}
                   </option>
                   {% endfor %}
