@@ -33,7 +33,7 @@ def query_solr(path: str, parameters: dict) -> tuple:
     """
 
     # Build the query string
-    query_string = urlencode(parameters).replace('-', '+')
+    query_string = urlencode(parameters)
     url = f"{path}{query_string}"
     print(url)
 
@@ -285,6 +285,50 @@ def index():
         collection=collection,
         query=query,
         active=active,
+        page=page,
+        numresults=numresults,
+        results=results,
+        collections=COLLECTIONS,
+        root='./'
+    )
+
+
+@app.route('/map', methods=["GET"])
+def map_view():
+    bbox = request.args.get("bbox", "")  # "minX,minY,maxX,maxY" (W,S,E,N / lon,lat,lon,lat)
+    page = int(request.args.get("page", 1))
+    results = []
+    numresults = 0
+
+    query_parameters = {
+        "q": "*:*",
+        "start": (page - 1) * DEFAULT_ROWS,
+        "rows": DEFAULT_ROWS,
+    }
+
+    if bbox:
+        try:
+            minX, minY, maxX, maxY = [float(v) for v in bbox.split(",")]
+            print(f"dcat_bbox:[{minY},{minX} TO {maxY},{maxX}]")
+            # Range syntax: [minLat,minLon TO maxLat,maxLon]
+            # Solr range rect uses "lat,lon" order, so: minY,minX TO maxY,maxX
+            query_parameters["fq"] = (
+                f"dcat_bbox:[{minY},{minX} TO {maxY},{maxX}]"
+            )
+        except ValueError:
+            bbox = ""
+
+    results, numresults = query_solr(f'{BASE_PATH}/dcat/select?wt=json&', query_parameters)
+
+    for entry in results:
+        if entry.get('dct_description'):
+            entry['display_description'] = entry['dct_description'][0]
+            if len(entry['display_description']) > SNIP_LENGTH:
+                entry['display_description'] = entry['dct_description'][0][:SNIP_LENGTH] + '...'
+
+    return render_template(
+        'map.html',
+        bbox=bbox,
         page=page,
         numresults=numresults,
         results=results,

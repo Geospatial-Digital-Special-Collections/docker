@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+{% block title %}GDSC Map Filter{% endblock %}
+
+{% block head %}
+{{ super() }}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<style>
+  #map { height: 420px; cursor: crosshair; }
+  #map.selecting { cursor: crosshair; }
+  .map-instruction { font-size: .85rem; color: #666; margin-bottom: .4rem; }
+  .bbox-badge { font-family: monospace; font-size: .78rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="mb-3">
+  <h2 class="mb-1">Map Filter</h2>
+  <p class="map-instruction">Click and drag on the map to draw a bounding box. Release to search datasets that intersect that area.</p>
+</div>
+
+<!-- bbox is carried as a hidden GET param; the "form" is just a link/redirect built by JS -->
+<div class="row border rounded p-2 mb-3">
+  <div class="col-12 mb-2">
+    <div id="map"></div>
+  </div>
+
+  <div class="col-12 d-flex align-items-center gap-3 flex-wrap">
+    {% if bbox %}
+      <span class="badge bg-secondary bbox-badge">bbox: {{ bbox }}</span>
+      <a href="/map" class="btn btn-sm btn-outline-secondary">Clear</a>
+    {% else %}
+      <span class="text-muted map-instruction mb-0">No area selected — showing no results. Draw a box above.</span>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Results (same card pattern as index.html) -->
+{% if results and results|length > 0 %}
+<div class="row mb-2 p-2">
+  <h5>Results (n={{ numresults }}):</h5>
+</div>
+
+{% for document in results %}
+{% autoescape off %}
+<div class="row mb-2 border rounded p-2"><div class="col-12">
+  <div class="row">
+    <div class="col-md-9">
+      <h5>
+        {% if document['dct_title'] %}
+          <a href="/detail/{{ document['gdsc_tablename'][0] }}?query=">{{ document['dct_title'][0] }}</a>
+        {% endif %}
+      </h5>
+      {% if document['dct_description'] and not "TBD" in document['dct_description'] %}
+      <p class="text-break text-wrap my-0">{{ document['display_description'] }}</p>
+      {% endif %}
+    </div>
+    <div class="col-md-3 text-end">
+      {% if document['dct_modified'] %}<div>last updated: {{ document['dct_modified'][0][:10] }}</div>{% endif %}
+      {% if document['gdsc_collections'] %}
+        <small><b>Collections:</b> {{ document['gdsc_collections']|join(' | ') }}</small>
+      {% endif %}
+    </div>
+  </div>
+</div></div>
+{% endautoescape %}
+{% endfor %}
+
+<!-- Pagination -->
+<div class="row mb-2 m-0">
+  <nav><ul class="pagination">
+    <li class="page-item {% if page == 1 %}disabled{% endif %}">
+      <a class="page-link" href="/map?bbox={{ bbox }}&page={{ page - 1 }}">&laquo;</a>
+    </li>
+    {% for i in range(numresults//10 + 1) %}
+    <li class="page-item {% if page == i + 1 %}active{% endif %}">
+      <a class="page-link" href="/map?bbox={{ bbox }}&page={{ i + 1 }}">{{ i + 1 }}</a>
+    </li>
+    {% endfor %}
+    <li class="page-item {% if page >= numresults//10 %}disabled{% endif %}">
+      <a class="page-link" href="/map?bbox={{ bbox }}&page={{ page + 1 }}">&raquo;</a>
+    </li>
+  </ul></nav>
+</div>
+{% endif %}
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+(function () {
+  // Initialize map centered on continental US
+  var map = L.map('map').setView([38, -96], 4);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors', maxZoom: 18
+  }).addTo(map);
+
+  // Draw existing bbox if present
+  var existingBbox = "{{ bbox }}";
+  if (existingBbox) {
+    var parts = existingBbox.split(',').map(Number); // minX,minY,maxX,maxY = W,S,E,N
+    var bounds = [[parts[1], parts[0]], [parts[3], parts[2]]];
+    L.rectangle(bounds, { color: '#0d6efd', weight: 2, fillOpacity: 0.15 }).addTo(map);
+    map.fitBounds(bounds, { padding: [40, 40] });
+  }
+
+  // Drag-select state
+  var startLatLng = null, rect = null;
+
+  map.on('mousedown', function (e) {
+    map.dragging.disable();
+    startLatLng = e.latlng;
+    if (rect) { map.removeLayer(rect); rect = null; }
+  });
+
+  map.on('mousemove', function (e) {
+    if (!startLatLng) return;
+    var bounds = L.latLngBounds(startLatLng, e.latlng);
+    if (rect) map.removeLayer(rect);
+    rect = L.rectangle(bounds, { color: '#0d6efd', weight: 2, fillOpacity: 0.15 }).addTo(map);
+  });
+
+  map.on('mouseup', function (e) {
+    map.dragging.enable();
+    if (!startLatLng) return;
+    var bounds = L.latLngBounds(startLatLng, e.latlng);
+    var sw = bounds.getSouthWest(), ne = bounds.getNorthEast();
+    // Encode as minX(W),minY(S),maxX(E),maxY(N) — 6 decimal places
+    var bbox = [sw.lng, sw.lat, ne.lng, ne.lat].map(function(v){ return v.toFixed(6); }).join(',');
+    window.location.href = '/map?bbox=' + bbox + '&page=1';
+    startLatLng = null;
+  });
+})();
+</script>
+{% endblock %}
