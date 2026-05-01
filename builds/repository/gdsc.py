@@ -11,6 +11,11 @@ app = Flask(__name__)
 log = logging.getLogger('werkzeug')
 log.disabled = True
 
+
+##
+ # Globals
+ ##
+
 BASE_PATH = 'http://gdsc-solr.gdsc:8983/solr'
 SNIP_LENGTH = 180
 QUERY_FIELDS = ['gdsc_collections','dct_title','dcat_keyword','dct_description','gdsc_attributes']
@@ -24,22 +29,22 @@ FILTER_SPECS = {
         "frontend_name": "Collections"
     },
     "keyword": {
-        "field": "dcat_keyword",
+        "field": "dcat_keyword_str",
         "facet_name": "possible_keywords",
         "frontend_name": "Keywords"
     },
     "geometry": {
-        "field": "locn_geometry",
+        "field": "locn_geometry_str",
         "facet_name": "possible_geometries",
         "frontend_name": "Geometry"
     },
     "representation": {
-        "field": "adms_representationTechnique",
+        "field": "adms_representationTechnique_str",
         "facet_name": "possible_representations",
         "frontend_name": "Representation"
     },
     "right": {
-        "field": "dct_rights",
+        "field": "dct_rights_str",
         "facet_name": "possible_rights",
         "frontend_name": "Rights"
     },
@@ -50,10 +55,10 @@ FILTER_SPECS = {
     }
 }
 
+
 ##
  # Local functions
  ##
-
 
 def query_solr(path: str, parameters: dict, facet_field: str = None) -> tuple:
     """
@@ -70,7 +75,6 @@ def query_solr(path: str, parameters: dict, facet_field: str = None) -> tuple:
     # query_string = urlencode(parameters).replace('-', '+')
     query_string = urlencode(parameters)
     url = f"{path}{query_string}"
-    if DEBUG: print(url)
 
     # Send the request
     try:
@@ -82,13 +86,15 @@ def query_solr(path: str, parameters: dict, facet_field: str = None) -> tuple:
 
     # Extract results
     if facet_field != None:
+        if DEBUG: print('getting facets:')
         results = response.get('facet_counts', {}).get('facet_fields', {}).get(facet_field, [])
         numresults = len(results)
-        print("getting facets")
     else:
+        if DEBUG: print('getting datasets:')
         numresults = response.get('response', {}).get('numFound', 0)
         results = response.get('response', {}).get('docs', [])
 
+    if DEBUG: print(url)
     return results, numresults
 
 
@@ -145,7 +151,7 @@ def build_citation(document: dict, type: str) -> str:
 
     :param dict document: the document metadata
     :param str type: the format type ["bibtex", "ris"]
-    :return: the formatted ciatation
+    :return: the formatted citation
     :rtype: str
     """
 
@@ -257,20 +263,28 @@ def build_citation(document: dict, type: str) -> str:
     return entry
 
 
-def build_filter_clause(field, values):
-    if not values:
-        return ""
+def fetch_facets(field: str, query: str, fq: str) -> tuple:
+    """
+    py:function:: fetch_facets(field: str, query: str, fq: str) -> tuple
 
-    clauses = [f'{field}:"{v}"' for v in values]
-    return f" ({' AND '.join(clauses)})"
+    Fetch the facets from SOLR for a given field and return a tuple with the 
+    results and the number of results.
 
-def fetch_facets(field, query, fq):
+    :return: the query results, the number of results
+    :rtype: tuple
+    """
+
     params = {
         "q": query,
+        "q.op": "AND",
+        "fq": fq,
+        "defType": "edismax",
+        "qf": ' '.join(QUERY_FIELDS),
         "facet.field": field,
         "indent": "true",
         "rows": "0",
         "facet": "true",
+        "facet.mincount": "1",
         "facet.limit": "-1",
         "facet.sort": "count"
     }
@@ -281,11 +295,22 @@ def fetch_facets(field, query, fq):
         field
     )
 
+
+
 ##
- # run SOLR query and render results for main page
+ # Routes and views
  ##
+
 @app.route('/', methods=["GET"])
-def index():
+def index() -> str:
+    """
+    py:function:: index()
+
+    Render HTML for the top level route of the application.
+
+    :return: HTML for the index page
+    :rtype: str
+    """
 
     collection = request.args.get("collection", "all")
     query = request.args.get("query", "")
@@ -309,9 +334,10 @@ def index():
 
     # --- Apply programmatic filters ---
     for key, values in selected_filters.items():
-        field = FILTER_SPECS[key]["field"]
-        clause = build_filter_clause(field, values)
-        if clause:
+        if len(values) > 0:
+            field = FILTER_SPECS[key]["field"]
+            clauses = [f'{field}:"{v}"' for v in values]
+            clause = f"({' AND '.join(clauses)})"
             fq_parts.append(clause)
 
     fq = " ".join(fq_parts)
@@ -350,10 +376,15 @@ def index():
 
     # --- Fetch facet values dynamically ---
     facet_data = {}
-
     for key, spec in FILTER_SPECS.items():
         values, count = fetch_facets(spec["field"], q, fq)
-        facet_data[spec["facet_name"]] = values
+        if key == "collections":
+            facet_data[spec["facet_name"]] = [
+                y for i in range(0,int(len(values)/2)) if values[i*2] in COLLECTIONS \
+                for y in (values[i*2], values[i*2+1])
+            ]
+        else:
+            facet_data[spec["facet_name"]] = values
 
     # --- Render ---
     return render_template(
@@ -370,11 +401,18 @@ def index():
         selected_filters=selected_filters
     )
 
-##
- # query SOLR for one document and render all metadata in detail
- ##
+
 @app.route('/detail/<name_id>', methods=["GET","POST"])
-def detail(name_id):
+def detail(name_id: str) -> str:
+    """
+    py:function:: detail(name_id)
+
+    Query SOLR for one document and render the metadata detail page for one dataset.
+
+    :param str name_id: the unique identifier for the dataset (tablename)
+    :return: HTML for the detail page
+    :rtype: str
+    """
 
     args = request.args.to_dict()
 
@@ -412,9 +450,22 @@ def detail(name_id):
         json_ld=json_ld
     )
 
+
 @app.route('/bibliography/<collection>/<fmt>', methods=["GET"])
 @app.route('/cite/<table_id>/<fmt>', methods=["GET"])
-def cite(collection=None, table_id=None, fmt=None):
+def cite(collection: str = None, table_id: str = None, fmt: str = None) -> Response:
+    """
+    py:function:: cite(collection, table_id, fmt)
+
+    Create a set of correctly formatted citations and return as a (Flask) Response.
+
+    :param str collection: the unique identifier for the collection
+    :param str table_id: the unique identifier for the dataset (tablename)
+    :param str fmt: the citation format identifier 
+    :return Response: correctly formatted citations as a (Flask) Response
+    :rtype: Response
+    """
+
     # Normalize parameters
     name_id = table_id  # reuse variable name for clarity
 
@@ -447,11 +498,18 @@ def cite(collection=None, table_id=None, fmt=None):
     resp.headers["Content-Type"] = "text/plain"
     return resp
 
-##
- # provide download api for derivate files
- ##
+
 @app.route('/download/<path:download_path>', methods=["GET","POST"])
-def download(download_path):
+def download(download_path: str) -> Response:
+    """
+    py:function:: download(download_path: str) -> Response
+
+    Retireve the correct derivative for download and return as a (Flask) Response.
+
+    :param str download_path: the path to the derivative for download 
+    :return Response: the derivative package as a (Flask) Response
+    :rtype: Response
+    """
 
     if 'ImmutableMultiDict' in str(type(request.args)): args = request.args.to_dict()
     else: args = request.args
