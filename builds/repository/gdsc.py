@@ -15,8 +15,14 @@ BASE_PATH = 'http://gdsc-solr.gdsc:8983/solr'
 SNIP_LENGTH = 180
 QUERY_FIELDS = ['gdsc_collections','dct_title','dcat_keyword','dct_description','gdsc_attributes']
 DEFAULT_ROWS = 10
+DEBUG = True
 
 FILTER_SPECS = {
+    "collections": {
+        "field": "gdsc_collections_str",
+        "facet_name": "possible_collections",
+        "frontend_name": "Collections"
+    },
     "keyword": {
         "field": "dcat_keyword",
         "facet_name": "possible_keywords",
@@ -61,9 +67,10 @@ def query_solr(path: str, parameters: dict, facet_field: str = None) -> tuple:
     """
 
     # Build the query string
-    query_string = urlencode(parameters).replace('-', '+')
+    # query_string = urlencode(parameters).replace('-', '+')
+    query_string = urlencode(parameters)
     url = f"{path}{query_string}"
-    print(url)
+    if DEBUG: print(url)
 
     # Send the request
     try:
@@ -260,12 +267,12 @@ def build_filter_clause(field, values):
 def fetch_facets(field, query, fq):
     params = {
         "q": query,
-        "fq": fq,
         "facet.field": field,
         "indent": "true",
-        "q.op": "AND",
         "rows": "0",
-        "facet": "true"
+        "facet": "true",
+        "facet.limit": "-1",
+        "facet.sort": "count"
     }
 
     return query_solr(
