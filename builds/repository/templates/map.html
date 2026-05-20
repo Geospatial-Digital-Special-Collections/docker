@@ -15,7 +15,7 @@
 {% block content %}
 <div class="mb-3">
   <h2 class="mb-1">Map Filter</h2>
-  <p class="map-instruction">Click and drag on the map to draw a bounding box. Release to search datasets that intersect that area.</p>
+<p class="map-instruction">Ctrl+drag on the map to draw a bounding box. Release to search datasets that intersect that area.</p>
 </div>
 
 <!-- bbox is carried as a hidden GET param; the "form" is just a link/redirect built by JS -->
@@ -90,25 +90,23 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 (function () {
-  // Initialize map centered on continental US
   var map = L.map('map').setView([38, -96], 4);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap contributors', maxZoom: 18
   }).addTo(map);
 
-  // Draw existing bbox if present
   var existingBbox = "{{ bbox }}";
   if (existingBbox) {
-    var parts = existingBbox.split(',').map(Number); // minX,minY,maxX,maxY = W,S,E,N
+    var parts = existingBbox.split(',').map(Number);
     var bounds = [[parts[1], parts[0]], [parts[3], parts[2]]];
     L.rectangle(bounds, { color: '#0d6efd', weight: 2, fillOpacity: 0.15 }).addTo(map);
     map.fitBounds(bounds, { padding: [40, 40] });
   }
 
-  // Drag-select state
   var startLatLng = null, rect = null;
 
   map.on('mousedown', function (e) {
+    if (!e.originalEvent.ctrlKey) return;  // ← only act on Ctrl+drag
     map.dragging.disable();
     startLatLng = e.latlng;
     if (rect) { map.removeLayer(rect); rect = null; }
@@ -126,7 +124,6 @@
     if (!startLatLng) return;
     var bounds = L.latLngBounds(startLatLng, e.latlng);
     var sw = bounds.getSouthWest(), ne = bounds.getNorthEast();
-    // Encode as minX(W),minY(S),maxX(E),maxY(N) — 6 decimal places
     var bbox = [sw.lng, sw.lat, ne.lng, ne.lat].map(function(v){ return v.toFixed(6); }).join(',');
     window.location.href = '/map?bbox=' + bbox + '&page=1';
     startLatLng = null;
