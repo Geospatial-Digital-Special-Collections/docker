@@ -295,31 +295,121 @@ def index():
 
 @app.route('/map', methods=["GET"])
 def map_view():
-    bbox = request.args.get("bbox", "")  # "minX,minY,maxX,maxY" (W,S,E,N / lon,lat,lon,lat)
-    page = int(request.args.get("page", 1))
-    results = []
+    bbox     = request.args.get("bbox", "")   # "minX,minY,maxX,maxY"  (lon,lat,lon,lat)
+    page     = int(request.args.get("page", 1))
+    mode     = request.args.get("mode", "intersects")   # "intersects" | "contained"
+    results  = []
     numresults = 0
-
-    query_parameters = {
-        "q": "*:*",
-        "start": (page - 1) * DEFAULT_ROWS,
-        "rows": DEFAULT_ROWS,
-    }
 
     if bbox:
         try:
             minX, minY, maxX, maxY = [float(v) for v in bbox.split(",")]
-            print(f"dcat_bbox:[{minY},{minX} TO {maxY},{maxX}]")
-            # Range syntax: [minLat,minLon TO maxLat,maxLon]
-            # Solr range rect uses "lat,lon" order, so: minY,minX TO maxY,maxX
-            query_parameters["fq"] = (
-                f"dcat_bbox:[{minY},{minX} TO {maxY},{maxX}]"
-            )
         except ValueError:
             bbox = ""
 
-    results, numresults = query_solr(f'{BASE_PATH}/dcat/select?wt=json&', query_parameters)
+    if bbox:
+        # ------------------------------------------------------------------ #
+        # Solr range query finds every doc whose bbox overlaps the selection. #
+        # For "contained" we tighten the filter; for "intersects" we keep it. #
+        # ------------------------------------------------------------------ #
+        if mode == "contained":
+            # doc must be fully inside the drawn box:
+            # doc.minLat >= sel.minLat  AND  doc.minLon >= sel.minLon
+            # doc.maxLat <= sel.maxLat  AND  doc.maxLon <= sel.maxLon
+            #
+            # Solr RPT / latLonBBoxField stores as "minLat minLon maxLat maxLon"
+            # but a plain range query on the field works like a 2-D point pair.
+            # The safest portable approach is to fetch ALL intersecting docs and
+            # filter in Python — fine for catalogue sizes.
+            fq = f"dcat_bbox:[{minY},{minX} TO {maxY},{maxX}]"
+            query_parameters = {
+                "q":    "*:*",
+                "fq":   fq,
+                "rows": 10000,          # pull everything; we filter + page in Python
+            }
+        else:
+            fq = f"dcat_bbox:[{minY},{minX} TO {maxY},{maxX}]"
+            query_parameters = {
+                "q":    "*:*",
+                "fq":   fq,
+                "rows": 10000,
+            }
 
+        all_results, _ = query_solr(f'{BASE_PATH}/dcat/select?wt=json&', query_parameters)
+
+        # ------------------------------------------------------------------ #
+        # Helper: parse a stored bbox string into (dMinX,dMinY,dMaxX,dMaxY). #
+        # Solr stores the field as "minLat,minLon maxLat,maxLon" or similar;  #
+        # adjust the parser below to match your actual stored format.         #
+        # ------------------------------------------------------------------ #
+        def parse_doc_bbox(doc):
+            """
+            Returns (dMinX, dMinY, dMaxX, dMaxY) i.e. (west,south,east,north).
+            Tries common storage formats.  Returns None on failure.
+            """
+            raw = doc.get("dcat_bbox")
+            if not raw:
+                return None
+            if isinstance(raw, list):
+                raw = raw[0]
+            raw = str(raw).strip()
+            # Format A: "minLat,minLon maxLat,maxLon"  (Solr RPT default)
+            try:
+                lo, hi = raw.split()
+                dMinY, dMinX = [float(v) for v in lo.split(",")]
+                dMaxY, dMaxX = [float(v) for v in hi.split(",")]
+                return dMinX, dMinY, dMaxX, dMaxY
+            except Exception:
+                pass
+            # Format B: "minX,minY,maxX,maxY"  (lon-lat CSV)
+            try:
+                parts = [float(v) for v in raw.split(",")]
+                if len(parts) == 4:
+                    return parts[0], parts[1], parts[2], parts[3]
+            except Exception:
+                pass
+            return None
+
+        def overlap_fraction(dMinX, dMinY, dMaxX, dMaxY):
+            """Fraction of the *document* bbox that lies inside the selection."""
+            ix1 = max(dMinX, minX);  ix2 = min(dMaxX, maxX)
+            iy1 = max(dMinY, minY);  iy2 = min(dMaxY, maxY)
+            if ix2 <= ix1 or iy2 <= iy1:
+                return 0.0
+            inter = (ix2 - ix1) * (iy2 - iy1)
+            doc_area = max((dMaxX - dMinX) * (dMaxY - dMinY), 1e-12)
+            return min(inter / doc_area, 1.0)
+
+        def is_contained(dMinX, dMinY, dMaxX, dMaxY):
+            return (dMinX >= minX and dMinY >= minY and
+                    dMaxX <= maxX and dMaxY <= maxY)
+
+        # Filter / annotate
+        annotated = []
+        for doc in all_results:
+            parsed = parse_doc_bbox(doc)
+            if parsed is None:
+                frac = 0.0
+            else:
+                frac = overlap_fraction(*parsed)
+
+            if mode == "contained":
+                if parsed and not is_contained(*parsed):
+                    continue          # skip docs not fully inside
+            doc["_overlap_pct"] = round(frac * 100, 1)
+            annotated.append(doc)
+
+        # Sort intersects mode by overlap descending
+        if mode == "intersects":
+            annotated.sort(key=lambda d: d["_overlap_pct"], reverse=True)
+
+        numresults = len(annotated)
+
+        # Manual pagination
+        start = (page - 1) * DEFAULT_ROWS
+        results = annotated[start: start + DEFAULT_ROWS]
+
+    # Snip descriptions
     for entry in results:
         if entry.get('dct_description'):
             entry['display_description'] = entry['dct_description'][0]
@@ -329,6 +419,7 @@ def map_view():
     return render_template(
         'map.html',
         bbox=bbox,
+        mode=mode,
         page=page,
         numresults=numresults,
         results=results,

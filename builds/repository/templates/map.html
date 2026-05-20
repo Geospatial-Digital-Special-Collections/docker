@@ -6,38 +6,66 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
   #map { height: 420px; cursor: crosshair; }
-  #map.selecting { cursor: crosshair; }
   .map-instruction { font-size: .85rem; color: #666; margin-bottom: .4rem; }
   .bbox-badge { font-family: monospace; font-size: .78rem; }
+  .overlap-bar-wrap {
+    height: 6px; background: #e9ecef; border-radius: 3px;
+    width: 100%; margin-top: 4px;
+  }
+  .overlap-bar {
+    height: 6px; background: #0d6efd; border-radius: 3px;
+    transition: width .3s;
+  }
+  .overlap-label { font-size: .75rem; color: #555; }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="mb-3">
   <h2 class="mb-1">Map Filter</h2>
-<p class="map-instruction">Ctrl+drag on the map to draw a bounding box. Release to search datasets that intersect that area.</p>
+  <p class="map-instruction">Ctrl+drag on the map to draw a bounding box. Release to search datasets that intersect that area.</p>
 </div>
 
-<!-- bbox is carried as a hidden GET param; the "form" is just a link/redirect built by JS -->
 <div class="row border rounded p-2 mb-3">
   <div class="col-12 mb-2">
     <div id="map"></div>
   </div>
 
-  <div class="col-12 d-flex align-items-center gap-3 flex-wrap">
+  <div class="col-12 d-flex align-items-center gap-3 flex-wrap mt-1">
     {% if bbox %}
       <span class="badge bg-secondary bbox-badge">bbox: {{ bbox }}</span>
-      <a href="/map" class="btn btn-sm btn-outline-secondary">Clear</a>
+
+      <!-- ── Mode toggle ── -->
+      <div class="btn-group btn-group-sm" role="group" aria-label="Spatial filter mode">
+        <a href="/map?bbox={{ bbox }}&page=1&mode=intersects"
+           class="btn btn-outline-primary {% if mode == 'intersects' %}active{% endif %}">
+          Intersects
+          <span class="ms-1 badge {% if mode == 'intersects' %}bg-light text-primary{% else %}bg-primary{% endif %}" style="font-weight:normal">sorted by % overlap</span>
+        </a>
+        <a href="/map?bbox={{ bbox }}&page=1&mode=contained"
+           class="btn btn-outline-primary {% if mode == 'contained' %}active{% endif %}">
+          Fully contained
+        </a>
+      </div>
+
+      <a href="/map" class="btn btn-sm btn-outline-secondary ms-auto">Clear</a>
     {% else %}
-      <span class="text-muted map-instruction mb-0">No area selected — showing no results. Draw a box above.</span>
+      <span class="text-muted map-instruction mb-0">No area selected — draw a box above.</span>
     {% endif %}
   </div>
 </div>
 
-<!-- Results (same card pattern as index.html) -->
+<!-- ── Results ── -->
 {% if results and results|length > 0 %}
 <div class="row mb-2 p-2">
-  <h5>Results (n={{ numresults }}):</h5>
+  <h5>
+    Results (n={{ numresults }})
+    {% if mode == 'intersects' %}
+      <small class="text-muted fw-normal">— ordered by % of dataset inside selection</small>
+    {% else %}
+      <small class="text-muted fw-normal">— datasets fully inside selection</small>
+    {% endif %}
+  </h5>
 </div>
 
 {% for document in results %}
@@ -53,11 +81,23 @@
       {% if document['dct_description'] and not "TBD" in document['dct_description'] %}
       <p class="text-break text-wrap my-0">{{ document['display_description'] }}</p>
       {% endif %}
+
+      {% if mode == 'intersects' %}
+      <div class="mt-2">
+        <div class="overlap-bar-wrap">
+          <div class="overlap-bar" style="width:{{ document['_overlap_pct'] }}%"></div>
+        </div>
+      </div>
+      {% endif %}
     </div>
+
     <div class="col-md-3 text-end">
       {% if document['dct_modified'] %}<div>last updated: {{ document['dct_modified'][0][:10] }}</div>{% endif %}
       {% if document['gdsc_collections'] %}
         <small><b>Collections:</b> {{ document['gdsc_collections']|join(' | ') }}</small>
+      {% endif %}
+      {% if mode == 'contained' %}
+        <div class="mt-1"><span class="badge bg-success">Fully contained</span></div>
       {% endif %}
     </div>
   </div>
@@ -69,21 +109,30 @@
 <div class="row mb-2 m-0">
   <nav><ul class="pagination">
     <li class="page-item {% if page == 1 %}disabled{% endif %}">
-      <a class="page-link" href="/map?bbox={{ bbox }}&page={{ page - 1 }}">&laquo;</a>
+      <a class="page-link" href="/map?bbox={{ bbox }}&mode={{ mode }}&page={{ page - 1 }}">&laquo;</a>
     </li>
     {% for i in range(numresults//10 + 1) %}
     <li class="page-item {% if page == i + 1 %}active{% endif %}">
-      <a class="page-link" href="/map?bbox={{ bbox }}&page={{ i + 1 }}">{{ i + 1 }}</a>
+      <a class="page-link" href="/map?bbox={{ bbox }}&mode={{ mode }}&page={{ i + 1 }}">{{ i + 1 }}</a>
     </li>
     {% endfor %}
     <li class="page-item {% if page >= numresults//10 %}disabled{% endif %}">
-      <a class="page-link" href="/map?bbox={{ bbox }}&page={{ page + 1 }}">&raquo;</a>
+      <a class="page-link" href="/map?bbox={{ bbox }}&mode={{ mode }}&page={{ page + 1 }}">&raquo;</a>
     </li>
   </ul></nav>
 </div>
+
 {% else %}
 <div class="row mb-2 p-2">
-  <h5>No Results Found</h5>
+  {% if bbox %}
+    <h5>No Results Found
+      {% if mode == 'contained' %}
+        <small class="text-muted fw-normal">— try switching to <a href="/map?bbox={{ bbox }}&page=1&mode=intersects">Intersects</a> mode</small>
+      {% endif %}
+    </h5>
+  {% else %}
+    <h5>No Results Found</h5>
+  {% endif %}
 </div>
 {% endif %}
 
@@ -106,7 +155,7 @@
   var startLatLng = null, rect = null;
 
   map.on('mousedown', function (e) {
-    if (!e.originalEvent.ctrlKey) return;  // ← only act on Ctrl+drag
+    if (!e.originalEvent.ctrlKey) return;
     map.dragging.disable();
     startLatLng = e.latlng;
     if (rect) { map.removeLayer(rect); rect = null; }
@@ -125,7 +174,9 @@
     var bounds = L.latLngBounds(startLatLng, e.latlng);
     var sw = bounds.getSouthWest(), ne = bounds.getNorthEast();
     var bbox = [sw.lng, sw.lat, ne.lng, ne.lat].map(function(v){ return v.toFixed(6); }).join(',');
-    window.location.href = '/map?bbox=' + bbox + '&page=1';
+    // Preserve current mode when a new box is drawn
+    var currentMode = new URLSearchParams(window.location.search).get('mode') || 'intersects';
+    window.location.href = '/map?bbox=' + bbox + '&page=1&mode=' + currentMode;
     startLatLng = null;
   });
 })();
