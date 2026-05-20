@@ -12,6 +12,30 @@
       .btn-link.btn-anchor:focus {
           box-shadow: none !important;
       }
+ 
+      .active-filters-row {
+          display: flex;
+          align-items: flex-start;
+          gap: 0.5rem;
+          flex-wrap: nowrap;
+      }
+ 
+      .active-filters-label {
+          font-size: 0.8rem;
+          font-weight: 600;
+          color: #6c757d;
+          white-space: nowrap;
+          padding-top: 0.3rem;
+          text-transform: capitalize;
+          min-width: 90px;
+          text-align: right;
+      }
+ 
+      .active-filters-chips {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 0.4rem;
+      }
     </style>
 {% endblock %}
 
@@ -112,35 +136,51 @@
             </div>
           </div>
           
+          <!-- Active filter chips grouped by filter key -->
+          {% set has_active_filters = namespace(value=false) %}
+          {% for key in filter_specs %}
+            {% if selected_filters[key] and selected_filters[key]|length > 0 %}
+              {% set has_active_filters.value = true %}
+            {% endif %}
+          {% endfor %}
+ 
+          {% if has_active_filters.value %}
           <div class="row mt-0 mb-4 container-xxl">
             <div class="col-md-3"></div>
-            <div class="col-md-9 d-flex flex-wrap gap-2">
+            <div class="col-md-9 d-flex flex-column gap-2">
               {% for key in filter_specs %}
-                {% for item in selected_filters[key] %}
-                <span class="badge rounded-pill bg-light text-dark d-flex align-items-center">
-                  
-                  {{ item }}  
-
-                  <input type="checkbox"
-                          checked=""
-                          name="{{ key }}"
-                          value="{{ item }}"
-                          form="filterForm"
-                          id="{{ item }}"
-                          hidden
-                          onchange="this.form.submit()">
-                  </label>
-                  <label class="btn-close btn-close-dark ms-2"
-                         for="{{ item }}"
-                         aria-label="Remove"
-                         style="font-size:0.6rem;">
-                  </label>
-
-                </span>
-                {% endfor %}
+                {% if selected_filters[key] and selected_filters[key]|length > 0 %}
+                <div class="active-filters-row">
+                  <span class="active-filters-label">
+                    {{ filter_specs[key]["frontend_name"] }}:
+                  </span>
+                  <div class="active-filters-chips">
+                    {% for item in selected_filters[key] %}
+                    <span class="badge rounded-pill bg-light text-dark d-flex align-items-center">
+                      {{ item }}
+                      <input type="checkbox"
+                              checked=""
+                              name="{{ key }}"
+                              value="{{ item }}"
+                              form="filterForm"
+                              id="{{ key }}-{{ item }}"
+                              hidden
+                              onchange="this.form.submit()">
+                      <label class="btn-close btn-close-dark ms-2"
+                             for="{{ key }}-{{ item }}"
+                             aria-label="Remove"
+                             style="font-size:0.6rem;">
+                      </label>
+                    </span>
+                    {% endfor %}
+                  </div>
+                </div>
+                {% endif %}
               {% endfor %}
             </div>
           </div>
+          {% endif %}
+
 
           <div class="row">
 
