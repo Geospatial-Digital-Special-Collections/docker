@@ -1,4 +1,4 @@
-from flask import Flask, render_template
+from flask import Flask, Response, render_template, request, send_from_directory, url_for, make_response
 import gdsc
 from urllib.request import urlopen
 from urllib.parse import urlencode
@@ -25,6 +25,9 @@ loader = gdsc.etl.Etl(
     pods = pods
 )
 
+# get the list of tables on disk
+tables = meta.get_all_datasets_on_disk(pods)
+
 @app.route('/', methods=["GET"])
 def index():
     """ render main page """
@@ -32,12 +35,22 @@ def index():
     # --- Render ---
     return render_template(
         "index.html",
-        pods=pods.pods
+        pods = pods.pods, 
+        tables = tables
     )
 
-##
+@app.route('/load/<dataset>', methods=["GET"])
+def load(dataset):
+    """ load a dataset """
+
+    #dataset = request.args.get("dataset","")
+    print(dataset)
+
+    return {"name": dataset}
+
+
  # run the app if called from the command line
- ##
+
 
 if __name__ == '__main__':
     # app.run(host='0.0.0.0')

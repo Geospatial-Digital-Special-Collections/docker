@@ -392,8 +392,11 @@ def detail(name_id):
         document['gdsc_derived'] = [attr.split(';') for attr in document['gdsc_derived']]
 
     # get json_ld 
-    with open(f"/data/{name_id}/meta_json-ld_{name_id}.json", 'r', encoding='utf-8') as f:
-        json_ld = json.load(f)
+    try:
+        with open(f"/data/{name_id}/meta_json-ld_{name_id}.json", 'r', encoding='utf-8') as f:
+            json_ld = json.load(f)
+    except:
+        json_ld = ""
         
     # render page
     return render_template(
