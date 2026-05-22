@@ -153,7 +153,7 @@
                     <h5 class="mr-2">Collection: </h5>
                   </div>
 
-                  <div class="row mb-2">
+                  <div class="row mb-4">
                     <select class="form-control mb-2"
                             id="collection"
                             name="collection"
@@ -175,6 +175,7 @@
                 {% from "filters.html" import accordion_item%}
 
                 <div class="accordion" id="filterAccordion">
+                  <h5 class="ps-4">Filter:</h5>
                   <hr />
                   {% for key in filter_specs %}
                     {{  accordion_item(filter_specs[key]["frontend_name"], key, facet_data[filter_specs[key]["facet_name"]], selected_filters[key]) }}
@@ -199,7 +200,7 @@
                   <div class="col-md-7 align-top">
                     <h5 class="float-left">
                       {% if document['adms_representationTechnique'] %}
-                        {% if document['adms_representationTechnique'][0] == 'raster' %}
+                        {% if document['adms_representationTechnique'] == 'raster' %}
                           <img src="/static/raster.jpg" class="mb-1" style="max-width: 18px;">
                         {% else %}
                           {% if document['locn_geometry'] %}
