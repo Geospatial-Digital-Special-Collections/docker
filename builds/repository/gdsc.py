@@ -62,6 +62,8 @@ FILTER_SPECS = {
 
 def query_solr(path: str, parameters: dict, facet_field: str = None) -> tuple:
     """
+    py:function:: query_solr(path, parameters, facet_field)
+
     Query the SOLR API with an index for the catalog or collections.
 
     :param str path: the base url for the SOLR API
@@ -100,7 +102,7 @@ def query_solr(path: str, parameters: dict, facet_field: str = None) -> tuple:
 
 def highlight_query(document: dict, query: str) -> dict:
     """
-    py:function:: query_solr(path, parameters)
+    py:function:: highlight_query(document, query)
 
     Highlight the query text in the given document.
 
