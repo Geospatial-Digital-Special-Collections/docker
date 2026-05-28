@@ -16,6 +16,7 @@ pods = gdsc.pod.Pods(api=auth.api, pg=auth.pg)
 
 # get metadata
 meta = gdsc.metadata.Meta()
+parsed_meta = meta.parse_meta(flavors=["etl","dcat"])
 
 # finally the etl class
 loader = gdsc.etl.Etl(
@@ -36,17 +37,33 @@ def index():
     return render_template(
         "index.html",
         pods = pods.pods, 
-        tables = tables
+        meta = parsed_meta,
+        tables = tables,
+        message = ""
+    )
+
+@app.route('/load-selected/', methods=["GET"])
+def loadform():
+    """ load a dataset """
+
+    dataset = request.args.get("dataSelect","")
+    print(dataset,"in form")
+
+    return render_template(
+        "index.html",
+        pods = pods.pods,
+        meta = parsed_meta, 
+        tables = tables,
+        message = {"name": f"{dataset}", "from": "loadform()"}
     )
 
 @app.route('/load/<dataset>', methods=["GET"])
-def load(dataset):
+def loadfetch(dataset):
     """ load a dataset """
 
-    #dataset = request.args.get("dataset","")
     print(dataset)
 
-    return {"name": dataset}
+    return {"name": f"{dataset}", "from": "loadFfetch()"}
 
 
  # run the app if called from the command line
