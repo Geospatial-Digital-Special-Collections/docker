@@ -1,0 +1,160 @@
+{% extends 'base.html' %}
+{% block title %}GDSC{% endblock %}
+{% block head %}
+    {{ super() }}
+    <style>
+      .btn-link.btn-anchor {
+          outline: none !important;
+          padding: 0;
+          border: 0;
+          vertical-align: baseline;
+      }
+      .btn-link.btn-anchor:focus {
+          box-shadow: none !important;
+      }
+    </style>
+{% endblock %}
+
+{% block content %}
+
+      <h3>GDSC is up</h3>
+      <hr />
+
+      <!-- running pods -->
+      <div class="col-lg-12 container mb-4">
+        <div class="row">
+          <div class="col-lg-5">
+            <h4>service pods:</h4>
+            {% for pod in pods['service'] %}
+              <div>
+                <strong>{{ pod }}:</strong> {{ pods['service'][pod] }}
+              </div>
+            {% endfor %}
+          </div>
+          <div class="col-lg-4">
+            <h4>data pods:</h4>
+            {% for pod in pods['data'] %}
+              <div>
+                <strong>{{ pod }}:</strong> {{ pods['data'][pod]['table'] }}
+              </div>
+            {% endfor %}
+          </div>
+          <div class="col-lg-3">
+            <h4>messages:</h4>
+            <pre id="message" name="message">{{ message | tojson(indent=2) }}</pre>
+          </div>        
+        </div>
+      </div>
+
+      <div class="col-lg-12 container mb-4">
+        <div class="row">
+          <div class="col">
+            <form action="/load-selected" method="get" id="loadDataForm" name="loadDataForm">
+              <div class="container">
+                <div class="row">
+                  <h5 class="mr-2">Availabe datasets: [ form ]</h5>
+                </div>
+                <div class="row mb-2">
+                  <select class="form-control mb-2"
+                          id="dataSelect"
+                          name="dataSelect",
+                          onchange=this.form.submit()>
+                    {% for dataset in tables %}
+                      <div>
+                        <strong>{{ dataset }}:</strong>
+                        <option value="{{ dataset }}">
+                          {{ dataset }}
+                        </option>
+                      </div>
+                    {% endfor %}
+                  </select>
+                </div>
+              </div>
+            </form>
+          </div>       
+        </div>
+      </div>
+
+      <div class="col-lg-12 container mb-4">
+        <div class="row">
+          <div class="col">
+            <form method="get" id="loadDataFetch" name="loadDataFetch">
+              <div class="container">
+                <div class="row">
+                  <h5 class="mr-2">Availabe datasets: [ fetch ]</h5>
+                </div>
+                <div class="row mb-2">
+                  <select class="form-control mb-2"
+                          id="dataSelectFetch"
+                          name="dataSelectFetch">
+                    {% for dataset in tables %}
+                      <div>
+                        <strong>{{ dataset }}:</strong>
+                        <option value="{{ dataset }}">
+                          {{ dataset }}
+                        </option>
+                      </div>
+                    {% endfor %}
+                  </select>
+                </div>
+              </div>
+            </form>
+          </div>       
+        </div>
+      </div>
+
+      <div class="col-lg-12 container mb-4">
+        <div class="row">
+          <div class="col">
+            <form action="handle-requests" method="get" id="handleRequests" name="HandleRequests">
+              <div class="container">
+                <div class="row">
+                  <h5 class="mr-2">Datasets: </h5>
+                </div>
+                <div class="row mb-2">
+                  <div class="col-lg-12 container">
+                    <div class="row">
+                      <div class="col-lg-1">select</div>
+                      <div class="col-lg-6">dataset</div>
+                      <div class="col-lg-1">on disk</div>
+                      <div class="col-lg-1">running</div>
+                      <div class="col-lg-1">start</div>
+                      <div class="col-lg-1">stop</div>
+                    </div>
+                  </div>
+                </div>
+                {% for dataset in meta %}
+                <div class="row mb-1">
+                  <div class="col-lg-12 container">
+                    <div class="row">
+                      <div class="col-lg-1"></div>
+                      <div class="col-lg-6">{{ meta[dataset]["dcat"]["dct:title"] }}</div>
+                      <div class="col-lg-1">{{ "X" if meta[dataset]["etl"]["table"] in tables else "" }}</div>
+                      <div class="col-lg-1"></div>
+                      <div class="col-lg-1"></div>
+                      <div class="col-lg-1"></div>
+                    </div>
+                  </div>
+                </div>
+                {% endfor %}
+              </div>
+            </form>
+          </div>       
+        </div>
+      </div>
+    
+      <script type="text/javascript">
+        const dataSelect = document.getElementById("dataSelectFetch"), messageBoard = document.getElementById("message");
+        dataSelect.addEventListener("change", function() {
+          dataset = dataSelect.value
+          fetch('/load/' + dataset )
+            .then(response => response.json()) // Parse the JSON from the response
+            .then(data => {
+              console.log(dataset);
+              console.log(data.name);
+              messageBoard.innerHTML = JSON.stringify(data,null,2);
+            })
+            .catch(error => console.error('Error:', error));
+        });
+      </script>
+{% endblock %}

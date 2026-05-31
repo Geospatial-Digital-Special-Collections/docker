@@ -60,6 +60,21 @@ FILTER_SPECS = {
  # Local functions
  ##
 
+def escape_solr_query(query: str) -> str:
+    """
+    Escape characters know to mess with the SOLR query parser
+
+    :param str query: the string to clean
+    :return: the cleaned query string
+    :rtype: str
+    """
+
+    # Solr's reserved syntax characters
+    # +, -, &&, ||, !, (, ), {, }, [, ], ^, ~, *, ?, :, \
+    pattern = r'[\+\-\&\|\!\(\)\{\}\[\]\^\"\~\*\?\:\\]'
+    return re.sub(pattern,'',query)
+
+
 def query_solr(path: str, parameters: dict, facet_field: str = None) -> tuple:
     """
     Query the SOLR API with an index for the catalog or collections.
@@ -70,6 +85,7 @@ def query_solr(path: str, parameters: dict, facet_field: str = None) -> tuple:
     :return: the query results, the number of results
     :rtype: tuple
     """
+
     query_string = urlencode(parameters)
     url = f"{path}{query_string}"
 
@@ -102,6 +118,7 @@ def highlight_query(document: dict, query: str) -> dict:
     :return: the document metadata with CSS highlight spans added to matching fields
     :rtype: dict
     """
+
     def add_tags(string_value, term):
         return re.sub(
             r'(' + re.escape(term) + ')',
@@ -118,7 +135,7 @@ def highlight_query(document: dict, query: str) -> dict:
             continue
         attrs = []
         for i, attr in enumerate(document[field]):
-            if not all(term.upper() in attr.upper() for term in terms):
+            if not any(term.upper() in attr.upper() for term in terms):
                 continue
             document['found_in'][field] = []
             for term in terms:
@@ -255,15 +272,17 @@ def index() -> str:
     :return: HTML for the index page
     :rtype: str
     """
+
     collection = request.args.get("collection", "all")
-    query = request.args.get("query", "")
+    query = escape_solr_query(request.args.get("query", ""))
     page = int(request.args.get("page", 1))
 
     selected_filters = {key: request.args.getlist(key) for key in FILTER_SPECS}
 
-    q = query or "*"
+    q = query or "*:*"
 
-    fq_parts = ["gdsc_collections:*" if collection == "all" else f'gdsc_collections:"{collection}"']
+    # fq_parts = ["gdsc_collections:*" if collection == "all" else f'gdsc_collections:"{collection}"']
+    fq_parts=[]
 
     for key, values in selected_filters.items():
         if values:
