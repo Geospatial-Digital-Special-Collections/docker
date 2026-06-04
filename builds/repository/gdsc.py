@@ -298,6 +298,10 @@ def map_view():
     bbox     = request.args.get("bbox", "")   # "minX,minY,maxX,maxY"  (lon,lat,lon,lat)
     page     = int(request.args.get("page", 1))
     mode     = request.args.get("mode", "intersects")   # "intersects" | "contained"
+    # Map view state — preserved across clears and navigation so the viewport never jumps
+    lat      = request.args.get("lat", "38")
+    lng      = request.args.get("lng", "-96")
+    zoom     = request.args.get("zoom", "4")
     results  = []
     numresults = 0
 
@@ -424,6 +428,9 @@ def map_view():
         numresults=numresults,
         results=results,
         collections=COLLECTIONS,
+        lat=lat,
+        lng=lng,
+        zoom=zoom,
         root='./'
     )
 

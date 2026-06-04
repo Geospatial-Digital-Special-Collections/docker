@@ -37,18 +37,18 @@
 
       <!-- ── Mode toggle ── -->
       <div class="btn-group btn-group-sm" role="group" aria-label="Spatial filter mode">
-        <a href="/map?bbox={{ bbox }}&page=1&mode=intersects"
+        <a href="/map?bbox={{ bbox }}&page=1&mode=intersects&lat={{ lat }}&lng={{ lng }}&zoom={{ zoom }}"
            class="btn btn-outline-primary {% if mode == 'intersects' %}active{% endif %}">
           Intersects
           <span class="ms-1 badge {% if mode == 'intersects' %}bg-light text-primary{% else %}bg-primary{% endif %}" style="font-weight:normal">sorted by % overlap</span>
         </a>
-        <a href="/map?bbox={{ bbox }}&page=1&mode=contained"
+        <a href="/map?bbox={{ bbox }}&page=1&mode=contained&lat={{ lat }}&lng={{ lng }}&zoom={{ zoom }}"
            class="btn btn-outline-primary {% if mode == 'contained' %}active{% endif %}">
           Fully contained
         </a>
       </div>
 
-      <a href="/map" class="btn btn-sm btn-outline-secondary ms-auto">Clear</a>
+      <a id="clear-btn" href="#" class="btn btn-sm btn-outline-secondary ms-auto">Clear</a>
     {% else %}
       <span class="text-muted map-instruction mb-0">No area selected — draw a box above.</span>
     {% endif %}
@@ -109,15 +109,15 @@
 <div class="row mb-2 m-0">
   <nav><ul class="pagination">
     <li class="page-item {% if page == 1 %}disabled{% endif %}">
-      <a class="page-link" href="/map?bbox={{ bbox }}&mode={{ mode }}&page={{ page - 1 }}">&laquo;</a>
+      <a class="page-link" href="/map?bbox={{ bbox }}&mode={{ mode }}&page={{ page - 1 }}&lat={{ lat }}&lng={{ lng }}&zoom={{ zoom }}">&laquo;</a>
     </li>
     {% for i in range(numresults//10 + 1) %}
     <li class="page-item {% if page == i + 1 %}active{% endif %}">
-      <a class="page-link" href="/map?bbox={{ bbox }}&mode={{ mode }}&page={{ i + 1 }}">{{ i + 1 }}</a>
+      <a class="page-link" href="/map?bbox={{ bbox }}&mode={{ mode }}&page={{ i + 1 }}&lat={{ lat }}&lng={{ lng }}&zoom={{ zoom }}">{{ i + 1 }}</a>
     </li>
     {% endfor %}
     <li class="page-item {% if page >= numresults//10 %}disabled{% endif %}">
-      <a class="page-link" href="/map?bbox={{ bbox }}&mode={{ mode }}&page={{ page + 1 }}">&raquo;</a>
+      <a class="page-link" href="/map?bbox={{ bbox }}&mode={{ mode }}&page={{ page + 1 }}&lat={{ lat }}&lng={{ lng }}&zoom={{ zoom }}">&raquo;</a>
     </li>
   </ul></nav>
 </div>
@@ -127,7 +127,7 @@
   {% if bbox %}
     <h5>No Results Found
       {% if mode == 'contained' %}
-        <small class="text-muted fw-normal">— try switching to <a href="/map?bbox={{ bbox }}&page=1&mode=intersects">Intersects</a> mode</small>
+        <small class="text-muted fw-normal">— try switching to <a href="/map?bbox={{ bbox }}&page=1&mode=intersects&lat={{ lat }}&lng={{ lng }}&zoom={{ zoom }}">Intersects</a> mode</small>
       {% endif %}
     </h5>
   {% else %}
@@ -139,7 +139,13 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 (function () {
-  var map = L.map('map').setView([38, -96], 4);
+  // Restore view from URL params if present, otherwise use defaults
+  var params = new URLSearchParams(window.location.search);
+  var initLat  = parseFloat(params.get('lat'))  || 38;
+  var initLng  = parseFloat(params.get('lng'))  || -96;
+  var initZoom = parseInt(params.get('zoom'), 10) || 4;
+
+  var map = L.map('map').setView([initLat, initLng], initZoom);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap contributors', maxZoom: 18
   }).addTo(map);
@@ -149,13 +155,49 @@
     var parts = existingBbox.split(',').map(Number);
     var bounds = [[parts[1], parts[0]], [parts[3], parts[2]]];
     L.rectangle(bounds, { color: '#0d6efd', weight: 2, fillOpacity: 0.15 }).addTo(map);
-    map.fitBounds(bounds, { padding: [40, 40] });
+    // Only fit to bbox bounds when no explicit view params were saved
+    if (!params.get('lat')) {
+      map.fitBounds(bounds, { padding: [40, 40] });
+    }
+  }
+
+  // Wire up the Clear button to preserve current map position
+  var clearBtn = document.getElementById('clear-btn');
+  if (clearBtn) {
+    clearBtn.addEventListener('click', function (e) {
+      e.preventDefault();
+      var c = map.getCenter();
+      var z = map.getZoom();
+      window.location.href = '/map?lat=' + c.lat.toFixed(6) +
+                             '&lng=' + c.lng.toFixed(6) +
+                             '&zoom=' + z;
+    });
+  }
+
+  // Helper: build a URL that carries current map view alongside new params
+  function mapUrl(params) {
+    var c = map.getCenter();
+    var z = map.getZoom();
+    return '/map?' + params +
+           '&lat=' + c.lat.toFixed(6) +
+           '&lng=' + c.lng.toFixed(6) +
+           '&zoom=' + z;
   }
 
   var startLatLng = null, rect = null;
+  var ctrlDown = false;
+
+  // Track Ctrl key state to avoid interfering with normal drag
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Control') { ctrlDown = true; }
+  });
+  document.addEventListener('keyup', function (e) {
+    if (e.key === 'Control') { ctrlDown = false; }
+  });
 
   map.on('mousedown', function (e) {
     if (!e.originalEvent.ctrlKey) return;
+    e.originalEvent.preventDefault();
     map.dragging.disable();
     startLatLng = e.latlng;
     if (rect) { map.removeLayer(rect); rect = null; }
@@ -174,9 +216,8 @@
     var bounds = L.latLngBounds(startLatLng, e.latlng);
     var sw = bounds.getSouthWest(), ne = bounds.getNorthEast();
     var bbox = [sw.lng, sw.lat, ne.lng, ne.lat].map(function(v){ return v.toFixed(6); }).join(',');
-    // Preserve current mode when a new box is drawn
     var currentMode = new URLSearchParams(window.location.search).get('mode') || 'intersects';
-    window.location.href = '/map?bbox=' + bbox + '&page=1&mode=' + currentMode;
+    window.location.href = mapUrl('bbox=' + bbox + '&page=1&mode=' + currentMode);
     startLatLng = null;
   });
 })();
