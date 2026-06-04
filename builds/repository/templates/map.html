@@ -5,7 +5,7 @@
 {{ super() }}
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
-  #map { height: 420px; cursor: crosshair; }
+  #map { height: 420px; cursor: grab; }
   .map-instruction { font-size: .85rem; color: #666; margin-bottom: .4rem; }
   .bbox-badge { font-family: monospace; font-size: .78rem; }
   .overlap-bar-wrap {
@@ -185,20 +185,53 @@
 
   var startLatLng = null, rect = null;
   var ctrlDown = false;
+  var mapContainer = map.getContainer();
 
-  // Track Ctrl key state to avoid interfering with normal drag
+  // ── Cursor helpers ──────────────────────────────────────────────────────
+  // Three states:
+  //   crosshair  — Ctrl held; ready to draw a selection box
+  //   grabbing   — actively panning (mouse button down, no Ctrl)
+  //   grab       — default; hovering over the map, ready to pan
+  function setCursor(type) {
+    mapContainer.style.cursor = type;
+  }
+
+  // Track Ctrl key state; swap cursor immediately on keydown/keyup
   document.addEventListener('keydown', function (e) {
-    if (e.key === 'Control') { ctrlDown = true; }
+    if (e.key === 'Control') {
+      ctrlDown = true;
+      setCursor('crosshair');
+    }
   });
   document.addEventListener('keyup', function (e) {
-    if (e.key === 'Control') { ctrlDown = false; }
+    if (e.key === 'Control') {
+      ctrlDown = false;
+      // Return to whichever pan cursor is appropriate
+      setCursor(startLatLng ? 'crosshair' : 'grab');
+    }
   });
 
+  // Pan drag: show closed-hand while the button is held
+  map.on('mousedown', function (e) {
+    if (e.originalEvent.ctrlKey) return; // selection mode handled below
+    setCursor('grabbing');
+  });
+  map.on('mouseup',   function ()  { if (!ctrlDown) setCursor('grab'); });
+  // Also reset if the pointer leaves the map mid-drag
+  mapContainer.addEventListener('mouseleave', function () {
+    if (!ctrlDown) setCursor('grab');
+  });
+  mapContainer.addEventListener('mouseenter', function () {
+    setCursor(ctrlDown ? 'crosshair' : 'grab');
+  });
+
+  // ── Bbox selection ───────────────────────────────────────────────────────
   map.on('mousedown', function (e) {
     if (!e.originalEvent.ctrlKey) return;
     e.originalEvent.preventDefault();
     map.dragging.disable();
     startLatLng = e.latlng;
+    setCursor('crosshair');
     if (rect) { map.removeLayer(rect); rect = null; }
   });
 
