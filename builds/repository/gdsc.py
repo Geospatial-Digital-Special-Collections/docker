@@ -312,40 +312,15 @@ def map_view():
             bbox = ""
 
     if bbox:
-        # ------------------------------------------------------------------ #
-        # Solr range query finds every doc whose bbox overlaps the selection. #
-        # For "contained" we tighten the filter; for "intersects" we keep it. #
-        # ------------------------------------------------------------------ #
-        if mode == "contained":
-            # doc must be fully inside the drawn box:
-            # doc.minLat >= sel.minLat  AND  doc.minLon >= sel.minLon
-            # doc.maxLat <= sel.maxLat  AND  doc.maxLon <= sel.maxLon
-            #
-            # Solr RPT / latLonBBoxField stores as "minLat minLon maxLat maxLon"
-            # but a plain range query on the field works like a 2-D point pair.
-            # The safest portable approach is to fetch ALL intersecting docs and
-            # filter in Python — fine for catalogue sizes.
-            fq = f"dcat_bbox:[{minY},{minX} TO {maxY},{maxX}]"
-            query_parameters = {
-                "q":    "*:*",
-                "fq":   fq,
-                "rows": 10000,          # pull everything; we filter + page in Python
-            }
-        else:
-            fq = f"dcat_bbox:[{minY},{minX} TO {maxY},{maxX}]"
-            query_parameters = {
-                "q":    "*:*",
-                "fq":   fq,
-                "rows": 10000,
-            }
+        fq = f"dcat_bbox:[{minY},{minX} TO {maxY},{maxX}]"
+        query_parameters = {
+            "q":    "*:*",
+            "fq":   fq,
+            "rows": 10000,
+        }
 
         all_results, _ = query_solr(f'{BASE_PATH}/dcat/select?wt=json&', query_parameters)
 
-        # ------------------------------------------------------------------ #
-        # Helper: parse a stored bbox string into (dMinX,dMinY,dMaxX,dMaxY). #
-        # Solr stores the field as "minLat,minLon maxLat,maxLon" or similar;  #
-        # adjust the parser below to match your actual stored format.         #
-        # ------------------------------------------------------------------ #
         def parse_doc_bbox(doc):
             """
             Returns (dMinX, dMinY, dMaxX, dMaxY) i.e. (west,south,east,north).
@@ -388,24 +363,31 @@ def map_view():
             return (dMinX >= minX and dMinY >= minY and
                     dMaxX <= maxX and dMaxY <= maxY)
 
-        # Filter / annotate
+        # Annotate all results with overlap % and containment flag
         annotated = []
         for doc in all_results:
             parsed = parse_doc_bbox(doc)
             if parsed is None:
                 frac = 0.0
+                contained = False
             else:
                 frac = overlap_fraction(*parsed)
+                contained = is_contained(*parsed)
 
-            if mode == "contained":
-                if parsed and not is_contained(*parsed):
-                    continue          # skip docs not fully inside
             doc["_overlap_pct"] = round(frac * 100, 1)
+            doc["_contained"] = contained
             annotated.append(doc)
 
-        # Sort intersects mode by overlap descending
-        if mode == "intersects":
-            annotated.sort(key=lambda d: d["_overlap_pct"], reverse=True)
+        if mode == "contained":
+            # Subset: only docs fully inside the selection box
+            annotated = [d for d in annotated if d["_contained"]]
+        else:
+            # Intersects: full superset — contained docs first, then partial
+            # intersects, both groups sorted by overlap % descending
+            annotated.sort(
+                key=lambda d: (d["_contained"], d["_overlap_pct"]),
+                reverse=True
+            )
 
         numresults = len(annotated)
 

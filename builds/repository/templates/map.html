@@ -40,7 +40,7 @@
         <a href="/map?bbox={{ bbox }}&page=1&mode=intersects&lat={{ lat }}&lng={{ lng }}&zoom={{ zoom }}"
            class="btn btn-outline-primary {% if mode == 'intersects' %}active{% endif %}">
           Intersects
-          <span class="ms-1 badge {% if mode == 'intersects' %}bg-light text-primary{% else %}bg-primary{% endif %}" style="font-weight:normal">sorted by % overlap</span>
+          <span class="ms-1 badge {% if mode == 'intersects' %}bg-light text-primary{% else %}bg-primary{% endif %}" style="font-weight:normal">contained first, then by % overlap</span>
         </a>
         <a href="/map?bbox={{ bbox }}&page=1&mode=contained&lat={{ lat }}&lng={{ lng }}&zoom={{ zoom }}"
            class="btn btn-outline-primary {% if mode == 'contained' %}active{% endif %}">
@@ -61,7 +61,7 @@
   <h5>
     Results (n={{ numresults }})
     {% if mode == 'intersects' %}
-      <small class="text-muted fw-normal">— ordered by % of dataset inside selection</small>
+      <small class="text-muted fw-normal">— fully contained datasets first, then ordered by % overlap</small>
     {% else %}
       <small class="text-muted fw-normal">— datasets fully inside selection</small>
     {% endif %}
@@ -82,13 +82,12 @@
       <p class="text-break text-wrap my-0">{{ document['display_description'] }}</p>
       {% endif %}
 
-      {% if mode == 'intersects' %}
       <div class="mt-2">
         <div class="overlap-bar-wrap">
           <div class="overlap-bar" style="width:{{ document['_overlap_pct'] }}%"></div>
         </div>
+        <span class="overlap-label">{{ document['_overlap_pct'] }}% overlap</span>
       </div>
-      {% endif %}
     </div>
 
     <div class="col-md-3 text-end">
@@ -96,7 +95,7 @@
       {% if document['gdsc_collections'] %}
         <small><b>Collections:</b> {{ document['gdsc_collections']|join(' | ') }}</small>
       {% endif %}
-      {% if mode == 'contained' %}
+      {% if document['_contained'] %}
         <div class="mt-1"><span class="badge bg-success">Fully contained</span></div>
       {% endif %}
     </div>
