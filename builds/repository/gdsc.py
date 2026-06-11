@@ -504,7 +504,7 @@ def cite(collection: str = None, table_id: str = None, fmt: str = None) -> Respo
     return resp
 
 
-@app.route('/download/<path:download_path>', methods=["GET","POST"])
+@app.route('/download/<path:download_path>', methods=["GET"])
 def download(download_path: str) -> Response:
     """
     py:function:: download(download_path: str) -> Response
@@ -516,8 +516,7 @@ def download(download_path: str) -> Response:
     :rtype: Response
     """
 
-    if 'ImmutableMultiDict' in str(type(request.args)): args = request.args.to_dict()
-    else: args = request.args
+    args = request.args
 
     # in case of reverse proxy
     download_path = download_path[download_path.index('data/'):]
@@ -525,13 +524,13 @@ def download(download_path: str) -> Response:
     if 'format' in args:
         if args['format'] in ["sql","shp","geotiff","geojson"]:
             return send_from_directory(
-                f"/{download_path}derived/",
+                f"/{download_path}/",
                 f"{args['file']}.{args['format']}.tar.gz",
                 as_attachment=True
             )
-        if args['format'] in ["json"]:
+        if args['format'] in ["json","json-ld"]:
             return send_from_directory(
-                f"/{download_path}derived/",
+                f"/{download_path}/",
                 f"{args['file']}.{args['format']}",
                 as_attachment=True
             )

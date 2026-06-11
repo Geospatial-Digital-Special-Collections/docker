@@ -65,7 +65,7 @@
               </span>
               {% endif %}
             </div>
-            <div class="col-md-2 dropdown mt-0 text-end">
+            <div class="col-md-1 dropdown mt-0 text-end">
               <button class="btn float-right dropdown-toggle" data-bs-toggle="dropdown" type="button" aria-expanded="true">
                 Cite
               </button>
@@ -80,6 +80,28 @@
                     RIS
                   </a>
                 </li>
+              </ul>
+            </div>
+            <div class="col-md-1 dropdown mt-0 text-end">
+              <button class="btn float-right dropdown-toggle" data-bs-toggle="dropdown" type="button" aria-expanded="true">
+                Metadata
+              </button>
+              <ul class="dropdown-menu pt-0 pb-0">
+                <li class="dropdown-item p-0">
+                  <a href="/download/{{ document['dcat_accessURL'][0][:-1] }}?file=meta_json-ld_{{ document['gdsc_tablename'][0] }}&format=json" class="btn">
+                    JSON-LD
+                  </a>
+                </li>
+                <!-- <li class="dropdown-item p-0">
+                  <a href="/download/{{ document['dcat_accessURL'][0][:-1] }}?file=meta_dcat_{{ document['gdsc_tablename'][0] }}&format=json" class="btn">
+                    DCAT
+                  </a>
+                </li>
+                <li class="dropdown-item p-0">
+                  <a href="/download/{{ document['dcat_accessURL'][0][:-1] }}?file=meta_etl_{{ document['gdsc_tablename'][0] }}&format=json" class="btn">
+                    ETL
+                  </a>
+                </li> -->
               </ul>
             </div>
           </div>
@@ -182,7 +204,7 @@
                           {% for download in document['gdsc_derived'] %}
                           <tr>
                             <td>{{ download }}</td>
-                            <td><a href="/download{{ document['dcat_accessURL'][0][:-1] }}/?file={{ document['gdsc_tablename'][0] }}&format={{ download }}">{{ document['gdsc_tablename'][0] }}.{{ download }}.tar.bz</a></td>
+                            <td><a href="/download{{ document['dcat_accessURL'][0][:-1] }}/derived?file={{ document['gdsc_tablename'][0] }}&format={{ download }}">{{ document['gdsc_tablename'][0] }}.{{ download }}.tar.bz</a></td>
                             <td>TBD</td>
                           </tr>
                           {% endfor %}
@@ -199,6 +221,7 @@
               <span class="mt-4 d-block">
                 <b>Open Geospatial Consortium Standards:</b>
                 {% if "Raster" not in document['dct_type'][0] %}
+                <li class="ms-4">
                 {% if document['gdsc_up'][0] == 'true' %}
                   <a href="https://gdsc.idsc.miami.edu/vector/public.{{ document['gdsc_tablename'][0] }}.html" target="_blank">
                 {% endif %}
@@ -206,19 +229,20 @@
                 {% if document['gdsc_up'][0] == 'true' %}
                   </a>
                 {% endif %}
+                </li>
                 {% endif %}
                 {% if document['gdsc_tileUrl'] %}
-                  <a href="{{ document['gdsc_tileUrl'][0] }}{{ document['gdsc_tileUrl'][2] }}" target="_blank">{{ document['dct_type'][0].split()[0].lower() }} tiles</a>
-                   | {{ document['dct_type'][0].split()[0].lower() }} tile url: {{ document['gdsc_tileUrl'][0] }}{{ document['gdsc_tileUrl'][1] }}
+                  <li class="ms-4"><a href="{{ document['gdsc_tileUrl'][0] }}{{ document['gdsc_tileUrl'][2] }}" target="_blank">{{ document['dct_type'][0].split()[0].lower() }} tiles</a>
+                  ( {{ document['dct_type'][0].split()[0].lower() }} tile url: {{ document['gdsc_tileUrl'][0] }}{{ document['gdsc_tileUrl'][1] }} )</li>
                 {% endif %}
                 <!-- | WMS (coming soon) | WFS (coming soon) -->
               </span>
               {% if document['gdsc_arcgisSD'] %}
               <span class="mt-1 d-block">
                 <b>ESRI Standards:</b>
-                <a href="https://arcgis.gdsc.miami.edu/arcgis/rest/services/{{ document['gdsc_tablename'][0] }}/MapServer" target="_blank">ArcGIS MapServer</a> |
-                <a href="https://arcgis.gdsc.miami.edu/arcgis/rest/services/{{ document['gdsc_tablename'][0] }}/FeatureServer" target="_blank">ArcGIS FeatureServer</a> |
-                <a href="https://portal.gdsc.miami.edu/arcgis/home/webmap/viewer.html?url=https%3A%2F%2Farcgis.gdsc.miami.edu%2Farcgis%2Frest%2Fservices%2F{{ document['gdsc_tablename'][0] }}%2FFeatureServer&source=sd" target="_blank">Open in ArcGIS Portal for GDSC</a>
+                <li class="ms-4"><a href="https://arcgis.gdsc.miami.edu/arcgis/rest/services/{{ document['gdsc_tablename'][0] }}/MapServer" target="_blank">ArcGIS MapServer</a></li>
+                <li class="ms-4"><a href="https://arcgis.gdsc.miami.edu/arcgis/rest/services/{{ document['gdsc_tablename'][0] }}/FeatureServer" target="_blank">ArcGIS FeatureServer</a></li>
+                <li class="ms-4"><a href="https://portal.gdsc.miami.edu/arcgis/home/webmap/viewer.html?url=https%3A%2F%2Farcgis.gdsc.miami.edu%2Farcgis%2Frest%2Fservices%2F{{ document['gdsc_tablename'][0] }}%2FFeatureServer&source=sd" target="_blank">Open in ArcGIS Portal for GDSC</a></li>
               </span>
               {% endif %}
               {% if document['gdsc_functions'] and document['gdsc_functions']|length > 0 %}
@@ -226,16 +250,16 @@
                 <b>Analytical Functions:</b>
                   {% for function in document['gdsc_functions'] %}
                     {% if function == "gdsc_get_attributes" %}
-                      <a target="_blank" href="https://gdsc.idsc.miami.edu/functions/rpc/gdsc_get_attributes?tablename=public.{{ document['gdsc_tablename'][0] }}&lat=25.718&lng=-80.279&identifier={{ document['gdsc_label'][0] }}&attrs=%7B{{ ','.join(document['gdsc_columns']) }}%7D&normal=" class="text-wrap text-break">gdsc_get_attributes(tablename={{ document['gdsc_tablename'][0] }},lat=25.718,lng=-80.279,identifier={{ document['gdsc_label'][0] }},normal='')</a>
+                      <li class="ms-4"><a target="_blank" href="https://gdsc.idsc.miami.edu/functions/rpc/gdsc_get_attributes?tablename=public.{{ document['gdsc_tablename'][0] }}&lat=25.718&lng=-80.279&identifier={{ document['gdsc_label'][0] }}&attrs=%7B{{ ','.join(document['gdsc_columns']) }}%7D&normal=" class="text-wrap text-break">gdsc_get_attributes( table, lat, lng, identifier, normal )</a></li>
                     {% endif %}
                     {% if function == "gdsc_nearest_neighbor" %}
-                      <a target="_blank" href="https://gdsc.idsc.miami.edu/functions/rpc/gdsc_nearest_neighbor?tablename=public.{{ document['gdsc_tablename'][0] }}&lat=25.718&lng=-80.279&identifier={{ document['gdsc_label'][0] }}" class="text-wrap text-break">gdsc_nearest_neighbor(table={{ document['gdsc_tablename'][0] }},lat=25.718,lng=-80.279,id={{ document['gdsc_label'][0] }})</a>
+                      <li class="ms-4"><a target="_blank" href="https://gdsc.idsc.miami.edu/functions/rpc/gdsc_nearest_neighbor?tablename=public.{{ document['gdsc_tablename'][0] }}&lat=25.718&lng=-80.279&identifier={{ document['gdsc_label'][0] }}" class="text-wrap text-break">gdsc_nearest_neighbor( table, lat, lng, id )</a></li>
                     {% endif %}
                     {% if function == "gdsc_count_within" %}
-                      <a target="_blank" href="https://gdsc.idsc.miami.edu/functions/rpc/gdsc_count_within?tablename=public.{{ document['gdsc_tablename'][0] }}&lat=25.718&lng=-80.279&radius=5280" class="text-wrap text-break">gdsc_count_within(table={{ document['gdsc_tablename'][0] }},lat=25.718,lng=-80.279,radius=5280)</a>
+                      <li class="ms-4"><a target="_blank" href="https://gdsc.idsc.miami.edu/functions/rpc/gdsc_count_within?tablename=public.{{ document['gdsc_tablename'][0] }}&lat=25.718&lng=-80.279&radius=5280" class="text-wrap text-break">gdsc_count_within( table, lat, lng, radius )</a></li>
                     {% endif %}
                     {% if function == "gdsc_zonal_statistics" %}
-                      <a target="_blank" href="https://gdsc.idsc.miami.edu/functions/rpc/gdsc_zonal_statistics?tablename=public.{{ document['gdsc_tablename'][0] }}&lat=25.718&lng=-80.279&radius=500" class="text-wrap text-break">gdsc_zonal_statistics(table={{ document['gdsc_tablename'][0] }},lat=25.718,lng=-80.279,radius=500)</a>
+                      <li class="ms-4"><a target="_blank" href="https://gdsc.idsc.miami.edu/functions/rpc/gdsc_zonal_statistics?tablename=public.{{ document['gdsc_tablename'][0] }}&lat=25.718&lng=-80.279&radius=500" class="text-wrap text-break">gdsc_zonal_statistics( table, lat, lng, radius )</a></li>
                     {% endif %}
                   {% endfor %}
               </span>
