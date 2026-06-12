@@ -354,7 +354,7 @@
                     </li>
 
                     <!-- Page numbers -->
-                    {% for i in (range(0, 5) if page < 3 else range(page - 3, page + 2)) %}
+                    {% for i in (range(([0,page - 3]|max), ([numresults//10 + 1, page + 2]|min))) %}
                     <li class="page-item {% if page == i + 1 %}active{% endif %}">
                       <button
                         class="page-link"
