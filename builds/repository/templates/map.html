@@ -138,11 +138,23 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 (function () {
-  // Restore view from URL params if present, otherwise use defaults
+  // Restore view from URL params if present, otherwise use defaults.
+  // NOTE: we can't use `parseFloat(x) || default` here — 0 is a perfectly
+  // valid latitude/longitude/zoom (e.g. a box drawn over the equator or the
+  // prime meridian), but 0 is falsy in JS, so `||` would silently discard it
+  // and snap back to the default view. Check for a missing/invalid param
+  // explicitly instead.
   var params = new URLSearchParams(window.location.search);
-  var initLat  = parseFloat(params.get('lat'))  || 38;
-  var initLng  = parseFloat(params.get('lng'))  || -96;
-  var initZoom = parseInt(params.get('zoom'), 10) || 4;
+
+  function parsedOrDefault(rawValue, parseFn, defaultValue) {
+    if (rawValue === null || rawValue === '') return defaultValue;
+    var parsed = parseFn(rawValue);
+    return isNaN(parsed) ? defaultValue : parsed;
+  }
+
+  var initLat  = parsedOrDefault(params.get('lat'), parseFloat, 38);
+  var initLng  = parsedOrDefault(params.get('lng'), parseFloat, -96);
+  var initZoom = parsedOrDefault(params.get('zoom'), function (v) { return parseInt(v, 10); }, 4);
 
   var map = L.map('map').setView([initLat, initLng], initZoom);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -155,7 +167,7 @@
     var bounds = [[parts[1], parts[0]], [parts[3], parts[2]]];
     L.rectangle(bounds, { color: '#0d6efd', weight: 2, fillOpacity: 0.15 }).addTo(map);
     // Only fit to bbox bounds when no explicit view params were saved
-    if (!params.get('lat')) {
+    if (params.get('lat') === null) {
       map.fitBounds(bounds, { padding: [40, 40] });
     }
   }
