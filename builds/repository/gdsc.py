@@ -137,11 +137,11 @@ def highlight_query(document: dict, query: str) -> dict:
         )
 
     document['found_in'] = {}
+    terms = query.split(' ')
     for field in QUERY_FIELDS:
         if field in document:
             attrs = []
             for i, attr in enumerate(document[field]):
-                terms = query.split(' ')
                 found = True
                 for term in terms:
                     if term.upper() not in attr.upper(): found = False
@@ -422,7 +422,7 @@ def index() -> str:
     )
 
 
-@app.route('/detail/<name_id>', methods=["GET","POST"])
+@app.route('/detail/<name_id>', methods=["GET"])
 def detail(name_id: str) -> str:
     """
     py:function:: detail(name_id)
@@ -442,17 +442,19 @@ def detail(name_id: str) -> str:
     response = simplejson.load(connection)
     document = response['response']['docs'][0]
 
+    if 'gdsc_attributes' in document:
+        document['gdsc_columns'] = [attr.split(';')[0] for attr in document['gdsc_attributes']]
+
     query_arg = args.get('query')
     if query_arg:
         highlight_query(document, query_arg)
     args['query'] = query_arg or None
 
     if 'gdsc_attributes' in document:
-        document['gdsc_columns'] = [attr.split(';')[0] for attr in document['gdsc_attributes']]
         document['gdsc_attributes'] = [attr.split(';') for attr in document['gdsc_attributes']]
 
     if 'gdsc_derived' in document:
-        document['gdsc_derived'] = [attr.split(';') for attr in document['gdsc_derived']]
+        document['gdsc_derived'] = [attr.split(';')[0] for attr in document['gdsc_derived']]
 
     # get json_ld
     try:
@@ -538,18 +540,12 @@ def download(download_path: str) -> Response:
     download_path = download_path[download_path.index('data/'):]
 
     if 'format' in args:
-        if args['format'] in ["sql","shp","geotiff","geojson"]:
-            return send_from_directory(
-                f"/{download_path}/",
-                f"{args['file']}.{args['format']}.tar.gz",
-                as_attachment=True
-            )
-        if args['format'] in ["json","json-ld"]:
-            return send_from_directory(
-                f"/{download_path}/",
-                f"{args['file']}.{args['format']}",
-                as_attachment=True
-            )
+        ext = ".tar.gz" if args['format'] in ["sql","shp","geotiff","geojson"] else ""
+        return send_from_directory(
+            f"/{download_path}/",
+            f"{args['file']}.{args['format']}{ext}",
+            as_attachment=True
+        )
 
     return "File not found", 400
 
