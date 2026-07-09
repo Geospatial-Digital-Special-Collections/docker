@@ -12,11 +12,33 @@
       .btn-link.btn-anchor:focus {
           box-shadow: none !important;
       }
+      .active-filters-row {
+          display: flex;
+          align-items: flex-start;
+          gap: 0.5rem;
+          flex-wrap: nowrap;
+      }
+
+      .active-filters-label {
+          font-size: 0.8rem;
+          font-weight: 600;
+          color: #6c757d;
+          white-space: nowrap;
+          padding-top: 0.3rem;
+          text-transform: capitalize;
+          min-width: 90px;
+          text-align: right;
+      }
+
+      .active-filters-chips {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 0.4rem;
+      }
     </style>
 {% endblock %}
 
 {% block content %}
-
       <!-- Collection information -->
       <div class="mb-4">
         <h2 class="mb-1">
@@ -288,19 +310,18 @@
               <div class="row mb-2 m-0">
                 <nav aria-label="Page navigation example">
                   <ul class="pagination">
-                    <!-- First-->
+                    <!-- First -->
                     <li class="page-item {% if page == 1 %}disabled{% endif %}">
                       <button
                         class="page-link"
                         type="submit"
                         form="filterForm"
                         name="page"
-                        value="{{ 1 }}"
-                        {% if page == 1 %}disabled{% endif %}>
+                        value="1"
+                        {%- if page == 1 %} disabled{% endif %}>
                         <span aria-hidden="true">&laquo;</span>
                       </button>
                     </li>
-
                     <!-- Previous -->
                     <li class="page-item {% if page == 1 %}disabled{% endif %}">
                       <button
@@ -309,47 +330,43 @@
                         form="filterForm"
                         name="page"
                         value="{{ page - 1 }}"
-                        {% if page == 1 %}disabled{% endif %}>
+                        {%- if page == 1 %} disabled{% endif %}>
                         <span aria-hidden="true">&lsaquo;</span>
                       </button>
                     </li>
-
                     <!-- Page numbers -->
-                    {% for i in range(numresults//10 + 1) %}
+                    {%- for i in (range(([0, page - 3]|max), ([numresults//10 + 1, page + 2]|min))) %}
                     <li class="page-item {% if page == i + 1 %}active{% endif %}">
                       <button
                         class="page-link"
                         type="submit"
                         form="filterForm"
                         name="page"
-                        value="{{ i + 1 }}">
-                        {{ i + 1 }}
-                      </button>
+                        value="{{ i + 1 }}">{{ i + 1 }}</button>
                     </li>
                     {% endfor %}
 
                     <!-- Next -->
-                    <li class="page-item {% if page > numresults//10%}disabled{% endif %}">
+                    <li class="page-item {% if page > numresults//10 %}disabled{% endif %}">
                       <button
                         class="page-link"
                         type="submit"
                         form="filterForm"
                         name="page"
                         value="{{ page + 1 }}"
-                        {% if page > numresults//10%}disabled{% endif %}>
+                        {%- if page > numresults//10 %} disabled{% endif %}>
                         <span aria-hidden="true">&rsaquo;</span>
                       </button>
                     </li>
-
-                    <!-- Next -->
-                    <li class="page-item {% if page > numresults//10%}disabled{% endif %}">
+                    <!-- Last -->
+                    <li class="page-item {% if page > numresults//10 %}disabled{% endif %}">
                       <button
                         class="page-link"
                         type="submit"
                         form="filterForm"
                         name="page"
                         value="{{ numresults//10 + 1 }}"
-                        {% if page > numresults//10%}disabled{% endif %}>
+                        {%- if page > numresults//10 %} disabled{% endif %}>
                         <span aria-hidden="true">&raquo;</span>
                       </button>
                     </li>
@@ -357,19 +374,14 @@
                 </nav>
               </div>
 
-              {% else %}
-
-                <div class="nav justify-content-center border rounded pt-1">
-                  <h3>
-                    No Results
-                  </h3>
-                </div>
-
-              {% endif %}
+              {%- else %}
+              <div class="nav justify-content-center border rounded pt-1">
+                <h3>No Results</h3>
+              </div>
+              {%- endif %}
             </div>
           </div>
 
         </div>
-
       </div>
 {% endblock %}
