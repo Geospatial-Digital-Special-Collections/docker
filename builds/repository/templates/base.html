@@ -32,6 +32,18 @@
         border: 1px solid grey;
         border-radius: 4px;
       }
+      .show-more-toggle[aria-expanded="true"] .show-more-label::before {
+        content: "Show less";
+      }
+      .show-more-toggle[aria-expanded="false"] .show-more-label::before {
+        content: "Show more";
+      }
+      .show-more-toggle .show-more-label {
+        font-size: 0;  /* hide the fallback text */
+      }
+      .show-more-toggle .show-more-label::before {
+        font-size: 0.875rem;  /* restore size on the pseudo-element */
+      }
     </style>
     <title>{% block title %}{% endblock %}</title>
     {% endblock %}

@@ -62,6 +62,8 @@ FILTER_SPECS = {
 
 def query_solr(path: str, parameters: dict, facet_field: str = None) -> tuple:
     """
+    py:function:: query_solr(path, parameters, facet_field)
+
     Query the SOLR API with an index for the catalog or collections.
 
     :param str path: the base url for the SOLR API
@@ -100,7 +102,7 @@ def query_solr(path: str, parameters: dict, facet_field: str = None) -> tuple:
 
 def highlight_query(document: dict, query: str) -> dict:
     """
-    py:function:: query_solr(path, parameters)
+    py:function:: highlight_query(document, query)
 
     Highlight the query text in the given document.
 
@@ -436,7 +438,7 @@ def detail(name_id: str) -> str:
     if 'gdsc_derivatives' in document:
         document['gdsc_derived'] = [attr.split(';') for attr in document['gdsc_derived']]
 
-    # get json_ld 
+    # get json_ld
     try:
         with open(f"/data/{name_id}/meta_json-ld_{name_id}.json", 'r', encoding='utf-8') as f:
             json_ld = json.load(f)
@@ -502,7 +504,7 @@ def cite(collection: str = None, table_id: str = None, fmt: str = None) -> Respo
     return resp
 
 
-@app.route('/download/<path:download_path>', methods=["GET","POST"])
+@app.route('/download/<path:download_path>', methods=["GET"])
 def download(download_path: str) -> Response:
     """
     py:function:: download(download_path: str) -> Response
@@ -514,8 +516,7 @@ def download(download_path: str) -> Response:
     :rtype: Response
     """
 
-    if 'ImmutableMultiDict' in str(type(request.args)): args = request.args.to_dict()
-    else: args = request.args
+    args = request.args
 
     # in case of reverse proxy
     download_path = download_path[download_path.index('data/'):]
@@ -523,13 +524,13 @@ def download(download_path: str) -> Response:
     if 'format' in args:
         if args['format'] in ["sql","shp","geotiff","geojson"]:
             return send_from_directory(
-                f"/{download_path}derived/",
+                f"/{download_path}/",
                 f"{args['file']}.{args['format']}.tar.gz",
                 as_attachment=True
             )
-        if args['format'] in ["json"]:
+        if args['format'] in ["json","json-ld"]:
             return send_from_directory(
-                f"/{download_path}derived/",
+                f"/{download_path}/",
                 f"{args['file']}.{args['format']}",
                 as_attachment=True
             )
