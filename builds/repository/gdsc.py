@@ -18,7 +18,7 @@ log.disabled = True
 
 BASE_PATH = 'http://gdsc-solr.gdsc:8983/solr'
 SNIP_LENGTH = 180
-QUERY_FIELDS = ['gdsc_collections','dct_title','dcat_keyword','dct_description','gdsc_attributes']
+QUERY_FIELDS = ['gdsc_collections', 'dct_title', 'dcat_keyword', 'dct_description', 'gdsc_attributes']
 DEFAULT_ROWS = 10
 DEBUG = True
 
@@ -60,6 +60,23 @@ FILTER_SPECS = {
  # Local functions
  ##
 
+def escape_solr_query(query: str) -> str:
+    """
+    py:function:: escape_solr_query(query)
+    
+    Escape characters know to mess with the SOLR query parser
+
+    :param str query: the string to clean
+    :return: the cleaned query string
+    :rtype: str
+    """
+
+    # Solr's reserved syntax characters
+    # +, -, &&, ||, !, (, ), {, }, [, ], ^, ~, *, ?, :, \
+    pattern = r'[\+\-\&\|\!\(\)\{\}\[\]\^\"\~\*\?\:\\]'
+    return re.sub(pattern,'',query)
+
+
 def query_solr(path: str, parameters: dict, facet_field: str = None) -> tuple:
     """
     py:function:: query_solr(path, parameters, facet_field)
@@ -68,13 +85,12 @@ def query_solr(path: str, parameters: dict, facet_field: str = None) -> tuple:
 
     :param str path: the base url for the SOLR API
     :param dict parameters: the query parameters
-    :param facet_field: optional field for which to get all possible options for froma all documents, if unspecified, query normally
+    :param facet_field: optional field for facet counts; if unspecified, queries normally
     :return: the query results, the number of results
     :rtype: tuple
     """
 
     # Build the query string
-    # query_string = urlencode(parameters).replace('-', '+')
     query_string = urlencode(parameters)
     url = f"{path}{query_string}"
 
@@ -87,7 +103,7 @@ def query_solr(path: str, parameters: dict, facet_field: str = None) -> tuple:
         return [], 0
 
     # Extract results
-    if facet_field != None:
+    if facet_field is not None:
         if DEBUG: print('getting facets:')
         results = response.get('facet_counts', {}).get('facet_fields', {}).get(facet_field, [])
         numresults = len(results)
@@ -112,19 +128,20 @@ def highlight_query(document: dict, query: str) -> dict:
     :rtype: dict
     """
 
-    def add_tags(string_value,query):
+    def add_tags(string_value, term):
         return re.sub(
-            r'(' + term  + ')',
-            '<span class="highlight-term">\g<1></span>',
+            r'(' + re.escape(term) + ')',
+            r'<span class="highlight-term">\1</span>',
             string_value,
-            flags=re.IGNORECASE)
+            flags=re.IGNORECASE
+        )
 
     document['found_in'] = {}
+    terms = query.split(' ')
     for field in QUERY_FIELDS:
         if field in document:
             attrs = []
             for i, attr in enumerate(document[field]):
-                terms = query.split(' ')
                 found = True
                 for term in terms:
                     if term.upper() not in attr.upper(): found = False
@@ -145,14 +162,14 @@ def highlight_query(document: dict, query: str) -> dict:
     return document
 
 
-def build_citation(document: dict, type: str) -> str:
+def build_citation(document: dict, fmt: str) -> str:
     """
-    py:function:: build_citation(document, type)
+    py:function:: build_citation(document, fmt)
 
     Create a formatted citation string for the document in the given format type.
 
     :param dict document: the document metadata
-    :param str type: the format type ["bibtex", "ris"]
+    :param str fmt: the format type ["bibtex", "ris"]
     :return: the formatted citation
     :rtype: str
     """
@@ -234,32 +251,32 @@ def build_citation(document: dict, type: str) -> str:
         }
     }
 
-    def build_element(field,value):
+    formatters = cite_formats['formatters'][fmt]
+
+    def build_element(field, value):
         return (
             f"{formatters['indent']}{field}{formatters['seperator']}"
             f"{formatters['quote_start']}{value}{formatters['quote_end']}"
             f"{formatters['line_seperator']}\n"
         )
 
-    formatters = cite_formats['formatters'][type]
     entry = formatters['begin']
-    if type == "bibtex":
-        entry += f"{document['gdsc_tablename'][0]}\n" or "citation\n"
+    if fmt == "bibtex":
+        entry += f"{document.get('gdsc_tablename', ['citation'])[0]}\n"
 
-    formatters = cite_formats['formatters'][type]
-    # looped citation body construction
-    for dc_term in cite_formats['fields']:
-        field = cite_formats['fields'][dc_term]
-        if type in field:
-            if dc_term in document:
-                val = document[dc_term]       
-                if field['type'] in ["single", "date"]:
-                    if dc_term in ["dct_issued"]: val[0] = val[0][:4]
-                    if dc_term in ["dct_modified"]: val[0] = val[0].split('T')[0]    
-                    entry += build_element(field[type],val[0])
-                elif field['type'] == "list":
-                    for item in val:
-                        entry += build_element(field[type],item.split(";")[0])
+    for dc_term, field in cite_formats['fields'].items():
+        if fmt not in field or dc_term not in document:
+            continue
+        val = list(document[dc_term])  # copy to avoid mutating the document
+        if field['type'] in ("single", "date"):
+            if dc_term == "dct_issued":
+                val[0] = val[0][:4]
+            elif dc_term == "dct_modified":
+                val[0] = val[0].split('T')[0]
+            entry += build_element(field[fmt], val[0])
+        elif field['type'] == "list":
+            for item in val:
+                entry += build_element(field[fmt], item.split(";")[0])
 
     entry += formatters['end']
     return entry
@@ -272,7 +289,10 @@ def fetch_facets(field: str, query: str, fq: str) -> tuple:
     Fetch the facets from SOLR for a given field and return a tuple with the 
     results and the number of results.
 
-    :return: the query results, the number of results
+    :param str field: the Solr field to facet on
+    :param str query: the current search query
+    :param str fq: the current filter query string
+    :return: the facet values and count
     :rtype: tuple
     """
 
@@ -315,7 +335,7 @@ def index() -> str:
     """
 
     collection = request.args.get("collection", "all")
-    query = request.args.get("query", "")
+    query = escape_solr_query(request.args.get("query", ""))
     page = int(request.args.get("page", 1))
 
     # --- Collect filters dynamically ---
@@ -329,6 +349,7 @@ def index() -> str:
 
     fq_parts = []
 
+	# TODO: remove perhaps ...
     if collection == "all":
         fq_parts.append("gdsc_collections:*")
     else:
@@ -339,8 +360,7 @@ def index() -> str:
         if len(values) > 0:
             field = FILTER_SPECS[key]["field"]
             clauses = [f'{field}:"{v}"' for v in values]
-            clause = f"({' AND '.join(clauses)})"
-            fq_parts.append(clause)
+            fq_parts.append(f"({' AND '.join(clauses)})")
 
     fq = " ".join(fq_parts)
 
@@ -362,10 +382,8 @@ def index() -> str:
 
     # --- Post-processing ---
     for entry in results:
-
         if query:
             entry = highlight_query(entry, query)
-
         if entry.get('dct_description'):
             desc = entry['dct_description'][0]
             entry['display_description'] = (
@@ -404,7 +422,7 @@ def index() -> str:
     )
 
 
-@app.route('/detail/<name_id>', methods=["GET","POST"])
+@app.route('/detail/<name_id>', methods=["GET"])
 def detail(name_id: str) -> str:
     """
     py:function:: detail(name_id)
@@ -418,25 +436,25 @@ def detail(name_id: str) -> str:
 
     args = request.args.to_dict()
 
-    query_parameters = {"q": "gdsc_tablename:" + name_id}
-    query_string  = urlencode(query_parameters)
-    connection = urlopen("{}{}".format(f'{BASE_PATH}/dcat/select?wt=json&', query_string))
+    query_parameters = {"q": f"gdsc_tablename:{name_id}"}
+    query_string = urlencode(query_parameters)
+    connection = urlopen(f'{BASE_PATH}/dcat/select?wt=json&{query_string}')
     response = simplejson.load(connection)
     document = response['response']['docs'][0]
-
-    if "query" in args:
-        if args['query'] != None and args['query'] != 'None' and args['query'] != '':
-            document = highlight_query(document,args['query'])
-    else: args['query'] = None
 
     if 'gdsc_attributes' in document:
         document['gdsc_columns'] = [attr.split(';')[0] for attr in document['gdsc_attributes']]
 
+    query_arg = args.get('query')
+    if query_arg:
+        highlight_query(document, query_arg)
+    args['query'] = query_arg or None
+
     if 'gdsc_attributes' in document:
         document['gdsc_attributes'] = [attr.split(';') for attr in document['gdsc_attributes']]
 
-    if 'gdsc_derivatives' in document:
-        document['gdsc_derived'] = [attr.split(';') for attr in document['gdsc_derived']]
+    if 'gdsc_derived' in document:
+        document['gdsc_derived'] = [attr.split(';')[0] for attr in document['gdsc_derived']]
 
     # get json_ld
     try:
@@ -447,9 +465,9 @@ def detail(name_id: str) -> str:
         
     # render page
     return render_template(
-        'detail.html', 
-        name_id=name_id, 
-        document=document, 
+        'detail.html',
+        name_id=name_id,
+        document=document,
         referrer=args,
         root='../',
         json_ld=json_ld
@@ -462,12 +480,12 @@ def cite(collection: str = None, table_id: str = None, fmt: str = None) -> Respo
     """
     py:function:: cite(collection, table_id, fmt)
 
-    Create a set of correctly formatted citations and return as a (Flask) Response.
+    Create formatted citations and return as a download Response.
 
     :param str collection: the unique identifier for the collection
     :param str table_id: the unique identifier for the dataset (tablename)
-    :param str fmt: the citation format identifier 
-    :return Response: correctly formatted citations as a (Flask) Response
+    :param str fmt: the citation format, one of "bibtex" or "ris"
+    :return: formatted citations as a Flask Response
     :rtype: Response
     """
 
@@ -509,7 +527,7 @@ def download(download_path: str) -> Response:
     """
     py:function:: download(download_path: str) -> Response
 
-    Retireve the correct derivative for download and return as a (Flask) Response.
+    Retrieve the correct derivative for download and return as a Flask Response.
 
     :param str download_path: the path to the derivative for download 
     :return Response: the derivative package as a (Flask) Response
@@ -522,18 +540,12 @@ def download(download_path: str) -> Response:
     download_path = download_path[download_path.index('data/'):]
 
     if 'format' in args:
-        if args['format'] in ["sql","shp","geotiff","geojson"]:
-            return send_from_directory(
-                f"/{download_path}/",
-                f"{args['file']}.{args['format']}.tar.gz",
-                as_attachment=True
-            )
-        if args['format'] in ["json","json-ld"]:
-            return send_from_directory(
-                f"/{download_path}/",
-                f"{args['file']}.{args['format']}",
-                as_attachment=True
-            )
+        ext = ".tar.gz" if args['format'] in ["sql","shp","geotiff","geojson"] else ""
+        return send_from_directory(
+            f"/{download_path}/",
+            f"{args['file']}.{args['format']}{ext}",
+            as_attachment=True
+        )
 
     return "File not found", 400
 
@@ -550,8 +562,13 @@ COLLECTIONS, COLLECTIONS_COUNT = query_solr(
     }
 )
 keys = [item['CollectionID'][0] for item in COLLECTIONS]
-COLLECTIONS = dict(zip(keys, COLLECTIONS))
-COLLECTIONS = OrderedDict(sorted(COLLECTIONS.items(), key=lambda i: i[0].lower()))
+COLLECTIONS = OrderedDict(
+	sorted(
+		dict(
+			zip(keys, COLLECTIONS)).items(), 
+			key=lambda i: i[0].lower()
+	)
+)
 
 
 ##
