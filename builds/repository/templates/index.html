@@ -178,7 +178,7 @@
                   <h5 class="ps-4">Filter:</h5>
                   <hr />
                   {%- for key in filter_specs %}
-                  {{ accordion_item(filter_specs[key]["frontend_name"], key, facet_data[filter_specs[key]["facet_name"]], selected_filters[key]) }}
+                  {{ accordion_item(filter_specs[key]["frontend_name"], key, facet_data[filter_specs[key]["facet_name"]], selected_filters[key], collections) }}
                   {%- endfor %}
                 </div>
               </form>
