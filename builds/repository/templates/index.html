@@ -151,26 +151,8 @@
             <!-- filters -->
             <div class="col-lg-3" style="max-width: 300px;">
               <form method="get" id="filterForm" name="filterForm">
-                <div class="container">
-                  <div class="row">
-                    <h5 class="mr-2">Collection: </h5>
-                  </div>
-                  <div class="row mb-4">
-                    <select class="form-control mb-2"
-                            id="collection"
-                            name="collection"
-                            onchange="this.form.submit()">
-                      {%- for coll in collections %}
-                      <option value="{{ collections[coll]['CollectionID'][0] }}"
-                        {{ "selected" if collection == collections[coll]['CollectionID'][0] else "" }}>
-                        {{- collections[coll]['Title'][0] }}
-                      </option>
-                      {%- endfor %}
-                    </select>
-                  </div>
-                  <!-- preserve search query -->
-                  <input type="hidden" name="query" value="{{ query }}">
-                </div>
+                <!-- preserve search query -->
+                <input type="hidden" name="query" value="{{ query }}">
 
                 {%- from "filters.html" import accordion_item %}
 
