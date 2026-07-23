@@ -6,6 +6,8 @@ import logging
 import re
 from collections import OrderedDict
 import json
+from urllib.error import HTTPError
+import re
 
 app = Flask(__name__)
 log = logging.getLogger('werkzeug')
@@ -23,32 +25,29 @@ DEFAULT_ROWS = 10
 
 
 def query_solr(path: str, parameters: dict) -> tuple:
-    """
-    Query the SOLR API with an index for the catalog or collections.
-
-    :param str path: the base url for the SOLR API
-    :param dict parameters: the query parameters    
-    :return: the query results, the number of results
-    :rtype: tuple
-    """
-
-    # Build the query string
     query_string = urlencode(parameters)
     url = f"{path}{query_string}"
     print(url)
 
-    # Send the request
     try:
         with urlopen(url) as connection:
             response = simplejson.load(connection)
+    except HTTPError as e:
+        # solr's error responses are json with a specific message (bad predicate,
+        # malformed shape, wrong field type, etc.) - print it instead of hiding it
+        # behind an empty result set.
+        try:
+            detail = simplejson.load(e)
+        except Exception:
+            detail = e.read().decode("utf-8", "replace")
+        print(f"Solr returned {e.code} for {url}\n{detail}")
+        return [], 0
     except Exception as e:
         print(f"Error querying SOLR: {e}")
         return [], 0
 
-    # Extract results
     numresults = response.get('response', {}).get('numFound', 0)
     results = response.get('response', {}).get('docs', [])
-
     return results, numresults
 
 
@@ -293,16 +292,62 @@ def index():
     )
 
 
+
+def parse_doc_bbox(doc: dict):
+    """
+    Parse a document's dcat_bbox field - stored as WKT, e.g.
+    "POLYGON((-80.87 25.14, -80.11 25.14, -80.11 25.97, -80.87 25.97, -80.87 25.14))" -
+    into (minX, minY, maxX, maxY), i.e. (west, south, east, north).
+    Returns None if missing or no coordinate pairs are found.
+    """
+    raw = doc.get("dcat_bbox")
+    if not raw:
+        return None
+    if isinstance(raw, list):
+        raw = raw[0]
+
+    pairs = re.findall(r"(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)", str(raw))
+    if not pairs:
+        return None
+
+    xs = [float(x) for x, _ in pairs]
+    ys = [float(y) for _, y in pairs]
+    return min(xs), min(ys), max(xs), max(ys)
+
+
+def overlap_fraction(qMinX, qMinY, qMaxX, qMaxY, dMinX, dMinY, dMaxX, dMaxY) -> float:
+    """Fraction of the *document* bbox that lies inside the query bbox."""
+    ix1, ix2 = max(dMinX, qMinX), min(dMaxX, qMaxX)
+    iy1, iy2 = max(dMinY, qMinY), min(dMaxY, qMaxY)
+    if ix2 <= ix1 or iy2 <= iy1:
+        return 0.0
+    inter = (ix2 - ix1) * (iy2 - iy1)
+    doc_area = max((dMaxX - dMinX) * (dMaxY - dMinY), 1e-12)
+    return min(inter / doc_area, 1.0)
+
+
+def is_contained(qMinX, qMinY, qMaxX, qMaxY, dMinX, dMinY, dMaxX, dMaxY) -> bool:
+    """True if the document bbox lies fully inside the query bbox."""
+    return dMinX >= qMinX and dMinY >= qMinY and dMaxX <= qMaxX and dMaxY <= qMaxY
+
+
+def is_contained(qMinX, qMinY, qMaxX, qMaxY, dMinX, dMinY, dMaxX, dMaxY) -> bool:
+    """True if the document bbox lies fully within the query bbox."""
+    return dMinX >= qMinX and dMinY >= qMinY and dMaxX <= qMaxX and dMaxY <= qMaxY
+
+
+# --- the route itself ---
+
 @app.route('/map', methods=["GET"])
 def map_view():
-    bbox     = request.args.get("bbox", "")   # "minX,minY,maxX,maxY"  (lon,lat,lon,lat)
-    page     = int(request.args.get("page", 1))
-    mode     = request.args.get("mode", "intersects")   # "intersects" | "contained"
-    # Map view state — preserved across clears and navigation so the viewport never jumps
-    lat      = request.args.get("lat", "38")
-    lng      = request.args.get("lng", "-96")
-    zoom     = request.args.get("zoom", "4")
-    results  = []
+    bbox = request.args.get("bbox", "")             # "minX,minY,maxX,maxY" (lon,lat,lon,lat)
+    page = int(request.args.get("page", 1))
+    mode = request.args.get("mode", "intersects")   # "intersects" | "contained"
+    lat  = request.args.get("lat", "38")
+    lng  = request.args.get("lng", "-96")
+    zoom = request.args.get("zoom", "4")
+
+    results = []
     numresults = 0
 
     if bbox:
@@ -312,90 +357,41 @@ def map_view():
             bbox = ""
 
     if bbox:
-        fq = f"dcat_bbox:[{minY},{minX} TO {maxY},{maxX}]"
         query_parameters = {
-            "q":    "*:*",
-            "fq":   fq,
+            "q": "*:*",
+            "fq": "dcat_bbox:*",   # only docs that actually have a bbox value
             "rows": 10000,
         }
+        all_docs, _ = query_solr(f'{BASE_PATH}/dcat/select?wt=json&', query_parameters)
 
-        all_results, _ = query_solr(f'{BASE_PATH}/dcat/select?wt=json&', query_parameters)
-
-        def parse_doc_bbox(doc):
-            """
-            Returns (dMinX, dMinY, dMaxX, dMaxY) i.e. (west,south,east,north).
-            Tries common storage formats.  Returns None on failure.
-            """
-            raw = doc.get("dcat_bbox")
-            if not raw:
-                return None
-            if isinstance(raw, list):
-                raw = raw[0]
-            raw = str(raw).strip()
-            # Format A: "minLat,minLon maxLat,maxLon"  (Solr RPT default)
-            try:
-                lo, hi = raw.split()
-                dMinY, dMinX = [float(v) for v in lo.split(",")]
-                dMaxY, dMaxX = [float(v) for v in hi.split(",")]
-                return dMinX, dMinY, dMaxX, dMaxY
-            except Exception:
-                pass
-            # Format B: "minX,minY,maxX,maxY"  (lon-lat CSV)
-            try:
-                parts = [float(v) for v in raw.split(",")]
-                if len(parts) == 4:
-                    return parts[0], parts[1], parts[2], parts[3]
-            except Exception:
-                pass
-            return None
-
-        def overlap_fraction(dMinX, dMinY, dMaxX, dMaxY):
-            """Fraction of the *document* bbox that lies inside the selection."""
-            ix1 = max(dMinX, minX);  ix2 = min(dMaxX, maxX)
-            iy1 = max(dMinY, minY);  iy2 = min(dMaxY, maxY)
-            if ix2 <= ix1 or iy2 <= iy1:
-                return 0.0
-            inter = (ix2 - ix1) * (iy2 - iy1)
-            doc_area = max((dMaxX - dMinX) * (dMaxY - dMinY), 1e-12)
-            return min(inter / doc_area, 1.0)
-
-        def is_contained(dMinX, dMinY, dMaxX, dMaxY):
-            return (dMinX >= minX and dMinY >= minY and
-                    dMaxX <= maxX and dMaxY <= maxY)
-
-        # Annotate all results with overlap % and containment flag
-        annotated = []
-        for doc in all_results:
+        matches = []
+        for doc in all_docs:
             parsed = parse_doc_bbox(doc)
-            if parsed is None:
-                frac = 0.0
-                contained = False
-            else:
-                frac = overlap_fraction(*parsed)
-                contained = is_contained(*parsed)
+            if not parsed:
+                continue
+            frac = overlap_fraction(minX, minY, maxX, maxY, *parsed)
+            contained = is_contained(minX, minY, maxX, maxY, *parsed)
+
+            if mode == "contained":
+                if not contained:
+                    continue
+            elif frac <= 0.0:
+                continue
 
             doc["_overlap_pct"] = round(frac * 100, 1)
             doc["_contained"] = contained
-            annotated.append(doc)
+            matches.append(doc)
 
-        if mode == "contained":
-            # Subset: only docs fully inside the selection box
-            annotated = [d for d in annotated if d["_contained"]]
-        else:
-            # Intersects: full superset — contained docs first, then partial
-            # intersects, both groups sorted by overlap % descending
-            annotated.sort(
-                key=lambda d: (d["_contained"], d["_overlap_pct"]),
-                reverse=True
-            )
+        if mode != "contained":
+            # sorting by overlap % descending puts fully-contained docs first,
+            # since a contained doc's overlap is always the max value (100%).
+            matches.sort(key=lambda d: d["_overlap_pct"], reverse=True)
 
-        numresults = len(annotated)
-
-        # Manual pagination
+        numresults = len(matches)
         start = (page - 1) * DEFAULT_ROWS
-        results = annotated[start: start + DEFAULT_ROWS]
+        results = matches[start: start + DEFAULT_ROWS]
 
-    # Snip descriptions
+    # Snip descriptions for display
     for entry in results:
         if entry.get('dct_description'):
             entry['display_description'] = entry['dct_description'][0]
