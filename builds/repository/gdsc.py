@@ -85,7 +85,7 @@ def query_solr(path: str, parameters: dict, facet_field: str = None) -> tuple:
 
     :param str path: the base url for the SOLR API
     :param dict parameters: the query parameters
-    :param facet_field: optional field for facet counts; if unspecified, queries normally
+    :param str facet_field: optional field for facet counts; if unspecified, queries normally
     :return: the query results, the number of results
     :rtype: tuple
     """
