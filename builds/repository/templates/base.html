@@ -48,7 +48,10 @@
     <title>{% block title %}{% endblock %}</title>
     {% endblock %}
   </head>
+
   <body>
+
+    <!-- header -->
     <!-- <div class="bg-image text-center shadow-1-strong mb-5 text-white p-5" style="background-image: url('/static/gdsc_UM2022drone_header.jpg')"> -->
     <div class="container-xxl mx-auto my-0" style="background-image: url('/static/gdsc_UM2022drone_header.jpg')">
       <div class="row">
@@ -61,10 +64,16 @@
       </div>
     </div>
     <hr class="my-0">
+    <!-- end header -->
+
+    <!-- page content -->
     <div id="content" class="container-xxl mt-4">
-    {% block content %}
-    {% endblock %}
+    {%- block content %}
+    {%- endblock %}
     </div>
+    <!-- end page content -->
+
+    <!-- footer -->
     <div id="footer" class="container text-center mb-4 mt-2">
     {% block footer %}
       <hr>
@@ -72,5 +81,7 @@
       <a href="https://www.library.miami.edu/"><img src="/static/Library-wide.jpg" class="img-fluid w-50" style="max-width: 350px"></a>
     {% endblock %}
     </div>
+    <!-- end footer -->
+
   </body>
 </html>
