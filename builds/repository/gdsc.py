@@ -292,48 +292,29 @@ def index():
     )
 
 
-
-def parse_doc_bbox(doc: dict):
+def build_bbox_query(minX: float, minY: float, maxX: float, maxY: float, mode: str) -> str:
     """
-    Parse a document's dcat_bbox field - stored as WKT, e.g.
-    "POLYGON((-80.87 25.14, -80.11 25.14, -80.11 25.97, -80.87 25.97, -80.87 25.14))" -
-    into (minX, minY, maxX, maxY), i.e. (west, south, east, north).
-    Returns None if missing or no coordinate pairs are found.
+    Build a Solr spatial query clause for the ``dcat_bbox`` field (indexed as
+    a BBoxField, storing rectangles such as
+    "POLYGON((-80.87 25.14, -80.11 25.14, -80.11 25.97, -80.87 25.97, -80.87 25.14))").
+
+    Solr's ENVELOPE shape syntax is ``ENVELOPE(minX, maxX, maxY, minY)`` -
+    i.e. (west, east, north, south) - which is a different axis order than
+    the (minX, minY, maxX, maxY) bbox param this app accepts, so the values
+    get reordered here rather than in the caller.
+
+    :param mode: "contained" restricts to documents whose bbox lies fully
+        inside the query envelope (IsWithin); anything else (the default,
+        "intersects") matches any overlap and asks Solr to score each hit
+        by ``overlapRatio`` - the fraction of the *document's* bbox that
+        falls inside the query envelope - so results can be ranked, and
+        the ratio reused client-side as an overlap percentage.
+    :return: a Solr local-params query string suitable for use as ``q`` or ``fq``
     """
-    raw = doc.get("dcat_bbox")
-    if not raw:
-        return None
-    if isinstance(raw, list):
-        raw = raw[0]
-
-    pairs = re.findall(r"(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)", str(raw))
-    if not pairs:
-        return None
-
-    xs = [float(x) for x, _ in pairs]
-    ys = [float(y) for _, y in pairs]
-    return min(xs), min(ys), max(xs), max(ys)
-
-
-def overlap_fraction(qMinX, qMinY, qMaxX, qMaxY, dMinX, dMinY, dMaxX, dMaxY) -> float:
-    """Fraction of the *document* bbox that lies inside the query bbox."""
-    ix1, ix2 = max(dMinX, qMinX), min(dMaxX, qMaxX)
-    iy1, iy2 = max(dMinY, qMinY), min(dMaxY, qMaxY)
-    if ix2 <= ix1 or iy2 <= iy1:
-        return 0.0
-    inter = (ix2 - ix1) * (iy2 - iy1)
-    doc_area = max((dMaxX - dMinX) * (dMaxY - dMinY), 1e-12)
-    return min(inter / doc_area, 1.0)
-
-
-def is_contained(qMinX, qMinY, qMaxX, qMaxY, dMinX, dMinY, dMaxX, dMaxY) -> bool:
-    """True if the document bbox lies fully inside the query bbox."""
-    return dMinX >= qMinX and dMinY >= qMinY and dMaxX <= qMaxX and dMaxY <= qMaxY
-
-
-def is_contained(qMinX, qMinY, qMaxX, qMaxY, dMinX, dMinY, dMaxX, dMaxY) -> bool:
-    """True if the document bbox lies fully within the query bbox."""
-    return dMinX >= qMinX and dMinY >= qMinY and dMaxX <= qMaxX and dMaxY <= qMaxY
+    envelope = f"ENVELOPE({minX}, {maxX}, {maxY}, {minY})"
+    if mode == "contained":
+        return f"{{!field f=dcat_bbox}}IsWithin({envelope})"
+    return f"{{!field f=dcat_bbox score=overlapRatio}}Intersects({envelope})"
 
 
 # --- the route itself ---
@@ -357,39 +338,47 @@ def map_view():
             bbox = ""
 
     if bbox:
-        query_parameters = {
-            "q": "*:*",
-            "fq": "dcat_bbox:*",   # only docs that actually have a bbox value
-            "rows": 10000,
-        }
-        all_docs, _ = query_solr(f'{BASE_PATH}/dcat/select?wt=json&', query_parameters)
+        spatial_q = build_bbox_query(minX, minY, maxX, maxY, mode)
 
-        matches = []
-        for doc in all_docs:
-            parsed = parse_doc_bbox(doc)
-            if not parsed:
-                continue
-            frac = overlap_fraction(minX, minY, maxX, maxY, *parsed)
-            contained = is_contained(minX, minY, maxX, maxY, *parsed)
+        if mode == "contained":
+            # every hit is, by construction of the query, fully inside the
+            # envelope, so there's no ratio to score/sort by
+            query_parameters = {
+                "q": spatial_q,
+                "start": (page - 1) * DEFAULT_ROWS,
+                "rows": DEFAULT_ROWS,
+            }
+        else:
+            # score=overlapRatio (set in build_bbox_query) only feeds the
+            # relevance score when the spatial clause is the main "q", so
+            # it's used here rather than as an "fq" - that lets Solr both
+            # filter AND rank/paginate hits by overlap in one round trip.
+            # "fl": "*,score" is required for the ratio to come back on
+            # each doc so it can be surfaced as an overlap percentage.
+            query_parameters = {
+                "q": spatial_q,
+                "fl": "*,score",
+                "sort": "score desc",
+                "start": (page - 1) * DEFAULT_ROWS,
+                "rows": DEFAULT_ROWS,
+            }
 
+        # Solr now does the spatial filtering/ranking directly, so there's
+        # no need to pull every doc with a bbox and compute overlap in Python
+        results, numresults = query_solr(f'{BASE_PATH}/dcat/select?wt=json&', query_parameters)
+
+        for doc in results:
             if mode == "contained":
-                if not contained:
-                    continue
-            elif frac <= 0.0:
-                continue
-
-            doc["_overlap_pct"] = round(frac * 100, 1)
-            doc["_contained"] = contained
-            matches.append(doc)
-
-        if mode != "contained":
-            # sorting by overlap % descending puts fully-contained docs first,
-            # since a contained doc's overlap is always the max value (100%).
-            matches.sort(key=lambda d: d["_overlap_pct"], reverse=True)
-
-        numresults = len(matches)
-        start = (page - 1) * DEFAULT_ROWS
-        results = matches[start: start + DEFAULT_ROWS]
+                doc["_overlap_pct"] = 100.0
+                doc["_contained"] = True
+            else:
+                # score IS the overlapRatio here (0.0-1.0); pop it so the raw
+                # Solr relevance score doesn't leak into the template as a field
+                score = doc.pop("score", 0.0)
+                doc["_overlap_pct"] = round(score * 100, 1)
+                # overlapRatio is exactly 1.0 (modulo float rounding) precisely
+                # when the doc's bbox is fully inside the query envelope
+                doc["_contained"] = score >= 0.999
 
     # Snip descriptions for display
     for entry in results:
