@@ -123,6 +123,9 @@
             <div class="col-md-3"></div>
             <div class="col-md-9 d-flex flex-wrap gap-2">
               {%- for key in filter_specs %}
+                {%- if selected_filters[key] != [] %}
+                  {{ filter_specs[key]["frontend_name"] }}:
+                {%- endif %}
                 {%- for item in selected_filters[key] %}
                 <span class="badge rounded-pill bg-light text-dark d-flex align-items-center">
                   
