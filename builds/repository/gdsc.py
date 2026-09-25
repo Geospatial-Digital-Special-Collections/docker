@@ -292,95 +292,64 @@ def index():
     )
 
 
-def build_bbox_query(minX: float, minY: float, maxX: float, maxY: float, mode: str) -> str:
-    """
-    Build a Solr spatial query clause for the ``dcat_bbox`` field (indexed as
-    a BBoxField, storing rectangles such as
-    "POLYGON((-80.87 25.14, -80.11 25.14, -80.11 25.97, -80.87 25.97, -80.87 25.14))").
-
-    Solr's ENVELOPE shape syntax is ``ENVELOPE(minX, maxX, maxY, minY)`` -
-    i.e. (west, east, north, south) - which is a different axis order than
-    the (minX, minY, maxX, maxY) bbox param this app accepts, so the values
-    get reordered here rather than in the caller.
-
-    :param mode: "contained" restricts to documents whose bbox lies fully
-        inside the query envelope (IsWithin); anything else (the default,
-        "intersects") matches any overlap and asks Solr to score each hit
-        by ``overlapRatio`` - the fraction of the *document's* bbox that
-        falls inside the query envelope - so results can be ranked, and
-        the ratio reused client-side as an overlap percentage.
-    :return: a Solr local-params query string suitable for use as ``q`` or ``fq``
-    """
-    envelope = f"ENVELOPE({minX}, {maxX}, {maxY}, {minY})"
-    if mode == "contained":
-        return f"{{!field f=dcat_bbox}}IsWithin({envelope})"
-    return f"{{!field f=dcat_bbox score=overlapRatio}}Intersects({envelope})"
+def _segments(lo: float, hi: float) -> list:
+    """Split a longitude range into non-wrapping (lo, hi) segments.
+    lo > hi is treated as a range that crosses the antimeridian."""
+    return [(lo, 180.0), (-180.0, hi)] if lo > hi else [(lo, hi)]
 
 
-# --- the route itself ---
+def _overlap_len(lo1, hi1, lo2, hi2) -> float:
+    return max(0.0, min(hi1, hi2) - max(lo1, lo2))
+
 
 @app.route('/map', methods=["GET"])
 def map_view():
-    bbox = request.args.get("bbox", "")             # "minX,minY,maxX,maxY" (lon,lat,lon,lat)
+    bbox = request.args.get("bbox", "")            # "minX,minY,maxX,maxY" (lon,lat,lon,lat)
     page = int(request.args.get("page", 1))
     mode = request.args.get("mode", "intersects")   # "intersects" | "contained"
     lat  = request.args.get("lat", "38")
     lng  = request.args.get("lng", "-96")
     zoom = request.args.get("zoom", "4")
 
-    results = []
-    numresults = 0
+    results, numresults = [], 0
 
     if bbox:
         try:
-            minX, minY, maxX, maxY = [float(v) for v in bbox.split(",")]
+            minX, minY, maxX, maxY = (float(v) for v in bbox.split(","))
+            minY, maxY = sorted((minY, maxY))   # latitude has no wraparound
         except ValueError:
             bbox = ""
 
     if bbox:
-        spatial_q = build_bbox_query(minX, minY, maxX, maxY, mode)
+        contained = mode == "contained"
+        x_segs = _segments(minX, maxX)
 
-        if mode == "contained":
-            # every hit is, by construction of the query, fully inside the
-            # envelope, so there's no ratio to score/sort by
-            query_parameters = {
-                "q": spatial_q,
-                "start": (page - 1) * DEFAULT_ROWS,
-                "rows": DEFAULT_ROWS,
-            }
-        else:
-            # score=overlapRatio (set in build_bbox_query) only feeds the
-            # relevance score when the spatial clause is the main "q", so
-            # it's used here rather than as an "fq" - that lets Solr both
-            # filter AND rank/paginate hits by overlap in one round trip.
-            # "fl": "*,score" is required for the ratio to come back on
-            # each doc so it can be surfaced as an overlap percentage.
-            query_parameters = {
-                "q": spatial_q,
-                "fl": "*,score",
-                "sort": "score desc",
-                "start": (page - 1) * DEFAULT_ROWS,
-                "rows": DEFAULT_ROWS,
-            }
+        def x_clause(lo, hi):
+            return (f'(dcat_bbox__minX:[{lo} TO *] AND dcat_bbox__maxX:[* TO {hi}])' if contained
+                    else f'(dcat_bbox__minX:[* TO {hi}] AND dcat_bbox__maxX:[{lo} TO *])')
 
-        # Solr now does the spatial filtering/ranking directly, so there's
-        # no need to pull every doc with a bbox and compute overlap in Python
+        x_q = " OR ".join(x_clause(lo, hi) for lo, hi in x_segs)
+        y_q = (f'dcat_bbox__minY:[{minY} TO *] AND dcat_bbox__maxY:[* TO {maxY}]' if contained
+               else f'dcat_bbox__minY:[* TO {maxY}] AND dcat_bbox__maxY:[{minY} TO *]')
+
+        query_parameters = {
+            "q": f'({x_q}) AND {y_q}',
+            "start": (page - 1) * DEFAULT_ROWS,
+            "rows": DEFAULT_ROWS,
+        }
         results, numresults = query_solr(f'{BASE_PATH}/dcat/select?wt=json&', query_parameters)
 
         for doc in results:
-            if mode == "contained":
-                doc["_overlap_pct"] = 100.0
-                doc["_contained"] = True
-            else:
-                # score IS the overlapRatio here (0.0-1.0); pop it so the raw
-                # Solr relevance score doesn't leak into the template as a field
-                score = doc.pop("score", 0.0)
-                doc["_overlap_pct"] = round(score * 100, 1)
-                # overlapRatio is exactly 1.0 (modulo float rounding) precisely
-                # when the doc's bbox is fully inside the query envelope
-                doc["_contained"] = score >= 0.999
+            dMinX, dMaxX = doc['dcat_bbox__minX'], doc['dcat_bbox__maxX']
+            dMinY, dMaxY = doc['dcat_bbox__minY'], doc['dcat_bbox__maxY']
+            doc["_contained"] = contained
+            if not contained:
+                x_ov = sum(_overlap_len(qlo, qhi, dlo, dhi)
+                           for qlo, qhi in x_segs for dlo, dhi in _segments(dMinX, dMaxX))
+                y_ov = _overlap_len(minY, maxY, dMinY, dMaxY)
+                doc_area = max(dMaxX - dMinX, 1e-9) * max(dMaxY - dMinY, 1e-9)
+                doc["_overlap_pct"] = round((x_ov * y_ov / doc_area) * 100, 1)
 
-    # Snip descriptions for display
     for entry in results:
         if entry.get('dct_description'):
             entry['display_description'] = entry['dct_description'][0]
@@ -389,16 +358,9 @@ def map_view():
 
     return render_template(
         'map.html',
-        bbox=bbox,
-        mode=mode,
-        page=page,
-        numresults=numresults,
-        results=results,
-        collections=COLLECTIONS,
-        lat=lat,
-        lng=lng,
-        zoom=zoom,
-        root='./'
+        bbox=bbox, mode=mode, page=page, numresults=numresults,
+        results=results, collections=COLLECTIONS,
+        lat=lat, lng=lng, zoom=zoom, root='./'
     )
 
 ##
