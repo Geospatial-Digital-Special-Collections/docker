@@ -16,7 +16,7 @@ log.disabled = True
  # Globals
  ##
 
-BASE_PATH = 'http://gdsc-solr.gdsc:8983/solr'
+BASE_PATH = 'http://gdsc-solr.gdsc:8983/solr/dcat/select?wt=json&'
 SNIP_LENGTH = 180
 QUERY_FIELDS = ['gdsc_collections', 'dct_title', 'dcat_keyword', 'dct_description', 'gdsc_attributes']
 DEFAULT_ROWS = 10
@@ -60,6 +60,26 @@ FILTER_SPECS = {
  # Local functions
  ##
 
+def get_layer_meta(layer_id: str) -> dict:
+    """
+    py:function:: get_layer_meta(layer_id)
+
+    get SOLR dcat data for one layer
+
+    :param str layer_id: the identifier for the layer
+    :return: the dcat metadata for the layer
+    :rtype: dict
+    """
+
+    query_parameters = {"q": "gdsc_tablename:" + layer_id}
+    query_string  = urlencode(query_parameters)
+    connection = urlopen("{}{}".format(BASE_PATH, query_string))
+    response = simplejson.load(connection)
+    document = response['response']['docs'][0]
+
+    return document
+
+
 def escape_solr_query(query: str) -> str:
     """
     py:function:: escape_solr_query(query)
@@ -90,7 +110,7 @@ def query_solr(path: str, parameters: dict, facet_field: str = None) -> tuple:
     :rtype: tuple
     """
 
-    # Build the query string
+    # Build the query string and url
     query_string = urlencode(parameters)
     url = f"{path}{query_string}"
 
@@ -312,11 +332,10 @@ def fetch_facets(field: str, query: str, fq: str) -> tuple:
     }
 
     return query_solr(
-        f'{BASE_PATH}/dcat/select?wt=json&',
+        f'{BASE_PATH}',
         params,
         field
     )
-
 
 
 ##
@@ -376,7 +395,7 @@ def index() -> str:
     }
 
     results, numresults = query_solr(
-        f'{BASE_PATH}/dcat/select?wt=json&',
+        f'{BASE_PATH}',
         query_parameters
     )
 
@@ -436,23 +455,23 @@ def detail(name_id: str) -> str:
 
     args = request.args.to_dict()
 
-    query_parameters = {"q": f"gdsc_tablename:{name_id}"}
-    query_string = urlencode(query_parameters)
-    connection = urlopen(f'{BASE_PATH}/dcat/select?wt=json&{query_string}')
-    response = simplejson.load(connection)
-    document = response['response']['docs'][0]
+    # query solr
+    document = get_layer_meta(name_id)
 
     if 'gdsc_attributes' in document:
         document['gdsc_columns'] = [attr.split(';')[0] for attr in document['gdsc_attributes']]
 
+    # highlight query if exists
     query_arg = args.get('query')
     if query_arg:
         highlight_query(document, query_arg)
     args['query'] = query_arg or None
 
+    # structure results for display
+    if 'gdsc_attributes' in document:
+        document['gdsc_columns'] = [attr.split(';')[0] for attr in document['gdsc_attributes']]
     if 'gdsc_attributes' in document:
         document['gdsc_attributes'] = [attr.split(';') for attr in document['gdsc_attributes']]
-
     if 'gdsc_derived' in document:
         document['gdsc_derived'] = [attr.split(';')[0] for attr in document['gdsc_derived']]
 
@@ -503,7 +522,7 @@ def cite(collection: str = None, table_id: str = None, fmt: str = None) -> Respo
     else:
         return {"error": "Please provide either 'collection' or 'table_id'."}, 400
 
-    documents, numresults = query_solr(f"{BASE_PATH}/dcat/select?wt=json&", query_parameters)
+    documents, numresults = query_solr(f"{BASE_PATH}", query_parameters)
     if not documents:
         return {"error": "No documents found."}, 400
 
@@ -555,7 +574,7 @@ def download(download_path: str) -> Response:
  ##
 
 COLLECTIONS, COLLECTIONS_COUNT = query_solr(
-    f'{BASE_PATH}/collections/select?wt=json&',
+    f'http://gdsc-solr.gdsc:8983/solr/collections/select?wt=json&',
     {
       "q.op": "OR",
       "q": "Status:published"
