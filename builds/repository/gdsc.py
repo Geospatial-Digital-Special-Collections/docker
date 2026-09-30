@@ -302,10 +302,21 @@ def _overlap_len(lo1, hi1, lo2, hi2) -> float:
     return max(0.0, min(hi1, hi2) - max(lo1, lo2))
 
 
+def _fetch_all(path: str, parameters: dict, batch: int = 1000) -> tuple:
+    """Page through Solr until every matching doc is retrieved."""
+    docs, total = query_solr(path, {**parameters, "start": 0, "rows": batch})
+    while docs and len(docs) < total:
+        more, _ = query_solr(path, {**parameters, "start": len(docs), "rows": batch})
+        if not more:
+            break
+        docs.extend(more)
+    return docs, total
+
+
 @app.route('/map', methods=["GET"])
 def map_view():
     bbox = request.args.get("bbox", "")            # "minX,minY,maxX,maxY" (lon,lat,lon,lat)
-    page = int(request.args.get("page", 1))
+    page = max(1, int(request.args.get("page", 1)))
     mode = request.args.get("mode", "intersects")   # "intersects" | "contained"
     lat  = request.args.get("lat", "38")
     lng  = request.args.get("lng", "-96")
@@ -332,23 +343,46 @@ def map_view():
         y_q = (f'dcat_bbox__minY:[{minY} TO *] AND dcat_bbox__maxY:[* TO {maxY}]' if contained
                else f'dcat_bbox__minY:[* TO {maxY}] AND dcat_bbox__maxY:[{minY} TO *]')
 
-        query_parameters = {
-            "q": f'({x_q}) AND {y_q}',
-            "start": (page - 1) * DEFAULT_ROWS,
-            "rows": DEFAULT_ROWS,
-        }
-        results, numresults = query_solr(f'{BASE_PATH}/dcat/select?wt=json&', query_parameters)
+        base_params = {"q": f'({x_q}) AND {y_q}'}
+        solr_url = f'{BASE_PATH}/dcat/select?wt=json&'
 
-        for doc in results:
-            dMinX, dMaxX = doc['dcat_bbox__minX'], doc['dcat_bbox__maxX']
-            dMinY, dMaxY = doc['dcat_bbox__minY'], doc['dcat_bbox__maxY']
-            doc["_contained"] = contained
-            if not contained:
+        if contained:
+            # no overlap ranking needed, so let Solr do the paging
+            results, numresults = query_solr(
+                solr_url,
+                {**base_params, "start": (page - 1) * DEFAULT_ROWS, "rows": DEFAULT_ROWS}
+            )
+            for doc in results:
+                doc["_contained"] = True
+        else:
+            # overlap is computed in Python, so sort across ALL matches, then page
+            docs, numresults = _fetch_all(solr_url, base_params)
+
+            for doc in docs:
+                dMinX, dMaxX = doc['dcat_bbox__minX'], doc['dcat_bbox__maxX']
+                dMinY, dMaxY = doc['dcat_bbox__minY'], doc['dcat_bbox__maxY']
+                d_segs = _segments(dMinX, dMaxX)
+
                 x_ov = sum(_overlap_len(qlo, qhi, dlo, dhi)
-                           for qlo, qhi in x_segs for dlo, dhi in _segments(dMinX, dMaxX))
+                           for qlo, qhi in x_segs for dlo, dhi in d_segs)
                 y_ov = _overlap_len(minY, maxY, dMinY, dMaxY)
-                doc_area = max(dMaxX - dMinX, 1e-9) * max(dMaxY - dMinY, 1e-9)
+
+                # doc width must sum its segments so antimeridian docs don't get ~0 area
+                doc_w = sum(hi - lo for lo, hi in d_segs)
+                doc_area = max(doc_w, 1e-9) * max(dMaxY - dMinY, 1e-9)
+
+                doc["_contained"] = False
+                doc["_overlap_area"] = x_ov * y_ov
                 doc["_overlap_pct"] = round((x_ov * y_ov / doc_area) * 100, 1)
+
+            # descending by the displayed percentage; absolute area breaks ties
+            docs.sort(key=lambda d: (d["_overlap_pct"], d["_overlap_area"]), reverse=True)
+
+            # clamp the page and slice
+            last_page = max(1, -(-len(docs) // DEFAULT_ROWS))
+            page = min(page, last_page)
+            start = (page - 1) * DEFAULT_ROWS
+            results = docs[start:start + DEFAULT_ROWS]
 
     for entry in results:
         if entry.get('dct_description'):
