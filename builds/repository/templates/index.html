@@ -85,15 +85,14 @@
             <div class="col-md-6 order-md-2 container">
               <form method="get" id="filterForm" name="filterForm">
                 <div class="row">
-                  <div class="col-md-8 pb-2 pb-md-0">
+                  <div class="col-12">
                     <input type="text"
+                           id="searchInput"
                            class="form-control"
                            name="query"
                            placeholder="Enter search term(s)"
+                           autocomplete="off"
                            value="{{ query }}">
-                  </div>
-                  <div class="col-md-4 pt-2 pt-md-0">
-                    <button type="submit" class="btn btn-primary mb-2">Search</button>
                   </div>
                   <!-- preserve filter state -->
                   <input type="hidden" name="collection" value="{{ collection }}">
@@ -363,4 +362,40 @@
         </div>
       </div>
       <!-- end search form and results -->
+      <script>
+        (function () {
+          const input = document.getElementById('searchInput');
+          if (!input) return;
+
+          const form = input.form;          // the search form that contains the input
+          const DEBOUNCE_MS = 500;
+          let timer = null;
+          let lastSubmitted = input.value;  // value the current page was rendered with
+
+          // Only fires on real user typing, never on page load
+          input.addEventListener('input', function () {
+            clearTimeout(timer);
+            timer = setTimeout(function () {
+              // skip if nothing actually changed (e.g. typed a char then deleted it)
+              if (input.value === lastSubmitted) return;
+              lastSubmitted = input.value;
+              form.submit();
+            }, DEBOUNCE_MS);
+          });
+
+          // Enter key: submit immediately and cancel any pending timer
+          form.addEventListener('submit', function () {
+            clearTimeout(timer);
+            lastSubmitted = input.value;
+          });
+
+          // After a search reloads the page, put the cursor back at the end of the
+          // text so the user can keep typing. Skipped on the very first visit.
+          if (new URLSearchParams(window.location.search).has('query')) {
+            input.focus();
+            const end = input.value.length;
+            input.setSelectionRange(end, end);
+          }
+        })();
+      </script>
 {% endblock %}
