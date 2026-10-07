@@ -35,7 +35,52 @@
           flex-wrap: wrap;
           gap: 0.4rem;
       }
+
+      /* ---- grid view ----
+         The view-grid class lives on <html> so it can be applied before first paint. */
+      .view-grid #resultsList {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+          gap: 0.75rem;
+      }
+      .view-grid #resultsList .dataset-card {
+          margin: 0 !important;
+          max-width: none;
+          width: 100%;
+          align-content: flex-start;
+      }
+      /* strip everything except icon + title link + activity circle + description */
+      .view-grid #resultsList .card-collections,
+      .view-grid #resultsList .card-source,
+      .view-grid #resultsList .card-attrs,
+      .view-grid #resultsList .card-side,
+      .view-grid #resultsList .card-keywords {
+          display: none !important;
+      }
+      .view-grid #resultsList .card-title-col,
+      .view-grid #resultsList .card-main {
+          flex: 0 0 100%;
+          max-width: 100%;
+          width: 100%;
+      }
+      .view-grid #resultsList .card-main {
+          margin-left: 0 !important;
+          order: 0;
+      }
+      .view-grid #resultsList .card-title-col h5 {
+          word-break: break-word;
+      }
     </style>
+    <script>
+      // Restore the saved results view (list/grid) immediately, avoiding a flash on reload
+      (function () {
+        try {
+          if (localStorage.getItem('gdscResultsView') === 'grid') {
+            document.documentElement.classList.add('view-grid');
+          }
+        } catch (e) { /* storage unavailable: default to list view */ }
+      })();
+    </script>
 {%- endblock %}
 
 {%- block content %}
@@ -177,18 +222,37 @@
             <div class="col">
 
               {%- if results and results|length > 0 %}
-              <div class="col-md-3 order-md-1"><h5 class="ml-2">Results (n={{ numresults }}):</h5></div>
 
+              <!-- results heading and view toggle -->
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <h5 class="ml-2 mb-0">Results (n={{ numresults }}):</h5>
+                <div class="btn-group btn-group-sm" role="group" aria-label="Results view">
+                  <button type="button" class="btn btn-outline-secondary" data-view="list" aria-pressed="true" title="List view">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true">
+                      <path fill-rule="evenodd" d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5"/>
+                    </svg>
+                    <span class="visually-hidden">List view</span>
+                  </button>
+                  <button type="button" class="btn btn-outline-secondary" data-view="grid" aria-pressed="false" title="Grid view">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true">
+                      <path d="M1 2.5A1.5 1.5 0 0 1 2.5 1h3A1.5 1.5 0 0 1 7 2.5v3A1.5 1.5 0 0 1 5.5 7h-3A1.5 1.5 0 0 1 1 5.5zm8 0A1.5 1.5 0 0 1 10.5 1h3A1.5 1.5 0 0 1 15 2.5v3A1.5 1.5 0 0 1 13.5 7h-3A1.5 1.5 0 0 1 9 5.5zm-8 8A1.5 1.5 0 0 1 2.5 9h3A1.5 1.5 0 0 1 7 10.5v3A1.5 1.5 0 0 1 5.5 15h-3A1.5 1.5 0 0 1 1 13.5zm8 0A1.5 1.5 0 0 1 10.5 9h3a1.5 1.5 0 0 1 1.5 1.5v3a1.5 1.5 0 0 1-1.5 1.5h-3A1.5 1.5 0 0 1 9 13.5z"/>
+                    </svg>
+                    <span class="visually-hidden">Grid view</span>
+                  </button>
+                </div>
+              </div>
+
+              <div id="resultsList">
               {%- for document in results %}
               {%- autoescape off %}
 
               <!-- dataset block -->
-              <div class="row mb-2 border rounded p-2 container-xxl">
+              <div class="row mb-2 border rounded p-2 container-xxl dataset-card">
                 <div class="col-12">
 
                   <!-- title and collections -->
                   <div class="row">
-                    <div class="col-md-7 align-top">
+                    <div class="col-md-7 align-top card-title-col">
                       <h5 class="float-left">
                         {%- if document['adms_representationTechnique'] %}
                           {%- if document['adms_representationTechnique'] == 'raster' %}
@@ -205,7 +269,7 @@
                         <div class="float-left circle {{ 'green-fill' if document['gdsc_up'][0] == 'true' or document['gdsc_tileUrl'] else 'red-fill' }}"></div>
                       </h5>
                     </div>
-                    <div class="col-md-5 align-top text-end mb-dm-2 mb-0">
+                    <div class="col-md-5 align-top text-end mb-dm-2 mb-0 card-collections">
                       {%- if document['gdsc_collections'] and document['gdsc_collections']|length > 0 %}
                         <b>Collections:</b> {%- for collection in document['gdsc_collections'] %}{{ collection }}{{ " | " if not loop.last else "" }}{%- endfor %}
                       {%- endif %}
@@ -214,8 +278,8 @@
 
                   <!-- source -->
                   <div class="row">
-                    <div class="col-md-9 container ml-2 order-last">
-                      <div class="row ml-2 pl-2">
+                    <div class="col-md-9 container ml-2 order-last card-main">
+                      <div class="row ml-2 pl-2 card-source">
                         <div class="col">
                           {%- if document['dct_creator'] -%}
                             {%- for creator in document['dct_creator'] -%}
@@ -230,19 +294,19 @@
                         </div>
                       </div>
                       {%- if document['dct_description'] and not "TBD" in document['dct_description'] %}
-                      <div class="row mt-2">
+                      <div class="row mt-2 card-description">
                         <p class="text-break text-wrap my-0">{{ document['display_description'] }}</p>
                       </div>
                       {%- endif %}
                       {%- if document['found_in'] %}
                       {%- if document['found_in']['gdsc_attributes'] and document['found_in']['gdsc_attributes']|length > 0 %}
-                      <div class="row mt-2"><div class="col"><b>Attributes with <span class="highlight-term">{{ query }}</span>:</b>
+                      <div class="row mt-2 card-attrs"><div class="col"><b>Attributes with <span class="highlight-term">{{ query }}</span>:</b>
                         {%- for attr in document['found_in']['gdsc_attributes'] %} {{ attr[0] }}{{ "," if not loop.last else "" }}{%- endfor %}
                       </div></div>
                       {%- endif %}
                       {%- endif %}
                     </div>
-                    <div class="col-md-3 align-top mt-2i order-first pl-2 text-md-start text-end mb-3 mb-md-0">
+                    <div class="col-md-3 align-top mt-2i order-first pl-2 text-md-start text-end mb-3 mb-md-0 card-side">
                       <div class="dropdown mt-0">
                         <button class="btn float-right dropdown-toggle" data-bs-toggle="dropdown" type="button" aria-expanded="true">
                           Cite
@@ -261,7 +325,7 @@
                   </div>
 
                   <!-- keywords -->
-                  <div class="row ml-2 mt-2">
+                  <div class="row ml-2 mt-2 card-keywords">
                     {%- if document['dcat_keyword'] and document['dcat_keyword']|length > 0 %}
                     <p><b>key words:</b> {{ ", ".join(document['dcat_keyword']) }}</p>
                     {%- endif %}
@@ -272,9 +336,11 @@
               <!-- end dataset block -->
               {%- endautoescape %}
               {%- endfor %}
+              </div>
+              <!-- end resultsList -->
 
               <!-- page navigation -->
-              <div class="row mb-2 m-0">
+              <div class="row mb-2 m-0 mt-3">
                 <nav aria-label="page navigation">
                   <ul class="pagination">
 
@@ -362,6 +428,8 @@
         </div>
       </div>
       <!-- end search form and results -->
+
+      <!-- search-as-you-type -->
       <script>
         (function () {
           const input = document.getElementById('searchInput');
@@ -369,12 +437,19 @@
 
           const form = input.form;          // the search form that contains the input
           const DEBOUNCE_MS = 500;
+          const MIN_CHARS = 3;              // typing/pasting must exceed this many characters to auto-search
           let timer = null;
           let lastSubmitted = input.value;  // value the current page was rendered with
 
-          // Only fires on real user typing, never on page load
-          input.addEventListener('input', function () {
+          // Only fires on real user edits, never on page load
+          input.addEventListener('input', function (e) {
             clearTimeout(timer);
+
+            // Deletions always refresh (so shortening or clearing a query updates results);
+            // anything else must be longer than MIN_CHARS.
+            const isDeletion = typeof e.inputType === 'string' && e.inputType.indexOf('delete') === 0;
+            if (!isDeletion && input.value.trim().length <= MIN_CHARS) return;
+
             timer = setTimeout(function () {
               // skip if nothing actually changed (e.g. typed a char then deleted it)
               if (input.value === lastSubmitted) return;
@@ -396,6 +471,35 @@
             const end = input.value.length;
             input.setSelectionRange(end, end);
           }
+        })();
+      </script>
+
+      <!-- list / grid view toggle -->
+      <script>
+        (function () {
+          const KEY = 'gdscResultsView';
+          const root = document.documentElement;
+          const buttons = document.querySelectorAll('[data-view]');
+          if (!buttons.length) return;
+
+          function apply(view) {
+            root.classList.toggle('view-grid', view === 'grid');
+            buttons.forEach(function (b) {
+              const on = b.dataset.view === view;
+              b.classList.toggle('active', on);
+              b.setAttribute('aria-pressed', on ? 'true' : 'false');
+            });
+          }
+
+          // sync button state with whatever the <head> script restored
+          apply(root.classList.contains('view-grid') ? 'grid' : 'list');
+
+          buttons.forEach(function (b) {
+            b.addEventListener('click', function () {
+              apply(b.dataset.view);
+              try { localStorage.setItem(KEY, b.dataset.view); } catch (e) { /* ignore */ }
+            });
+          });
         })();
       </script>
 {% endblock %}
