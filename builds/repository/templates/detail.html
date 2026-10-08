@@ -285,10 +285,11 @@
               <!-- end analytic functions -->
               {%- endif -%}
 
-              {%- if document['prov_action'] %}
+              {%- if document['prov_action'] or document['dcat_landingPage'] or document['dcat_downloadURL'] %}
 
-              <!-- provenance -->
+              <!-- provenance and external links -->
               <span class="mt-4 d-block text-wrap text-break">
+                {%- if document['prov_action'] %}
                 <button type="button" class="btn btn-link btn-anchor" data-bs-toggle="modal" data-bs-target="#modal__{{ document['gdsc_tablename'][0] }}" style="outline: none !important; padding: 0; border: 0; vertical-align: baseline;">
                   <b>ETL documentation</b>
                 </button>
@@ -305,8 +306,21 @@
                     </div>
                   </div>
                 </div>
+                {%- endif %}
+                {%- if document['prov_action'] and document['dcat_landingPage'] %} | {% endif %}
+                {%- if document['dcat_landingPage'] %}
+                <a href="{{ document['dcat_landingPage'][0] }}" target="_blank" class="btn btn-link btn-anchor" style="outline: none !important; padding: 0; border: 0; vertical-align: baseline;">
+                  <b>Landing Page</b>
+                </a>
+                {%- endif %}
+                {%- if (document['prov_action'] or document['dcat_landingPage']) and document['dcat_downloadURL'] %} | {% endif %}
+                {%- if document['dcat_downloadURL'] %}
+                <a href="{{ document['dcat_downloadURL'][0] }}" target="_blank" class="btn btn-link btn-anchor" style="outline: none !important; padding: 0; border: 0; vertical-align: baseline;">
+                  <b>Download</b>
+                </a>
+                {%- endif %}
               </span>
-              <!-- end provenance -->
+              <!-- end provenance and external links -->
               {%- endif -%}
 
               {%- else -%}
