@@ -30,7 +30,7 @@ USER gdsc
 
 # set up the python environment
 RUN pip install --upgrade pip
-RUN pip install --upgrade -r requirements.txt
+RUN pip install -r requirements.txt
 
 ENTRYPOINT ["./entrypoint.sh"]
 # CMD ["nohup", "python", "./gdsc.py", "&"]
