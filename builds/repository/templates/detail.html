@@ -132,6 +132,14 @@
               {%- if document['dcat_keyword'] and document['dcat_keyword']|length > 0 %}
               <span class="mt-1 d-block"><b>Key words:</b> {{ ", ".join(document['dcat_keyword']) }}</span>
               {%- endif %}
+              {%- if "Restricted" not in document['dct_rights'][0] %}
+              {%- if document['dcat_landingPage'] %}
+              <span class="mt-1 d-block"><a href="{{ document['dcat_landingPage'][0] }}" target="_blank" class="text-break">{{ document['dcat_landingPage'][0][:80] }}</a></span>
+              {%- endif %}
+              {%- if document['dcat_downloadURL'] %}
+              <span class="d-block"><a href="{{ document['dcat_downloadURL'][0] }}" target="_blank" class="text-break">{{ document['dcat_downloadURL'][0][:80] }}</a></span>
+              {%- endif %}
+              {%- endif %}
 
               {% if document['gdsc_attributes'] and document['gdsc_attributes']|length > 0 -%}
               <!-- attributes -->
@@ -285,11 +293,10 @@
               <!-- end analytic functions -->
               {%- endif -%}
 
-              {%- if document['prov_action'] or document['dcat_landingPage'] or document['dcat_downloadURL'] %}
+              {%- if document['prov_action'] %}
 
-              <!-- provenance and external links -->
+              <!-- provenance -->
               <span class="mt-4 d-block text-wrap text-break">
-                {%- if document['prov_action'] %}
                 <button type="button" class="btn btn-link btn-anchor" data-bs-toggle="modal" data-bs-target="#modal__{{ document['gdsc_tablename'][0] }}" style="outline: none !important; padding: 0; border: 0; vertical-align: baseline;">
                   <b>ETL documentation</b>
                 </button>
@@ -306,21 +313,8 @@
                     </div>
                   </div>
                 </div>
-                {%- endif %}
-                {%- if document['prov_action'] and document['dcat_landingPage'] %} | {% endif %}
-                {%- if document['dcat_landingPage'] %}
-                <a href="{{ document['dcat_landingPage'][0] }}" target="_blank" class="btn btn-link btn-anchor" style="outline: none !important; padding: 0; border: 0; vertical-align: baseline;">
-                  <b>Landing Page</b>
-                </a>
-                {%- endif %}
-                {%- if (document['prov_action'] or document['dcat_landingPage']) and document['dcat_downloadURL'] %} | {% endif %}
-                {%- if document['dcat_downloadURL'] %}
-                <a href="{{ document['dcat_downloadURL'][0] }}" target="_blank" class="btn btn-link btn-anchor" style="outline: none !important; padding: 0; border: 0; vertical-align: baseline;">
-                  <b>Download</b>
-                </a>
-                {%- endif %}
               </span>
-              <!-- end provenance and external links -->
+              <!-- end provenance -->
               {%- endif -%}
 
               {%- else -%}
