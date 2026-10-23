@@ -2,6 +2,7 @@
 {% block title %}{{ name_id }}{% endblock %}
 {% block head %}
     {{ super() -}}
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
       .grid-color {
         background:#ddd
@@ -9,339 +10,335 @@
       .grid-color:nth-child(even) {
         background:#fff;
       }
+      #locator-map {
+        height: 320px;
+        width: 100%;
+        border-radius: .25rem;
+      }
+      .detail-panel {
+        background: #fff;
+      }
     </style>
-    {%- if document['dct_description'] %}<meta name="description" content="{{ document['dct_description'][0] | replace('\n',' ') }}" />{%- endif %}
-    {%- if document['dct_identifier'] %}<meta name="DC.identifier" content="{{ document['dct_identifier'][0] }}" />{%- endif %}
+    {% if document['dct_description'] %}<meta name="description" content="{{ document['dct_description'][0] | replace('\n',' ') }}" />{% endif %}
+    {% if document['dct_identifier'] %}<meta name="DC.identifier" content="{{ document['dct_identifier'][0] }}" />{% endif %}
     <meta name="DC.type" content="Dataset" />
-    {%- if document['dct_title'] %}<meta name="DC.title" content="{{ document['dct_title'][0] }}" />{%- endif %}
-    {%- if document['dct_issued'] %}<meta name="DC.date" content="{{ document['dct_issued'][0] }}" />{%- endif %}
-    {%- if document['dct_publisher'] %}<meta name="DC.publisher" content="{{ document['dct_publisher'][0] }}" />{%- endif %}
-    {%- if document['dct_description'] %}<meta name="DC.description" content="{{ document['dct_description'][0] | replace('\n',' ') }}" />{%- endif %}
-    {%- if document['dct_creator'] %}{%- for creator in document['dct_creator'] -%}
+    {% if document['dct_title'] %}<meta name="DC.title" content="{{ document['dct_title'][0] }}" />{% endif %}
+    {% if document['dct_issued'] %}<meta name="DC.date" content="{{ document['dct_issued'][0] }}" />{% endif %}
+    {% if document['dct_publisher'] %}<meta name="DC.publisher" content="{{ document['dct_publisher'][0] }}" />{% endif %}
+    {% if document['dct_description'] %}<meta name="DC.description" content="{{ document['dct_description'][0] | replace('\n',' ') }}" />{% endif %}
+    {% if document['dct_creator'] %}{% for creator in document['dct_creator'] -%}
     {%- set creator = creator.split(';') -%}
     <meta name="DC.creator" content="{{ creator[0] }}" />
-    {%- endfor %}{%- endif %}
-    {%- if document['dcat_keyword'] %}{%- for keyword in document['dcat_keyword'] -%}
+    {%- endfor %}{% endif %}
+    {% if document['dcat_keyword'] %}{% for keyword in document['dcat_keyword'] -%}
     <meta name="DC.subject" content="{{ keyword[0] }}" />
-    {%- endfor %}{%- endif %}
-    {%- if document['dct_title'] %}<meta property="og:title" content="{{ document['dct_title'][0] }}" />{%- endif %}
+    {%- endfor %}{% endif %}
+    {% if document['dct_title'] %}<meta property="og:title" content="{{ document['dct_title'][0] }}" />{% endif %}
     <meta property="og:type" content="article" />
-    <meta property="og:url" content="https://gdsc.idsc.miami.edu/detail/{{ name_id }}" />
+    <meta property="og:url" content="https://gdsc.idsc.miami.edu/detail/{{ name_id  }}" />
     <meta property="og:site_name" content="University of Miami Geospatial Digitial Special Collections" />
-    {%- if document['dct_description'] %}<meta property="og:description" content="{{ document['dct_description'][0] | replace('\n',' ') }}" />{%- endif %}
-    {%- if document['dct_creator'] %}{%- for creator in document['dct_creator'] -%}
-    {%- set creator = creator.split(';') -%}
+    {% if document['dct_description'] %}<meta property="og:description" content="{{ document['dct_description'][0] | replace('\n',' ') }}" />{% endif -%}
+    {% if document['dct_creator'] %}{% for creator in document['dct_creator'] -%}
+    {% set creator = creator.split(';') %}
     <meta property="article:author" content="{{ creator[0] }}" />
-    {%- endfor %}{%- endif %}
-    {%- if document['dct_issued'] %}<meta property="article:published_time" content="{{ document['dct_issued'][0] }}" />{%- endif %}
+    {%- endfor %}{% endif %}
+    {% if document['dct_issued'] %}<meta property="article:published_time" content="{{ document['dct_issued'][0] }}" />{% endif %}
     <script type="application/ld+json">{{ json_ld | tojson }}</script>
 {%- endblock %}
 
-{%- block content %}
+{% block content %}
+{% set has_bbox = document['dcat_bbox__minX'] is defined and document['dcat_bbox__maxX'] is defined
+                  and document['dcat_bbox__minY'] is defined and document['dcat_bbox__maxY'] is defined %}
       <div class="container mb-6">
 
-        <!-- breadcrumbs -->
-        <div class="mb-4">
-          <form method="get" action="/" id="filterForm" name="filterForm">
+        <!-- breadcrumb / referrer -->
+        <div class="mb-3">
+          <form method="post" action="/" id="filterForm" name="filterForm">
+            <input type="hidden" id="active" name="active" value="{{ referrer.active }}">
             <input type="hidden" id="collection" name="collection" value="{{ referrer.collection }}">
-            <input type="hidden" id="query" name="query" value="{{ referrer.query if (referrer.query != '' and referrer.query != None) else '' }}">
+            <input type="hidden" id="searchTerm" name="searchTerm" value="{{ referrer.query if (referrer.query != "" and referrer.query != None) else "" }}">
           </form>
           <a href="/">gdsc</a>
-          {%- if referrer.query != "" and referrer.query != None and referrer.query != "None" %}
-          &nbsp;>&nbsp;<a href="#" onclick="javascript:document.getElementById('filterForm').submit();">search [{{ referrer.query }}]
-          {%- endif %}</a>
+          {% if referrer.query != "" and referrer.query != None and referrer.query != "None" %}
+          &nbsp;>&nbsp;<a href="#" onclick="javascript:document.getElementById('filterForm').submit();">search [{{ referrer.query }}]</a>
+          {% endif %}
         </div>
-        <!-- end breadcrumbs -->
 
-        {% autoescape off -%}
-        <!-- dataset content -->
-        <div class="row border rounded p-2">
+        {% autoescape off %}
 
-          <!-- title, collections, and citations -->
-          <div class="row">
-            <div class="col-md-6 align-top mt-1">
-              <h4 class="float-left">
-                {%- if document['dct_title'] %}{{ document['dct_title'][0] }}{% endif %}
-                <div class="float-left circle {{ 'green-fill' if document['gdsc_up'][0] == 'true' or document['gdsc_tileUrl'] else 'red-fill' }}"></div>
-              </h4>
+        <!-- ROW 1: TITLE -->
+        <div class="border rounded p-3 mb-3 detail-panel">
+          <div class="d-flex align-items-center flex-wrap">
+            <span class="circle {{ 'green-fill' if document['gdsc_up'][0] or document['gdsc_tileUrl'] else 'red-fill' }} me-2"></span>
+            <h4 class="mb-0">{% if document['dct_title'] %}{{ document['dct_title'][0] }}{% endif %}</h4>
+          </div>
+          {% if document['gdsc_collections'] and document['gdsc_collections']|length > 0 %}
+          <div class="mt-1 small text-muted">
+            <b>Collections:</b>
+            {% for collection in document['gdsc_collections'] %}{{ collection }}{{ " | " if not loop.last else "" }}{% endfor %}
+          </div>
+          {% endif %}
+        </div>
+
+        <!-- ROW 2: CITATION -->
+        <div class="border rounded p-3 mb-3 detail-panel">
+          <div class="d-flex justify-content-between align-items-start">
+            <div class="text-break pe-3">
+              {% if document['dct_creator'] %}
+                {% for creator in document['dct_creator'] %}
+                  {% set creator = creator.split(';') %}
+                  {{ creator[0] }}{% if loop.index < document['dct_creator']|length %}, {% endif %}
+                {% endfor %}
+              {% endif %}
+              ({% if document['dct_issued'] %}{{ document['dct_issued'][0][:4] }}{% endif %}).
+              {% if document['dct_title'] %}{{ document['dct_title'][0] }}{% endif %} [gis dataset].
+              {% if document['dct_publisher'] %}{{ document['dct_publisher'][0] }}{% endif %}.
+              {% if document['dct_identifier'] %}<a href="{{ document['dct_identifier'][0] }}" target="_blank" class="text-wrap text-break">{{ document['dct_identifier'][0] }}</a>.{% endif %}
+              {% if document['dct_modified'] %} Last updated: {{ document['dct_modified'][0][:10] }}.{% endif %}
             </div>
-            <div class="col-md-4 align-top mt-2">
-              {%- if document['gdsc_collections'] and document['gdsc_collections']|length > 0 %}
-              <span class="d-block float-right align-top text-right"><b>Collections:</b>
-                {%- for collection in document['gdsc_collections'] %}{{ collection }}{{ " | " if not loop.last else "" }}{% endfor %}
-              </span>
-              {%- endif %}
-            </div>
-            <div class="col-md-1 dropdown mt-0 text-end">
-              <button class="btn float-right dropdown-toggle" data-bs-toggle="dropdown" type="button" aria-expanded="true">
+            <div class="dropdown flex-shrink-0">
+              <button class="btn btn-outline-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown" type="button" aria-expanded="false">
                 Cite
               </button>
-              <ul class="dropdown-menu pt-0 pb-0">
-                <li class="dropdown-item p-0">
-                  <a href="/cite/{{ document['gdsc_tablename'][0] }}/bibtex" class="btn">BibTeX</a>
-                </li>
-                <li class="dropdown-item p-0">
-                  <a href="/cite/{{ document['gdsc_tablename'][0] }}/ris" class="btn">RIS</a>
-                </li>
-              </ul>
-            </div>
-            <div class="col-md-1 dropdown mt-0 text-end">
-              <button class="btn float-right dropdown-toggle" data-bs-toggle="dropdown" type="button" aria-expanded="true">
-                Metadata
-              </button>
-              <ul class="dropdown-menu pt-0 pb-0">
-                <li class="dropdown-item p-0">
-                  <a href="/download{{ document['dcat_accessURL'][0][:-1] }}?file=meta_json-ld_{{ document['gdsc_tablename'][0] }}&format=json" class="btn">
-                    JSON-LD
-                  </a>
-                </li>
-                <!-- <li class="dropdown-item p-0">
-                  <a href="/download{{ document['dcat_accessURL'][0][:-1] }}?file=meta_dcat_{{ document['gdsc_tablename'][0] }}&format=json" class="btn">
-                    DCAT
-                  </a>
-                </li>
-                <li class="dropdown-item p-0">
-                  <a href="/download{{ document['dcat_accessURL'][0][:-1] }}?file=meta_etl_{{ document['gdsc_tablename'][0] }}&format=json" class="btn">
-                    ETL
-                  </a>
-                </li> -->
+              <ul class="dropdown-menu dropdown-menu-end">
+                <li><a href="/cite/{{ document['gdsc_tablename'][0] }}/bibtex" class="dropdown-item">BibTeX</a></li>
+                <li><a href="/cite/{{ document['gdsc_tablename'][0] }}/ris" class="dropdown-item">RIS</a></li>
               </ul>
             </div>
           </div>
-          <!-- end title, collections, and citations -->
+        </div>
 
-          <!-- all other elements -->
-          <div class="row">
-            <div class="col-12 ml-3 mt-2 mr-2">
-              {%- if document['dct_creator'] -%}
-                {%- for creator in document['dct_creator'] -%}
-                  {%- set creator = creator.split(';') -%}
-                  {{ creator[0] }}{%- if loop.index < document['dct_creator']|length %}, {% endif -%}
-                {%- endfor %}
-              {%- endif %}
-              ({% if document['dct_issued'] %}{{ document['dct_issued'][0][:4] }}{% endif %}).
-              {%- if document['dct_title'] %} {{ document['dct_title'][0] }}{% endif %} [gis dataset].
-              {%- if document['dct_publisher'] %} {{ document['dct_publisher'][0] }}.{% endif %}
-              {%- if document['dct_identifier'] %} <a href="{{ document['dct_identifier'][0] }}" target="_blank" class="text-wrap text-break">{{ document['dct_identifier'][0] }}</a>.{% endif %}
-              {%- if document['dct_modified'] %} last updated: {{ document['dct_modified'][0][:10] }}{% endif %}
-              <!-- {% if document['dcat_downloadURL'] %} from <a href="{{ document['dcat_downloadURL'][0] }}" target="_blank" class="text-wrap text-break">{{ document['dcat_downloadURL'][0] }}</a>{% endif %} -->
-              {%- if document['dct_accrualPeriodicity'] %} (update frequency: {{ document['dct_accrualPeriodicity'][0] }}){% endif %}.
-              {%- if document['dct_description'] %}
-              <span class="mt-2 d-block">{{ document['dct_description'][0] }}</span>
-              {%- endif %}
-              {%- if document['dcat_keyword'] and document['dcat_keyword']|length > 0 %}
-              <span class="mt-1 d-block"><b>Key words:</b> {{ ", ".join(document['dcat_keyword']) }}</span>
-              {%- endif %}
-              {%- if "Restricted" not in document['dct_rights'][0] %}
-              {%- if document['dcat_landingPage'] %}
-              <span class="mt-1 d-block"><a href="{{ document['dcat_landingPage'][0] }}" target="_blank" class="text-break">{{ document['dcat_landingPage'][0][:80] }}</a></span>
-              {%- endif %}
-              {%- if document['dcat_downloadURL'] %}
-              <span class="d-block"><a href="{{ document['dcat_downloadURL'][0] }}" target="_blank" class="text-break">{{ document['dcat_downloadURL'][0][:80] }}</a></span>
-              {%- endif %}
-              {%- endif %}
+        <!-- ROW 3: DESCRIPTION / LINKS / KEYWORDS (left)  |  LOCATOR MAP (right) -->
+        <div class="row g-3 mb-3">
+          <div class="col-lg-7">
+            <div class="border rounded p-3 h-100 detail-panel">
 
-              {% if document['gdsc_attributes'] and document['gdsc_attributes']|length > 0 -%}
-              <!-- attributes -->
-              <div class="accordion mt-2" id="attributes-container">
-                <div class="accordion-itemb order-0">
-                  <div class="accordion-header">
-                    <a href="attributes" data-bs-toggle="collapse" data-bs-target="#attributes" aria-expanded="false" aria-controls="attributes">
-                      <b>Attributes:</b>
-                    </a>
-                  </div>
-                  <div id="attributes" class="accordion-collapse collapse" data-bs-parent="#attributes-container">
-                    <div class="accordion-body">
-                      <div class="container mt-2 text-break">
-                        <div class="container-fluid"><div class="row"><div class="wrapScroll">
-                        <table class="table table_morecondensed table-striped w-auto" style="font-size: 0.75em;">
-                          <thead>
-                            <tr>
-                              <th scope="col">Name</th>
-                              <th scope="col">Description</th>
-                              <th scope="col">Type</th>
-                              <th scope="col">Unit</th>
-                              <th scope="col">Unit Concept ID</th>
-                              <th scope="col">Min Val</th>
-                              <th scope="col">Max Val</th>
-                              <th scope="col">Start Date</th>
-                              <th scope="col">End Date</th>
-                              <th scope="col">Concept ID</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {% for attr in document['gdsc_attributes'] -%}
-                            <tr>
-                              <td>{{ attr[0] }}</td>
-                              <td>{{ attr[1] }}</td>
-                              <td>{{ attr[3] }}</td>
-                              <td>{{ attr[4] }}</td>
-                              <td>{{ attr[5] }}</td>
-                              <td>{%- if attr[6] %}{{ attr[6] }}{% endif %}</td>
-                              <td>{%- if attr[7] %}{{ attr[7] }}{% endif %}</td>
-                              <td>{%- if attr[8] %}{{ attr[8] }}{% endif %}</td>
-                              <td>{%- if attr[9] %}{{ attr[9] }}{% endif %}</td>
-                              <td>{%- if attr[10] %}{{ attr[10] }}{% endif %}</td>
-                            </tr>
-                            {%- endfor %}
-                          </tbody>
-                        </table>
-                        </div></div></div>
-                      </div>
-                    </div>
-                  </div>
+              {% if document['dct_accrualPeriodicity'] %}
+              <div class="small text-muted mb-2">Update frequency: {{ document['dct_accrualPeriodicity'][0] }}</div>
+              {% endif %}
+
+              {% if document['dct_description'] %}
+              <p class="mb-2">{{ document['dct_description'][0] }}</p>
+              {% endif %}
+
+              {% if document['dcat_keyword'] and document['dcat_keyword']|length > 0 %}
+              <p class="mb-3"><b>Key words:</b> {{ ", ".join(document['dcat_keyword']) }}</p>
+              {% endif %}
+
+              {% if "Restricted" not in document['dct_rights'][0] %}
+
+                <div class="mb-2">
+                  <b>Open Geospatial Consortium Standards:</b><br>
+                  {% if "Raster" not in document['dct_type'][0] %}
+                    <a href="http://localhost:7800/public.{{ document['gdsc_tablename'][0] }}.html" target="_blank">dynamic vector tiles</a> |
+                  {% endif %}
+                  {% if document['gdsc_tileUrl'] %}
+                    <a href="{{ document['gdsc_tileUrl'][0] }}{{ document['gdsc_tileUrl'][2] }}" target="_blank">{{ document['dct_type'][0].split()[0].lower() }} tiles</a>
+                    <br><span class="small">{{ document['dct_type'][0].split()[0].lower() }} tile url: {{ document['gdsc_tileUrl'][0] }}{{ document['gdsc_tileUrl'][1] }}</span><br>
+                  {% endif %}
+                  WMS (coming soon) | WFS (coming soon)
                 </div>
-              </div>
-              <!-- end attributes -->
-              {%- endif %}
 
-              {% if "Restricted" not in document['dct_rights'][0] -%}
-              {% if document['gdsc_derived'] and document['gdsc_derived']|length > 0 -%}
-              <!-- downloads -->
-              <div class="accordion mt-2" id="downloads-container">
-                <div class="accordion-item border-0">
-                  <div class="accordion-header">
-                    <a href="downloads" data-bs-toggle="collapse" data-bs-target="#downloads" aria-expanded="false" aria-controls="downloads">
-                      <b>Downloads:</b>
-                    </a>
-                  </div>
-                  <div id="downloads" class="accordion-collapse collapse" data-bs-parent="#downloads-container">
-                    <div class="accordion-body">
-                      <div class="container mt-2 text-break">
-                      <div class="container-fluid"><div class="row"><div class="wrapScroll">
-                      <table class="table table_morecondensed table-striped w-auto" style="font-size: 0.75em;">
-                        <thead>
-                          <tr>
-                            <th scope="col">Type</th>
-                            <th scope="col">URL</th>
-                            <th scope="col">Size</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {% for download in document['gdsc_derived'] %}
-                          <tr>
-                            <td>{{ download }}</td>
-                            <td><a href="/download{{ document['dcat_accessURL'][0][:-1] }}/derived?file={{ document['gdsc_tablename'][0] }}&format={{ download }}">{{ document['gdsc_tablename'][0] }}.{{ download }}.tar.bz</a></td>
-                            <td>TBD</td>
-                          </tr>
-                          {% endfor %}
-                        </tbody>
-                      </table>
-                      </div></div></div>
-                      </div>
-                    </div>
-                  </div>
+                {% if document['gdsc_arcgisSD'] %}
+                <div class="mb-2">
+                  <b>ESRI Standards:</b><br>
+                  <a href="https://arcgis.gdsc.miami.edu/arcgis/rest/services/{{ document['gdsc_tablename'][0] }}/MapServer" target="_blank">ArcGIS MapServer</a> |
+                  <a href="https://arcgis.gdsc.miami.edu/arcgis/rest/services/{{ document['gdsc_tablename'][0] }}/FeatureServer" target="_blank">ArcGIS FeatureServer</a> |
+                  <a href="https://portal.gdsc.miami.edu/arcgis/home/webmap/viewer.html?url=https%3A%2F%2Farcgis.gdsc.miami.edu%2Farcgis%2Frest%2Fservices%2F{{ document['gdsc_tablename'][0] }}%2FFeatureServer&source=sd" target="_blank">Open in ArcGIS Portal for GDSC</a>
                 </div>
-              </div>
-              <!-- end downloads -->
-              {%- endif %}
+                {% endif %}
 
-              <!-- OGC services -->
-              <span class="mt-4 d-block">
-                <b>Open Geospatial Consortium Standards:</b>
-                {%- if "Raster" not in document['dct_type'][0] %}
-                <li class="ms-4">
-                {%- if document['gdsc_up'][0] == 'true' %}
-                  <a href="https://gdsc.idsc.miami.edu/vector/public.{{ document['gdsc_tablename'][0] }}.html" target="_blank">
-                {%- endif %}
-                    dynamic vector tiles
-                {%- if document['gdsc_up'][0] == 'true' %}
-                  </a>
-                {%- endif %}
-                </li>
-                {%- endif %}
-                {%- if document['gdsc_tileUrl'] %}
-                  <li class="ms-4"><a href="{{ document['gdsc_tileUrl'][0] }}{{ document['gdsc_tileUrl'][2] }}" target="_blank">{{ document['dct_type'][0].split()[0].lower() }} tiles</a>
-                  ( {{ document['dct_type'][0].split()[0].lower() }} tile url: {{ document['gdsc_tileUrl'][0] }}{{ document['gdsc_tileUrl'][1] }} )</li>
-                {%- endif %}
-                <!-- | WMS (coming soon) | WFS (coming soon) -->
-              </span>
-              <!-- end OGC services -->
+                {% if document['gdsc_functions'] and document['gdsc_functions']|length > 0 %}
+                <div class="mb-2 text-break">
+                  <b>Analytical Functions:</b><br>
+                  {% for function in document['gdsc_functions'] %}
+                    {% if function == "gdsc_get_attributes" %}
+                      <a target="_blank" href="https://gdsc.idsc.miami.edu/functions/rpc/gdsc_get_attributes?tablename=public.{{ document['gdsc_tablename'][0] }}&lat=25.718&lng=-80.279&identifier={{ document['gdsc_label'][0] }}&attrs=%7B{{ ','.join(document['gdsc_columns']) }}%7D&normal=" class="text-wrap text-break">gdsc_get_attributes(tablename={{ document['gdsc_tablename'][0] }},lat=25.718,lng=-80.279,identifier={{ document['gdsc_label'][0] }},normal='')</a><br>
+                    {% endif %}
+                    {% if function == "gdsc_nearest_neighbor" %}
+                      <a target="_blank" href="https://gdsc.idsc.miami.edu/functions/rpc/gdsc_nearest_neighbor?tablename=public.{{ document['gdsc_tablename'][0] }}&lat=25.718&lng=-80.279&identifier={{ document['gdsc_label'][0] }}" class="text-wrap text-break">gdsc_nearest_neighbor(table={{ document['gdsc_tablename'][0] }},lat=25.718,lng=-80.279,id={{ document['gdsc_label'][0] }})</a><br>
+                    {% endif %}
+                    {% if function == "gdsc_count_within" %}
+                      <a target="_blank" href="https://gdsc.idsc.miami.edu/functions/rpc/gdsc_count_within?tablename=public.{{ document['gdsc_tablename'][0] }}&lat=25.718&lng=-80.279&radius=5280" class="text-wrap text-break">gdsc_count_within(table={{ document['gdsc_tablename'][0] }},lat=25.718,lng=-80.279,radius=5280)</a><br>
+                    {% endif %}
+                    {% if function == "gdsc_zonal_statistics" %}
+                      <a target="_blank" href="https://gdsc.idsc.miami.edu/functions/rpc/gdsc_zonal_statistics?tablename=public.{{ document['gdsc_tablename'][0] }}&lat=25.718&lng=-80.279&radius=500" class="text-wrap text-break">gdsc_zonal_statistics(table={{ document['gdsc_tablename'][0] }},lat=25.718,lng=-80.279,radius=500)</a><br>
+                    {% endif %}
+                  {% endfor %}
+                </div>
+                {% endif %}
 
-              {%- if document['gdsc_arcgisSD'] %}
+                {% if document['prov_action'] %}
+                <div class="mb-2">
+                  <button type="button" class="btn btn-link btn-anchor p-0" data-bs-toggle="modal" data-bs-target="#modal__{{ document['gdsc_tablename'][0] }}">
+                    <b>ETL documentation</b>
+                  </button>
+                </div>
+                {% endif %}
 
-              <!-- ESRI services -->
-              <span class="mt-1 d-block">
-                <b>ESRI Standards:</b>
-                <li class="ms-4"><a href="https://arcgis.gdsc.miami.edu/arcgis/rest/services/{{ document['gdsc_tablename'][0] }}/MapServer" target="_blank">ArcGIS MapServer</a></li>
-                <li class="ms-4"><a href="https://arcgis.gdsc.miami.edu/arcgis/rest/services/{{ document['gdsc_tablename'][0] }}/FeatureServer" target="_blank">ArcGIS FeatureServer</a></li>
-                <li class="ms-4"><a href="https://portal.gdsc.miami.edu/arcgis/home/webmap/viewer.html?url=https%3A%2F%2Farcgis.gdsc.miami.edu%2Farcgis%2Frest%2Fservices%2F{{ document['gdsc_tablename'][0] }}%2FFeatureServer&source=sd" target="_blank">Open in ArcGIS Portal for GDSC</a></li>
-              </span>
-              <!-- end ESRI services -->
-              {%- endif -%}
+              {% else %}
+                <span class="d-block text-wrap text-break">Restricted Access</span>
+              {% endif %}
+            </div>
+          </div>
 
-              {%- if document['gdsc_functions'] and document['gdsc_functions']|length > 0 %}
+          <div class="col-lg-5">
+            <div class="border rounded p-3 h-100 detail-panel">
+              <div class="small mb-2"><b>Locator map</b></div>
+              {% if has_bbox %}
+                <div id="locator-map"></div>
+              {% else %}
+                <div class="text-muted small">No bounding box available for this dataset.</div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
 
-              <!-- analytic functions -->
-              <span class="mt-1 d-block text-wrap text-break">
-                <b>Analytical Functions:</b>
-                {%- for function in document['gdsc_functions'] %}
-                {%- if function == "gdsc_get_attributes" %}
-                <li class="ms-4"><a target="_blank" href="https://gdsc.idsc.miami.edu/functions/rpc/gdsc_get_attributes?tablename=public.{{ document['gdsc_tablename'][0] }}&lat=25.718&lng=-80.279&identifier={{ document['gdsc_label'][0] }}&attrs=%7B{{ ','.join(document['gdsc_columns']) }}%7D&normal=" class="text-wrap text-break">gdsc_get_attributes( table, lat, lng, identifier, normal )</a></li>
-                {%- endif %}
-                {%- if function == "gdsc_nearest_neighbor" %}
-                <li class="ms-4"><a target="_blank" href="https://gdsc.idsc.miami.edu/functions/rpc/gdsc_nearest_neighbor?tablename=public.{{ document['gdsc_tablename'][0] }}&lat=25.718&lng=-80.279&identifier={{ document['gdsc_label'][0] }}" class="text-wrap text-break">gdsc_nearest_neighbor( table, lat, lng, id )</a></li>
-                {%- endif %}
-                {%- if function == "gdsc_count_within" %}
-                <li class="ms-4"><a target="_blank" href="https://gdsc.idsc.miami.edu/functions/rpc/gdsc_count_within?tablename=public.{{ document['gdsc_tablename'][0] }}&lat=25.718&lng=-80.279&radius=5280" class="text-wrap text-break">gdsc_count_within( table, lat, lng, radius )</a></li>
-                {%- endif %}
-                {%- if function == "gdsc_zonal_statistics" %}
-                <li class="ms-4"><a target="_blank" href="https://gdsc.idsc.miami.edu/functions/rpc/gdsc_zonal_statistics?tablename=public.{{ document['gdsc_tablename'][0] }}&lat=25.718&lng=-80.279&radius=500" class="text-wrap text-break">gdsc_zonal_statistics( table, lat, lng, radius )</a></li>
-                {%- endif %}
-                {%- endfor %}
-              </span>
-              <!-- end analytic functions -->
-              {%- endif -%}
+        <!-- ROW 4: ATTRIBUTES / DOWNLOADS / OTHER (full width) -->
+        <div class="border rounded p-3 mb-3 detail-panel">
 
-              {%- if document['prov_action'] %}
-
-              <!-- provenance -->
-              <span class="mt-4 d-block text-wrap text-break">
-                <button type="button" class="btn btn-link btn-anchor" data-bs-toggle="modal" data-bs-target="#modal__{{ document['gdsc_tablename'][0] }}" style="outline: none !important; padding: 0; border: 0; vertical-align: baseline;">
-                  <b>ETL documentation</b>
+          {% if document['gdsc_attributes'] and document['gdsc_attributes']|length > 0 %}
+          <div class="accordion mb-2" id="attributes-container">
+            <div class="accordion-item border-0">
+              <div class="accordion-header">
+                <button class="accordion-button collapsed px-0 py-1 bg-transparent shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#attributes" aria-expanded="false" aria-controls="attributes">
+                  <b>Attributes</b>
                 </button>
-                <div class="modal fade" id="modal__{{ document['gdsc_tablename'][0] }}" tabindex="-1" aria-labelledby="label_{{ document['gdsc_tablename'][0] }}" aria-hidden="true">
-                  <div class="modal-dialog modal-dialog-scrollable modal-xl">
-                    <div class="modal-content">
-                      <div class="modal-header">
-                        <h5 class="modal-title" id="label_{{ document['gdsc_tablename'][0] }}">ETL for {{ document['gdsc_tablename'][0] }}</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                      </div>
-                      <div class="modal-body">
-                        <span style="white-space: pre-line">{{ document['prov_action'][0] }}</span>
-                      </div>
-                    </div>
+              </div>
+              <div id="attributes" class="accordion-collapse collapse" data-bs-parent="#attributes-container">
+                <div class="accordion-body px-0">
+                  <div class="wrapScroll">
+                    <table class="table table_morecondensed table-striped w-auto" style="font-size: 0.75em;">
+                      <thead>
+                        <tr>
+                          <th scope="col">Name</th>
+                          <th scope="col">Description</th>
+                          <th scope="col">Type</th>
+                          <th scope="col">Unit</th>
+                          <th scope="col">Unit Concept ID</th>
+                          <th scope="col">Min Val</th>
+                          <th scope="col">Max Val</th>
+                          <th scope="col">Start Date</th>
+                          <th scope="col">End Date</th>
+                          <th scope="col">Concept ID</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {% for attr in document['gdsc_attributes'] %}
+                        <tr>
+                          <td>{{ attr[0] }}</td>
+                          <td>{{ attr[1] }}</td>
+                          <td>{{ attr[3] }}</td>
+                          <td>{{ attr[4] }}</td>
+                          <td>{{ attr[5] }}</td>
+                          <td>{% if attr[6] %}{{ attr[6] }}{% endif %}</td>
+                          <td>{% if attr[7] %}{{ attr[7] }}{% endif %}</td>
+                          <td>{% if attr[8] %}{{ attr[8] }}{% endif %}</td>
+                          <td>{% if attr[9] %}{{ attr[9] }}{% endif %}</td>
+                          <td>{% if attr[10] %}{{ attr[10] }}{% endif %}</td>
+                        </tr>
+                        {% endfor %}
+                      </tbody>
+                    </table>
                   </div>
                 </div>
-              </span>
-              <!-- end provenance -->
-              {%- endif -%}
-
-              {%- else -%}
-              <!-- restriced access -->
-              <span class="mt-4 d-block text-wrap text-break">Restricted Access</span>
-              <!-- end restriced access -->
-              {%- endif %}
-
+              </div>
             </div>
-
-            <!-- sponsors -->
-            <!-- <div class="col-sm-1">
-              {%- if document['gdsc_sponsor'] %}
-              <span class="mt-1 d-block"><b>Sponsors:</b><br>
-              {%- for sponsor in document['gdsc_sponsor'] %}
-              <a href="{{ sponsor.split(';')[1] }}" target="_blank"><img src="/static/{{ sponsor.split(';')[0] }}-small.jpg" style="max-height:30px;"></a>
-              {%- endfor %}
-              </span>
-              {%- endif %}
-            </div> -->
-            <!-- end sponsors -->
-
           </div>
-          <!-- end all other elements -->
+          {% endif %}
+
+          {% if document['gdsc_derived'] and document['gdsc_derived']|length > 0 %}
+          <div class="accordion mb-2" id="downloads-container">
+            <div class="accordion-item border-0">
+              <div class="accordion-header">
+                <button class="accordion-button collapsed px-0 py-1 bg-transparent shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#downloads" aria-expanded="false" aria-controls="downloads">
+                  <b>Downloads</b>
+                </button>
+              </div>
+              <div id="downloads" class="accordion-collapse collapse" data-bs-parent="#downloads-container">
+                <div class="accordion-body px-0">
+                  <table class="table table_morecondensed table-striped w-auto" style="font-size: 0.75em;">
+                    <thead>
+                      <tr>
+                        <th scope="col">Type</th>
+                        <th scope="col">URL</th>
+                        <th scope="col">Size</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for download in document['gdsc_derived'] %}
+                      <tr>
+                        <td>{{ download }}</td>
+                        <td><a href="/download{{ document['dcat_accessURL'][0][:-1] }}/?file={{ document['gdsc_tablename'][0] }}&format={{ download }}">{{ document['gdsc_tablename'][0] }}.{{ download }}.tar.bz</a></td>
+                        <td>TBD</td>
+                      </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+          {% endif %}
+
+          {% if document['prov_action'] %}
+          <div class="modal fade" id="modal__{{ document['gdsc_tablename'][0] }}" tabindex="-1" aria-labelledby="label_{{ document['gdsc_tablename'][0] }}" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-scrollable modal-xl">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="label_{{ document['gdsc_tablename'][0] }}">ETL for {{ document['gdsc_tablename'][0] }}</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                  <span style="white-space: pre-line">{{ document['prov_action'][0] }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          {% endif %}
 
         </div>
+
+        {% endautoescape %}
       </div>
-      <!-- end dataset content -->
-      {%- endautoescape %}
+
+{% if has_bbox %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+  (function () {
+    var el = document.getElementById('locator-map');
+    if (!el || typeof L === 'undefined') return;
+
+    var bbox = {{ {
+      'minX': document['dcat_bbox__minX'],
+      'minY': document['dcat_bbox__minY'],
+      'maxX': document['dcat_bbox__maxX'],
+      'maxY': document['dcat_bbox__maxY']
+    } | tojson }};
+
+    // bounding boxes crossing the antimeridian are stored with minX > maxX
+    var xSegments = bbox.minX > bbox.maxX
+      ? [[bbox.minX, 180], [-180, bbox.maxX]]
+      : [[bbox.minX, bbox.maxX]];
+
+    var map = L.map(el, { scrollWheelZoom: false });
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 18,
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    var group = L.featureGroup();
+    xSegments.forEach(function (seg) {
+      L.rectangle(
+        [[bbox.minY, seg[0]], [bbox.maxY, seg[1]]],
+        { color: '#c0392b', weight: 2, fillOpacity: 0.2 }
+      ).addTo(group);
+    });
+    group.addTo(map);
+
+    map.fitBounds(group.getBounds(), { padding: [20, 20], maxZoom: 12 });
+  })();
+</script>
+{% endif %}
 {% endblock %}
