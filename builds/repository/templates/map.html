@@ -23,7 +23,7 @@
 {% block content %}
 <div class="mb-3">
   <h2 class="mb-1">Map Filter</h2>
-  <p class="map-instruction">Ctrl+drag on the map to draw a bounding box. Release to search datasets that intersect that area.</p>
+  <p class="map-instruction">Shift+drag on the map to draw a bounding box. Release to search datasets that intersect that area.</p>
 </div>
 
 <div class="row p-2">
@@ -164,7 +164,9 @@
   var initLng  = parsedOrDefault(params.get('lng'), parseFloat, -96);
   var initZoom = parsedOrDefault(params.get('zoom'), function (v) { return parseInt(v, 10); }, 4);
 
-  var map = L.map('map').setView([initLat, initLng], initZoom);
+  // boxZoom: false disables Leaflet's built-in Shift+drag box-zoom so that
+  // Shift+drag can be used for bounding-box selection instead.
+  var map = L.map('map', { boxZoom: false }).setView([initLat, initLng], initZoom);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap contributors', maxZoom: 18
   }).addTo(map);
@@ -204,28 +206,28 @@
   }
 
   var startLatLng = null, rect = null;
-  var ctrlDown = false;
+  var shiftDown = false;
   var mapContainer = map.getContainer();
 
   // ── Cursor helpers ──────────────────────────────────────────────────────
   // Three states:
-  //   crosshair  — Ctrl held; ready to draw a selection box
-  //   grabbing   — actively panning (mouse button down, no Ctrl)
+  //   crosshair  — Shift held; ready to draw a selection box
+  //   grabbing   — actively panning (mouse button down, no Shift)
   //   grab       — default; hovering over the map, ready to pan
   function setCursor(type) {
     mapContainer.style.cursor = type;
   }
 
-  // Track Ctrl key state; swap cursor immediately on keydown/keyup
+  // Track Shift key state; swap cursor immediately on keydown/keyup
   document.addEventListener('keydown', function (e) {
-    if (e.key === 'Control') {
-      ctrlDown = true;
+    if (e.key === 'Shift') {
+      shiftDown = true;
       setCursor('crosshair');
     }
   });
   document.addEventListener('keyup', function (e) {
-    if (e.key === 'Control') {
-      ctrlDown = false;
+    if (e.key === 'Shift') {
+      shiftDown = false;
       // Return to whichever pan cursor is appropriate
       setCursor(startLatLng ? 'crosshair' : 'grab');
     }
@@ -233,22 +235,22 @@
 
   // Pan drag: show closed-hand while the button is held
   map.on('mousedown', function (e) {
-    if (e.originalEvent.ctrlKey) return; // selection mode handled below
+    if (e.originalEvent.shiftKey) return; // selection mode handled below
     setCursor('grabbing');
   });
-  map.on('mouseup',   function ()  { if (!ctrlDown) setCursor('grab'); });
+  map.on('mouseup',   function ()  { if (!shiftDown) setCursor('grab'); });
   // Also reset if the pointer leaves the map mid-drag
   mapContainer.addEventListener('mouseleave', function () {
-    if (!ctrlDown) setCursor('grab');
+    if (!shiftDown) setCursor('grab');
   });
   mapContainer.addEventListener('mouseenter', function () {
-    setCursor(ctrlDown ? 'crosshair' : 'grab');
+    setCursor(shiftDown ? 'crosshair' : 'grab');
   });
 
   // ── Bbox selection ───────────────────────────────────────────────────────
   map.on('mousedown', function (e) {
-    if (!e.originalEvent.ctrlKey) return;
-    e.originalEvent.preventDefault();
+    if (!e.originalEvent.shiftKey) return;
+    e.originalEvent.preventDefault();  // also prevents text selection while dragging
     map.dragging.disable();
     startLatLng = e.latlng;
     setCursor('crosshair');
